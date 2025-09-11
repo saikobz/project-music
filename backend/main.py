@@ -2,7 +2,7 @@ from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import FileResponse, JSONResponse
 import os
 from uuid import uuid4
-import time
+import asyncio
 from fastapi.middleware.cors import CORSMiddleware
 import zipfile
 import shutil
@@ -137,7 +137,7 @@ async def process_audio(file: UploadFile = File(...)):
 
     results = []
     for step in steps:
-        time.sleep(2)
+        await asyncio.sleep(2)
         results.append(step)
 
     return JSONResponse(content={"steps": results})
