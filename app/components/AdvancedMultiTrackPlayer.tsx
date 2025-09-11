@@ -86,6 +86,23 @@ export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {
         }
     };
 
+    const handleDownload = async (stem: StemType) => {
+        try {
+            const response = await fetch(`${baseUrl}/${stem}.wav`);
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `${stem}.wav`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error("Download failed", error);
+        }
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex gap-2">
@@ -108,13 +125,12 @@ export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {
                     <div className="flex justify-between items-center">
                         <span className="capitalize font-bold">{stem}</span>
                         <div className="flex gap-2">
-                            <a
-                                href={`${baseUrl}/${stem}.wav`}
-                                download={`${stem}.wav`}
+                            <button
+                                onClick={() => handleDownload(stem)}
                                 className="text-sm px-3 py-1 border rounded bg-white text-black"
                             >
                                 ดาวน์โหลด
-                            </a>
+                            </button>
                             <button
                                 onClick={() => toggleMute(stem)}
                                 className="text-sm px-3 py-1 border rounded"
