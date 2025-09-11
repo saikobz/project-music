@@ -66,6 +66,17 @@ export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {
         setIsPlaying((prev) => !prev);
     };
 
+    const resetAll = () => {
+        stems.forEach((stem) => {
+            const ws = waveSurferRefs.current[stem];
+            if (ws) {
+                ws.pause();
+                ws.seekTo(0);
+            }
+        });
+        setIsPlaying(false);
+    };
+
     const toggleMute = (stem: StemType) => {
         const ws = waveSurferRefs.current[stem];
         const isMuted = !mutedTracks[stem];
@@ -77,23 +88,40 @@ export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {
 
     return (
         <div className="space-y-6">
-            <button
-                onClick={togglePlay}
-                className="px-4 py-2 bg-green-600 text-white rounded"
-            >
-                {isPlaying ? "⏸ หยุดทั้งหมด" : "▶️ เล่นทั้งหมด"}
-            </button>
+            <div className="flex gap-2">
+                <button
+                    onClick={togglePlay}
+                    className="px-4 py-2 bg-green-600 text-white rounded"
+                >
+                    {isPlaying ? "⏸ หยุดทั้งหมด" : "▶️ เล่นทั้งหมด"}
+                </button>
+                <button
+                    onClick={resetAll}
+                    className="px-4 py-2 bg-gray-500 text-white rounded"
+                >
+                    ⏮️ รีเซ็ต
+                </button>
+            </div>
 
             {stems.map((stem) => (
                 <div key={stem} className="space-y-2">
                     <div className="flex justify-between items-center">
                         <span className="capitalize font-bold">{stem}</span>
-                        <button
-                            onClick={() => toggleMute(stem)}
-                            className="text-sm px-3 py-1 border rounded"
-                        >
-                            {mutedTracks[stem] ? "Unmute" : "Mute"}
-                        </button>
+                        <div className="flex gap-2">
+                            <a
+                                href={`${baseUrl}/${stem}.wav`}
+                                download={`${stem}.wav`}
+                                className="text-sm px-3 py-1 border rounded bg-white text-black"
+                            >
+                                ดาวน์โหลด
+                            </a>
+                            <button
+                                onClick={() => toggleMute(stem)}
+                                className="text-sm px-3 py-1 border rounded"
+                            >
+                                {mutedTracks[stem] ? "Unmute" : "Mute"}
+                            </button>
+                        </div>
                     </div>
 
                     <div id={`waveform-${stem}`} className="bg-gray-200 rounded" />
