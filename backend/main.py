@@ -38,7 +38,7 @@ async def separate(file: UploadFile = File(...)):
         # 1. แยกเสียงไปไว้ที่ separated/{file_id}/
         output_dir = os.path.join("separated", file_id)
         os.makedirs(output_dir, exist_ok=True)
-        separate_audio(input_path, output_dir)  # ✅ ใช้ path แยกตาม file_id
+        await asyncio.to_thread(separate_audio, input_path, output_dir)  # ✅ ใช้ path แยกตาม file_id
 
         # 2. สร้าง zip
         zip_filename = f"{file_id}_separated.zip"
@@ -98,7 +98,7 @@ async def apply_eq(file: UploadFile = File(...), target: str = "vocals"):
         f.write(await file.read())
 
     try:
-        output_path = apply_eq_to_file(input_path, target)
+        output_path = await asyncio.to_thread(apply_eq_to_file, input_path, target) 
         return FileResponse(
             output_path,
             media_type="audio/wav",
@@ -117,7 +117,7 @@ async def apply_compressor(file: UploadFile = File(...), strength: str = "medium
         f.write(await file.read())
 
     try:
-        output_path = apply_compression(input_path, strength)
+        output_path = await asyncio.to_thread(apply_compression, input_path, strength)
         return FileResponse(
             output_path,
             media_type="audio/wav",
