@@ -15,6 +15,7 @@ function UploadBox() {
     const [fileId, setFileId] = useState<string | null>(null); // ✅ เก็บ file_id จาก backend
     const [zipUrl, setZipUrl] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     const handleUpload = async () => {
         if (!file) return alert('กรุณาเลือกไฟล์ก่อน');
@@ -24,6 +25,7 @@ function UploadBox() {
         setProcessingTime(null);
         setFileId(null);
         setZipUrl(null);
+        setErrorMessage(null);
 
         const formData = new FormData();
         formData.append('file', file);
@@ -70,9 +72,20 @@ function UploadBox() {
             const minutes = Math.floor(duration / 60);
             const seconds = duration % 60;
             setProcessingTime(`${minutes} นาที ${seconds} วินาที`);
-        } catch (err) {
-            alert('❌ เกิดข้อผิดพลาด');
-            console.error(err);
+        } catch (err: any) {
+            let message = '❌ เกิดข้อผิดพลาด';
+            if (err.code === 'ERR_NETWORK') {
+                message = '🚫 ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ (อาจเกิดจาก CORS หรือเซิร์ฟเวอร์ล้ม)';
+            } else if (err.response?.status) {
+                const status = err.response.status;
+                if (status >= 500) {
+                    message = `⚠️ เซิร์ฟเวอร์มีปัญหา (${status})`;
+                } else {
+                    message = `⚠️ คำขอถูกปฏิเสธ (${status})`;
+                }
+            }
+            setErrorMessage(message);
+            alert(message);
         } finally {
             setLoading(false);
         }
@@ -127,6 +140,12 @@ function UploadBox() {
             {processingTime && (
                 <div className="text-center text-green-300 font-medium mt-2">
                     ⏱️ เวลาที่ใช้ในการประมวลผล: {processingTime}
+                </div>
+            )}
+
+            {errorMessage && (
+                <div className="text-center text-red-300 font-medium mt-2">
+                    {errorMessage}
                 </div>
             )}
 
