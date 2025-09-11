@@ -108,13 +108,13 @@ export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {
             <div className="flex gap-2">
                 <button
                     onClick={togglePlay}
-                    className="px-4 py-2 bg-green-600 text-white rounded"
+                    className="px-4 py-2 bg-green-600 text-white rounded cursor-pointer"
                 >
                     {isPlaying ? "⏸ หยุดทั้งหมด" : "▶️ เล่นทั้งหมด"}
                 </button>
                 <button
                     onClick={resetAll}
-                    className="px-4 py-2 bg-gray-500 text-white rounded"
+                    className="px-4 py-2 bg-gray-500 text-white rounded cursor-pointer"
                 >
                     ⏮️ รีเซ็ต
                 </button>
@@ -127,13 +127,13 @@ export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {
                         <div className="flex gap-2">
                             <button
                                 onClick={() => handleDownload(stem)}
-                                className="text-sm px-3 py-1 border rounded bg-white text-black"
+                                className="text-sm px-3 py-1 border rounded bg-white text-black cursor-pointer"
                             >
                                 ดาวน์โหลด
                             </button>
                             <button
                                 onClick={() => toggleMute(stem)}
-                                className="text-sm px-3 py-1 border rounded"
+                                className="text-sm px-3 py-1 border rounded cursor-pointer"
                             >
                                 {mutedTracks[stem] ? "Unmute" : "Mute"}
                             </button>
