@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Music Source Separation Using AI",
+  title: "HarmoniQ",
   description: "Web Application for Music Source Separation Using AI with Automatic EQ and Compressor",
 };
 
