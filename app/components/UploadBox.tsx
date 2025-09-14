@@ -164,7 +164,7 @@ function UploadBox() {
             {analysis && (
                 <AudioAnalysis data={analysis} />
             )}
-            
+
             {/* ✅ แสดง Player แบบเต็มหลังแยกเสียง */}
             {fileId && (
                 <div className="mt-6">
@@ -185,7 +185,16 @@ function UploadBox() {
 
             {/* 🎧 แสดง player ถ้าเป็น .wav เดี่ยว */}
             {downloadUrl && downloadFileName && !downloadFileName.endsWith('.zip') && (
-                <WaveformPlayer audioUrl={downloadUrl} />
+                <>
+                    <a
+                        href={downloadUrl}
+                        download={downloadFileName}
+                        className="mt-4 block w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg"
+                    >
+                        ⬇️ ดาวน์โหลดผลลัพธ์ (WAV)
+                    </a>
+                    <WaveformPlayer audioUrl={downloadUrl} />
+                </>
             )}
         </div>
     );
