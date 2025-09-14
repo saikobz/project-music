@@ -6,6 +6,7 @@ import torchaudio
 import torch
 import numpy as np
 import librosa
+import soundfile as sf
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -88,4 +89,16 @@ def analyze_audio(input_path: str) -> dict:
         return {"tempo": tempo, "pitch": pitch_note, "key": key}
     except Exception as e:
         print(f"❌ ERROR in analyze_audio: {e}")
+        raise
+
+
+def pitch_shift_audio(input_path: str, steps: float, output_path: str) -> str:
+    """Shift the pitch of an audio file by a number of half-steps."""
+    try:
+        y, sr = librosa.load(input_path, sr=None)
+        shifted = librosa.effects.pitch_shift(y, sr, n_steps=steps)
+        sf.write(output_path, shifted, sr)
+        return output_path
+    except Exception as e:
+        print(f"❌ ERROR in pitch_shift_audio: {e}")
         raise

@@ -10,6 +10,7 @@ function UploadBox() {
     const [action, setAction] = useState('separate');
     const [target, setTarget] = useState('vocals');
     const [strength, setStrength] = useState('medium');
+    const [pitchSteps, setPitchSteps] = useState(0);
     const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
     const [downloadFileName, setDownloadFileName] = useState<string | null>(null);
     const [processingTime, setProcessingTime] = useState<string | null>(null);
@@ -65,6 +66,15 @@ function UploadBox() {
                 suffix = `_compressed_${strength}`;
             }
 
+            if (action === 'pitch') {
+                response = await axios.post(`http://localhost:8000/pitch-shift?steps=${pitchSteps}`, formData, {
+                    responseType: 'blob'
+                });
+                const url = window.URL.createObjectURL(new Blob([response.data]));
+                setDownloadUrl(url);
+                suffix = `_pitch_${pitchSteps}`;
+            }
+
             if (file && suffix) {
                 const baseName = file.name.replace(/\.[^/.]+$/, '');
                 setDownloadFileName(`${baseName}${suffix}.wav`);
@@ -115,6 +125,7 @@ function UploadBox() {
                     <option value="separate">แยกเสียง (AI Stem)</option>
                     <option value="eq">ปรับ EQ</option>
                     <option value="compressor">ปรับ Compressor</option>
+                    <option value="pitch">ปรับ Pitch</option>
                 </select>
             </div>
 
@@ -138,6 +149,18 @@ function UploadBox() {
                         <option value="medium">Medium</option>
                         <option value="hard">Hard</option>
                     </select>
+                </div>
+            )}
+
+            {action === 'pitch' && (
+                <div>
+                    <label className="block mt-2">จำนวน half-steps (+/-):</label>
+                    <input
+                        type="number"
+                        value={pitchSteps}
+                        onChange={(e) => setPitchSteps(parseFloat(e.target.value))}
+                        className="w-full text-black p-2 rounded-lg bg-amber-50"
+                    />
                 </div>
             )}
 
