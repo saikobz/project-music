@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import WaveformPlayer from "./WaveformPlayer";
 import MultiStemLivePlayer from "./MultiStemLivePlayer";
+import AudioAnalysis from "./AudioAnalysis";
 
 function UploadBox() {
     const [file, setFile] = useState<File | null>(null);
@@ -16,6 +17,7 @@ function UploadBox() {
     const [zipUrl, setZipUrl] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [analysis, setAnalysis] = useState<{ tempo: number; key: string; pitch: string | null } | null>(null);
 
     const handleUpload = async () => {
         if (!file) return alert('กรุณาเลือกไฟล์ก่อน');
@@ -26,6 +28,7 @@ function UploadBox() {
         setFileId(null);
         setZipUrl(null);
         setErrorMessage(null);
+        setAnalysis(null);
 
         const formData = new FormData();
         formData.append('file', file);
@@ -65,6 +68,15 @@ function UploadBox() {
             if (file && suffix) {
                 const baseName = file.name.replace(/\.[^/.]+$/, '');
                 setDownloadFileName(`${baseName}${suffix}.wav`);
+            }
+
+            const analyzeData = new FormData();
+            analyzeData.append('file', file);
+            try {
+                const analyzeResp = await axios.post('http://localhost:8000/analyze', analyzeData);
+                setAnalysis(analyzeResp.data);
+            } catch (err) {
+                console.error('Analyze error', err);
             }
 
             const endTime = Date.now();
@@ -149,6 +161,10 @@ function UploadBox() {
                 </div>
             )}
 
+            {analysis && (
+                <AudioAnalysis data={analysis} />
+            )}
+            
             {/* ✅ แสดง Player แบบเต็มหลังแยกเสียง */}
             {fileId && (
                 <div className="mt-6">

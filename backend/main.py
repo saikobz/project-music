@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import zipfile
 import shutil
 
-from backend.process_audio import separate_audio
+from backend.process_audio import separate_audio, analyze_audio
 from backend.eq_compressor import apply_eq_to_file
 from backend.eq_compressor import apply_compression
 
@@ -125,6 +125,25 @@ async def apply_compressor(file: UploadFile = File(...), strength: str = "medium
         )
     except Exception as e:
         return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
+
+
+@app.post("/analyze")
+async def analyze(file: UploadFile = File(...)):
+    file_id = str(uuid4())
+    filename = f"{file_id}_{file.filename}"
+    input_path = os.path.join(UPLOAD_DIR, filename)
+
+    with open(input_path, "wb") as f:
+        f.write(await file.read())
+
+    try:
+        result = await asyncio.to_thread(analyze_audio, input_path)
+        return JSONResponse(content=result)
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
+    finally:
+        if os.path.exists(input_path):
+            os.remove(input_path)
 
 @app.post("/process-audio")
 async def process_audio(file: UploadFile = File(...)):
