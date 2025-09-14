@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import zipfile
 import shutil
 
-from backend.process_audio import separate_audio, analyze_audio
+from backend.process_audio import separate_audio, analyze_audio, pitch_shift_audio
 from backend.eq_compressor import apply_eq_to_file
 from backend.eq_compressor import apply_compression
 
@@ -127,6 +127,31 @@ async def apply_compressor(file: UploadFile = File(...), strength: str = "medium
         return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
 
 
+@app.post("/pitch-shift")
+async def pitch_shift(file: UploadFile = File(...), steps: float = 0):
+    file_id = str(uuid4())
+    filename = f"{file_id}_{file.filename}"
+    input_path = os.path.join(UPLOAD_DIR, filename)
+
+    with open(input_path, "wb") as f:
+        f.write(await file.read())
+
+    try:
+        output_filename = f"{file_id}_pitch.wav"
+        output_path = os.path.join(UPLOAD_DIR, output_filename)
+        result_path = await asyncio.to_thread(pitch_shift_audio, input_path, steps, output_path)
+        return FileResponse(
+            result_path,
+            media_type="audio/wav",
+            filename=os.path.basename(result_path)
+        )
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
+    finally:
+        if os.path.exists(input_path):
+            os.remove(input_path)
+
+            
 @app.post("/analyze")
 async def analyze(file: UploadFile = File(...)):
     file_id = str(uuid4())
