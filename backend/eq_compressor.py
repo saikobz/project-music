@@ -8,7 +8,7 @@ from pydub import AudioSegment
 
 def apply_eq(waveform: torch.Tensor, sample_rate: int, target: str) -> torch.Tensor:
     """
-    ปรับ EQ ตามประเภท track (ชื่อไฟล์) เช่น vocals, drums, ...
+    ปรับ EQ ตามประเภทเช่น vocals, drums, ...
     """
     if target == "vocals":
         waveform = equalizer_biquad(waveform, sample_rate, center_freq=1500, gain=6.0, Q=1.0)
