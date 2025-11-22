@@ -206,7 +206,7 @@ function UploadBox() {
                 </a>
             )}
 
-            {/* 🎧 แสดง player ถ้าเป็น .wav เดี่ยว */}
+            {/*แสดง player*/}
             {downloadUrl && downloadFileName && !downloadFileName.endsWith('.zip') && (
                 <>
                     <a

@@ -6,7 +6,7 @@ const stems = ["vocals", "drums", "bass", "other"] as const;
 type StemType = typeof stems[number];
 
 type Props = {
-    baseUrl: string; // ex: http://localhost:8000/separated/<fileId>
+    baseUrl: string;
 };
 
 export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {

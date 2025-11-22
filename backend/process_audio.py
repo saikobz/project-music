@@ -15,7 +15,7 @@ def separate_audio(input_path: str, output_dir: str = "separated") -> str:
 
     ext = os.path.splitext(input_path)[-1].lower()
     if ext != ".wav":
-        raise ValueError("Only .wav files are supported.")
+        raise ValueError("รองรับแค่ไฟล์ .wav เท่านั้น")
 
     try:
         # โหลดไฟล์เสียง
@@ -29,14 +29,14 @@ def separate_audio(input_path: str, output_dir: str = "separated") -> str:
             device=str(DEVICE)
         )
 
-        # บันทึกไฟล์ที่แยกได้ (ไม่มี EQ)
+        # บันทึกไฟล์ที่แยกได้
         for target, waveform in estimates.items():
             if waveform.ndim == 3:
                 waveform = waveform.squeeze(0)
 
             torchaudio.save(
                 os.path.join(output_dir, f"{target}.wav"),
-                waveform.cpu(),  # สำคัญมาก: ต้อง .cpu() ก่อน save
+                waveform.cpu(),  
                 sample_rate=rate
             )
 

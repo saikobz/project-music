@@ -21,7 +21,7 @@ const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl }) => {
         waveSurferRef.current = WaveSurfer.create({
             container: containerRef.current,
             waveColor: "#ddd",
-            progressColor: "#facc15", // amber-400
+            progressColor: "#facc15",
             height: 80,
         });
 

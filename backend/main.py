@@ -19,7 +19,7 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # หรือ ["*"] ถ้าทดสอบ local
+    allow_origins=["http://localhost:3000"],#frontend
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -184,4 +184,4 @@ async def process_audio(file: UploadFile = File(...)):
         await asyncio.sleep(2)
         results.append(step)
 
-    return JSONResponse(content={"steps": results})
+#     return JSONResponse(content={"steps": results})
