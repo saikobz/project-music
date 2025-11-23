@@ -1,16 +1,17 @@
-from fastapi import FastAPI, UploadFile, File
-from fastapi.responses import FileResponse, JSONResponse
 import os
-from uuid import uuid4
 import asyncio
-from fastapi.middleware.cors import CORSMiddleware
-import zipfile
 import shutil
 import threading
+import zipfile
+from uuid import uuid4
+from typing import Tuple
+
+from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse
 
 from backend.process_audio import separate_audio, analyze_audio, pitch_shift_audio
-from backend.eq_compressor import apply_eq_to_file
-from backend.eq_compressor import apply_compression
+from backend.eq_compressor import apply_eq_to_file, apply_compression
 
 
 app = FastAPI()
@@ -18,26 +19,47 @@ app = FastAPI()
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-# อ่าน allow_origins จาก env (คั่นด้วย comma) ถ้าไม่ตั้งค่าจะใช้ localhost:3000
 allow_origins_env = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000")
 allow_origins = [origin.strip() for origin in allow_origins_env.split(",") if origin.strip()]
-cleanup_ttl = int(os.getenv("SEPARATE_TTL_SECONDS", "21600"))  # ค่าเริ่มต้น 6 ชั่วโมง
+cleanup_ttl = int(os.getenv("SEPARATE_TTL_SECONDS", "21600"))  # 6 hours by default
+MAX_UPLOAD_BYTES = 50 * 1024 * 1024  # 50MB
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allow_origins,  # รายการ origin ที่อนุญาต
+    allow_origins=allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 @app.get("/health")
 async def health():
     return {"status": "ok"}
 
 
+async def save_upload(file: UploadFile, upload_dir: str = UPLOAD_DIR) -> Tuple[str, str]:
+    """Validate and save upload. Returns (file_id, path)."""
+    filename = file.filename or ""
+    _, ext = os.path.splitext(filename)
+    if ext.lower() != ".wav":
+        raise HTTPException(status_code=400, detail="รองรับเฉพาะไฟล์ .wav")
+
+    data = await file.read()
+    if len(data) > MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=400, detail="ขนาดไฟล์เกิน 50MB")
+
+    file_id = str(uuid4())
+    stored_name = f"{file_id}_{filename}"
+    input_path = os.path.join(upload_dir, stored_name)
+    with open(input_path, "wb") as f:
+        f.write(data)
+    return file_id, input_path
+
+
 def schedule_cleanup(path: str, delay: int = 0):
-    """ตั้งเวลาลบไฟล์/โฟลเดอร์เพื่อกันดิสก์เต็ม"""
+    """Schedule cleanup to prevent disk bloat."""
+
     def _cleanup():
         try:
             if os.path.isdir(path):
@@ -54,23 +76,15 @@ def schedule_cleanup(path: str, delay: int = 0):
 
 @app.post("/separate")
 async def separate(file: UploadFile = File(...)):
-    file_id = str(uuid4())
-    filename = f"{file_id}_{file.filename}"
-    input_path = os.path.join(UPLOAD_DIR, filename)
-
-    with open(input_path, "wb") as f:
-        f.write(await file.read())
-
     try:
-        # 1. ��?�����?��?����������΅�"��>��"�����%��-����^ separated/{file_id}/
+        file_id, input_path = await save_upload(file)
+
         output_dir = os.path.join("separated", file_id)
         os.makedirs(output_dir, exist_ok=True)
-        await asyncio.to_thread(separate_audio, input_path, output_dir)  # �o. �����S��% path ��?�����?�������� file_id
+        await asyncio.to_thread(separate_audio, input_path, output_dir)
 
-        # 2. ��������%������ zip
         zip_filename = f"{file_id}_separated.zip"
         zip_path = os.path.join(UPLOAD_DIR, zip_filename)
-
         with zipfile.ZipFile(zip_path, "w") as zipf:
             for root, _, files in os.walk(output_dir):
                 for name in files:
@@ -78,7 +92,6 @@ async def separate(file: UploadFile = File(...)):
                     arcname = os.path.relpath(file_path, output_dir)
                     zipf.write(file_path, arcname)
 
-        # ล้างไฟล์อัปโหลดทันที และตั้งเวลาลบ zip/stems ภายหลัง
         if os.path.exists(input_path):
             os.remove(input_path)
         schedule_cleanup(zip_path, cleanup_ttl)
@@ -92,6 +105,8 @@ async def separate(file: UploadFile = File(...)):
             }
         )
 
+    except HTTPException as http_exc:
+        raise http_exc
     except Exception as e:
         return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
 
@@ -108,7 +123,7 @@ async def download_zip(file_id: str):
             filename="separated.zip",
         )
     else:
-        return JSONResponse(status_code=404, content={"status": "error", "message": "��\"�����^��z��s��\"��Y�����O zip"})
+        return JSONResponse(status_code=404, content={"status": "error", "message": "ไม่พบไฟล์ zip"})
 
 
 @app.get("/separated/{file_id}/{stem}.wav")
@@ -120,65 +135,51 @@ async def get_stem(file_id: str, stem: str):
     if os.path.exists(path):
         return FileResponse(path, media_type="audio/wav")
     else:
-        return JSONResponse(status_code=404, content={"status": "error", "message": f"��\"�����^��z��s��\"��Y�����O {stem}.wav"})
+        return JSONResponse(status_code=404, content={"status": "error", "message": f"ไม่พบไฟล์ {stem}.wav"})
 
 
 @app.post("/apply-eq")
 async def apply_eq(file: UploadFile = File(...), target: str = "vocals"):
-    file_id = str(uuid4())
-    filename = f"{file_id}_{file.filename}"
-    input_path = os.path.join(UPLOAD_DIR, filename)
-
-    with open(input_path, "wb") as f:
-        f.write(await file.read())
-
     try:
+        _, input_path = await save_upload(file)
         output_path = await asyncio.to_thread(apply_eq_to_file, input_path, target)
         return FileResponse(
             output_path,
             media_type="audio/wav",
             filename=os.path.basename(output_path),
         )
+    except HTTPException as http_exc:
+        raise http_exc
     except Exception as e:
         return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
     finally:
-        if os.path.exists(input_path):
+        if "input_path" in locals() and os.path.exists(input_path):
             os.remove(input_path)
 
 
 @app.post("/apply-compressor")
 async def apply_compressor(file: UploadFile = File(...), strength: str = "medium"):
-    file_id = str(uuid4())
-    filename = f"{file_id}_{file.filename}"
-    input_path = os.path.join(UPLOAD_DIR, filename)
-
-    with open(input_path, "wb") as f:
-        f.write(await file.read())
-
     try:
+        _, input_path = await save_upload(file)
         output_path = await asyncio.to_thread(apply_compression, input_path, strength)
         return FileResponse(
             output_path,
             media_type="audio/wav",
             filename=os.path.basename(output_path),
         )
+    except HTTPException as http_exc:
+        raise http_exc
     except Exception as e:
         return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
     finally:
-        if os.path.exists(input_path):
+        if "input_path" in locals() and os.path.exists(input_path):
             os.remove(input_path)
 
 
 @app.post("/pitch-shift")
 async def pitch_shift(file: UploadFile = File(...), steps: float = 0):
-    file_id = str(uuid4())
-    filename = f"{file_id}_{file.filename}"
-    input_path = os.path.join(UPLOAD_DIR, filename)
-
-    with open(input_path, "wb") as f:
-        f.write(await file.read())
-
     try:
+        file_id, input_path = await save_upload(file)
         output_filename = f"{file_id}_pitch.wav"
         output_path = os.path.join(UPLOAD_DIR, output_filename)
         result_path = await asyncio.to_thread(pitch_shift_audio, input_path, steps, output_path)
@@ -187,27 +188,25 @@ async def pitch_shift(file: UploadFile = File(...), steps: float = 0):
             media_type="audio/wav",
             filename=os.path.basename(result_path),
         )
+    except HTTPException as http_exc:
+        raise http_exc
     except Exception as e:
         return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
     finally:
-        if os.path.exists(input_path):
+        if "input_path" in locals() and os.path.exists(input_path):
             os.remove(input_path)
 
 
 @app.post("/analyze")
 async def analyze(file: UploadFile = File(...)):
-    file_id = str(uuid4())
-    filename = f"{file_id}_{file.filename}"
-    input_path = os.path.join(UPLOAD_DIR, filename)
-
-    with open(input_path, "wb") as f:
-        f.write(await file.read())
-
     try:
+        _, input_path = await save_upload(file)
         result = await asyncio.to_thread(analyze_audio, input_path)
         return JSONResponse(content=result)
+    except HTTPException as http_exc:
+        raise http_exc
     except Exception as e:
         return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
     finally:
-        if os.path.exists(input_path):
+        if "input_path" in locals() and os.path.exists(input_path):
             os.remove(input_path)
