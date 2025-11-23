@@ -109,6 +109,9 @@ async def apply_eq(file: UploadFile = File(...), target: str = "vocals"):
         )
     except Exception as e:
         return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
+    finally:
+        if os.path.exists(input_path):
+            os.remove(input_path)
 
 
 @app.post("/apply-compressor")
@@ -129,6 +132,9 @@ async def apply_compressor(file: UploadFile = File(...), strength: str = "medium
         )
     except Exception as e:
         return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
+    finally:
+        if os.path.exists(input_path):
+            os.remove(input_path)
 
 
 @app.post("/pitch-shift")
