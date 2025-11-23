@@ -11,20 +11,23 @@ interface AnalysisProps {
 
 const AudioAnalysis: React.FC<AnalysisProps> = ({ data }) => {
     return (
-        <div className="mt-4 p-4 bg-purple-700 rounded-lg text-white">
-            <h3 className="font-semibold mb-2">🔍 Audio Analysis</h3>
-            <div className="grid grid-cols-3 gap-2 text-center">
-                <div>
-                    <p className="text-sm">Tempo</p>
-                    <p className="text-lg">{Math.round(data.tempo)} BPM</p>
+        <div className="rounded-2xl border border-[#5B21B6]/40 bg-gradient-to-br from-[#111827] via-[#1F1B34] to-[#312E81] p-5 shadow-[0_20px_40px_rgba(17,24,39,0.45)]">
+            <div className="flex items-center gap-2 text-[#EDE9FE]">
+                <span className="text-lg">🔎</span>
+                <h3 className="text-lg font-semibold">Audio Analysis</h3>
+            </div>
+            <div className="mt-3 grid grid-cols-3 gap-4 text-center text-[#EDE9FE]">
+                <div className="rounded-xl bg-[#5B21B6]/20 p-3 border border-[#5B21B6]/30">
+                    <p className="text-xs uppercase tracking-wide text-[#A78BFA]">Tempo</p>
+                    <p className="text-xl font-semibold">{Math.round(data.tempo)} BPM</p>
                 </div>
-                <div>
-                    <p className="text-sm">Key</p>
-                    <p className="text-lg">{data.key}</p>
+                <div className="rounded-xl bg-[#5B21B6]/20 p-3 border border-[#5B21B6]/30">
+                    <p className="text-xs uppercase tracking-wide text-[#A78BFA]">Key</p>
+                    <p className="text-xl font-semibold">{data.key}</p>
                 </div>
-                <div>
-                    <p className="text-sm">Pitch</p>
-                    <p className="text-lg">{data.pitch || '-'}</p>
+                <div className="rounded-xl bg-[#5B21B6]/20 p-3 border border-[#5B21B6]/30">
+                    <p className="text-xs uppercase tracking-wide text-[#A78BFA]">Pitch</p>
+                    <p className="text-xl font-semibold">{data.pitch || "-"}</p>
                 </div>
             </div>
         </div>

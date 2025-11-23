@@ -101,7 +101,7 @@ def pitch_shift_audio(input_path: str, steps: float, output_path: str) -> str:
     """Shift the pitch of an audio file by a number of half-steps."""
     try:
         y, sr = librosa.load(input_path, sr=None)
-        shifted = librosa.effects.pitch_shift(y, sr, n_steps=steps)
+        shifted = librosa.effects.pitch_shift(y, sr=sr, n_steps=steps)
         sf.write(output_path, shifted, sr)
         return output_path
     except Exception as e:

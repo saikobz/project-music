@@ -182,6 +182,7 @@ async def pitch_shift(file: UploadFile = File(...), steps: float = 0):
         file_id, input_path = await save_upload(file)
         output_filename = f"{file_id}_pitch.wav"
         output_path = os.path.join(UPLOAD_DIR, output_filename)
+        # pitch_shift_audio รับ (input_path, steps, output_path)
         result_path = await asyncio.to_thread(pitch_shift_audio, input_path, steps, output_path)
         return FileResponse(
             result_path,
