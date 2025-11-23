@@ -17,9 +17,13 @@ app = FastAPI()
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+# อ่าน allow_origins จาก env (คั่นด้วย comma) ถ้าไม่ตั้งค่าจะใช้ localhost:3000
+allow_origins_env = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000")
+allow_origins = [origin.strip() for origin in allow_origins_env.split(",") if origin.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # ฝั่ง frontend
+    allow_origins=allow_origins,  # รายการ origin ที่อนุญาต
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
