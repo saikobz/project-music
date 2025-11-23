@@ -6,6 +6,7 @@ import asyncio
 from fastapi.middleware.cors import CORSMiddleware
 import zipfile
 import shutil
+import threading
 
 from backend.process_audio import separate_audio, analyze_audio, pitch_shift_audio
 from backend.eq_compressor import apply_eq_to_file
@@ -20,6 +21,7 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 # อ่าน allow_origins จาก env (คั่นด้วย comma) ถ้าไม่ตั้งค่าจะใช้ localhost:3000
 allow_origins_env = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000")
 allow_origins = [origin.strip() for origin in allow_origins_env.split(",") if origin.strip()]
+cleanup_ttl = int(os.getenv("SEPARATE_TTL_SECONDS", "21600"))  # ค่าเริ่มต้น 6 ชั่วโมง
 
 app.add_middleware(
     CORSMiddleware,
@@ -32,6 +34,22 @@ app.add_middleware(
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+
+def schedule_cleanup(path: str, delay: int = 0):
+    """ตั้งเวลาลบไฟล์/โฟลเดอร์เพื่อกันดิสก์เต็ม"""
+    def _cleanup():
+        try:
+            if os.path.isdir(path):
+                shutil.rmtree(path, ignore_errors=True)
+            elif os.path.exists(path):
+                os.remove(path)
+        except Exception as exc:
+            print(f"cleanup failed for {path}: {exc}")
+
+    timer = threading.Timer(delay, _cleanup)
+    timer.daemon = True
+    timer.start()
 
 
 @app.post("/separate")
@@ -59,6 +77,12 @@ async def separate(file: UploadFile = File(...)):
                     file_path = os.path.join(root, name)
                     arcname = os.path.relpath(file_path, output_dir)
                     zipf.write(file_path, arcname)
+
+        # ล้างไฟล์อัปโหลดทันที และตั้งเวลาลบ zip/stems ภายหลัง
+        if os.path.exists(input_path):
+            os.remove(input_path)
+        schedule_cleanup(zip_path, cleanup_ttl)
+        schedule_cleanup(output_dir, cleanup_ttl)
 
         return JSONResponse(
             content={
