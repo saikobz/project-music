@@ -1,6 +1,5 @@
-// frontend/components/WaveformPlayer.tsx
 "use client";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import WaveSurfer from "wavesurfer.js";
 
 interface WaveformPlayerProps {
@@ -10,6 +9,8 @@ interface WaveformPlayerProps {
 const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl }) => {
     const containerRef = useRef<HTMLDivElement | null>(null);
     const waveSurferRef = useRef<WaveSurfer | null>(null);
+    const isDraggingRef = useRef(false);
+    const [isPlaying, setIsPlaying] = useState(false);
 
     useEffect(() => {
         if (!containerRef.current) return;
@@ -20,27 +21,81 @@ const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl }) => {
 
         waveSurferRef.current = WaveSurfer.create({
             container: containerRef.current,
-            waveColor: "#ddd",
-            progressColor: "#facc15",
-            height: 80,
+            waveColor: "#C7D2FE",
+            progressColor: "#5B21B6",
+            cursorColor: "#22D3EE",
+            height: 140,
+            barGap: 2,
+            barWidth: 2,
+            responsive: true,
         });
 
         waveSurferRef.current.load(audioUrl);
+        waveSurferRef.current.on("finish", () => setIsPlaying(false));
 
         return () => waveSurferRef.current?.destroy();
     }, [audioUrl]);
 
+    const seekToPointer = (clientX: number) => {
+        if (!waveSurferRef.current || !containerRef.current) return;
+        const rect = containerRef.current.getBoundingClientRect();
+        const progress = Math.min(Math.max((clientX - rect.left) / rect.width, 0), 1);
+        waveSurferRef.current.seekTo(progress);
+    };
+
+    const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+        isDraggingRef.current = true;
+        seekToPointer(event.clientX);
+    };
+
+    const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+        if (!isDraggingRef.current) return;
+        seekToPointer(event.clientX);
+    };
+
+    const handlePointerUp = () => {
+        isDraggingRef.current = false;
+    };
+
+    const togglePlay = () => {
+        waveSurferRef.current?.playPause();
+        setIsPlaying((prev) => !prev);
+    };
+
+    const stopPlayback = () => {
+        waveSurferRef.current?.stop();
+        setIsPlaying(false);
+    };
+
     return (
-        <div className="mt-4 space-y-2">
-            <div ref={containerRef} />
-            <div className="text-center">
+        <div className="space-y-3 rounded-2xl border border-[#7C3AED]/30 bg-[#1C162C] p-4 backdrop-blur">
+            <div className="flex items-center justify-between text-sm font-semibold text-[#EDE9FE]">
+                <span>เล่นตัวอย่าง (WAV)</span>
+                <span className="text-[#A78BFA]">{isPlaying ? "กำลังเล่น" : "หยุด"}</span>
+            </div>
+            <div
+                ref={containerRef}
+                className="rounded-xl bg-[#0F0B1D] cursor-pointer"
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                onPointerLeave={handlePointerUp}
+            />
+            <div className="flex items-center gap-3 justify-center">
                 <button
-                    onClick={() => waveSurferRef.current?.playPause()}
-                    className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-1 px-4 rounded-lg cursor-pointer"
+                    onClick={togglePlay}
+                    className="rounded-lg bg-[#7C3AED] px-4 py-2 font-semibold text-white hover:bg-[#A78BFA] cursor-pointer"
                 >
-                    ▶️ เล่น / ⏸️ หยุด
+                    {isPlaying ? "พัก / หยุดชั่วคราว" : "เล่น"}
+                </button>
+                <button
+                    onClick={stopPlayback}
+                    className="rounded-lg bg-[#F472B6] px-4 py-2 font-semibold text-white hover:bg-[#A78BFA] cursor-pointer"
+                >
+                    หยุด
                 </button>
             </div>
+            <p className="text-center text-xs text-[#EDE9FE]/70">คลิกค้างแล้วลากเพื่อเลื่อนตำแหน่งบน waveform</p>
         </div>
     );
 };
