@@ -1,9 +1,8 @@
 # backend/process_audio.py
 
 import os
-from openunmix.predict import separate
-import torchaudio
 import torch
+import torchaudio
 import numpy as np
 import librosa
 import soundfile as sf
@@ -11,6 +10,12 @@ import soundfile as sf
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def separate_audio(input_path: str, output_dir: str = "separated") -> str:
+    try:
+        from openunmix.predict import separate
+    except ImportError as exc:
+        # แจ้งให้ติดตั้ง openunmix ถ้าไม่พร้อมใช้งาน
+        raise RuntimeError("กรุณาติดตั้ง openunmix ก่อนใช้งานการแยกสเต็ม: pip install openunmix") from exc
+
     os.makedirs(output_dir, exist_ok=True)
 
     ext = os.path.splitext(input_path)[-1].lower()
