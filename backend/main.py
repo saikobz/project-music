@@ -19,11 +19,12 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],#frontend
+    allow_origins=["http://localhost:3000"],  # ฝั่ง frontend
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 @app.post("/separate")
 async def separate(file: UploadFile = File(...)):
@@ -35,12 +36,12 @@ async def separate(file: UploadFile = File(...)):
         f.write(await file.read())
 
     try:
-        # 1. แยกเสียงไปไว้ที่ separated/{file_id}/
+        # 1. ��?�����?��?����������΅�"��>��"�����%��-����^ separated/{file_id}/
         output_dir = os.path.join("separated", file_id)
         os.makedirs(output_dir, exist_ok=True)
-        await asyncio.to_thread(separate_audio, input_path, output_dir)  # ✅ ใช้ path แยกตาม file_id
+        await asyncio.to_thread(separate_audio, input_path, output_dir)  # �o. �����S��% path ��?�����?�������� file_id
 
-        # 2. สร้าง zip
+        # 2. ��������%������ zip
         zip_filename = f"{file_id}_separated.zip"
         zip_path = os.path.join(UPLOAD_DIR, zip_filename)
 
@@ -51,11 +52,13 @@ async def separate(file: UploadFile = File(...)):
                     arcname = os.path.relpath(file_path, output_dir)
                     zipf.write(file_path, arcname)
 
-        return JSONResponse(content={
-            "status": "success",
-            "file_id": file_id,
-            "zip_url": f"http://localhost:8000/download/{file_id}"
-        })
+        return JSONResponse(
+            content={
+                "status": "success",
+                "file_id": file_id,
+                "zip_url": f"http://localhost:8000/download/{file_id}",
+            }
+        )
 
     except Exception as e:
         return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
@@ -70,10 +73,10 @@ async def download_zip(file_id: str):
         return FileResponse(
             zip_path,
             media_type="application/zip",
-            filename="separated.zip"
+            filename="separated.zip",
         )
     else:
-        return JSONResponse(status_code=404, content={"status": "error", "message": "ไม่พบไฟล์ zip"})
+        return JSONResponse(status_code=404, content={"status": "error", "message": "��\"�����^��z��s��\"��Y�����O zip"})
 
 
 @app.get("/separated/{file_id}/{stem}.wav")
@@ -85,7 +88,7 @@ async def get_stem(file_id: str, stem: str):
     if os.path.exists(path):
         return FileResponse(path, media_type="audio/wav")
     else:
-        return JSONResponse(status_code=404, content={"status": "error", "message": f"ไม่พบไฟล์ {stem}.wav"})
+        return JSONResponse(status_code=404, content={"status": "error", "message": f"��\"�����^��z��s��\"��Y�����O {stem}.wav"})
 
 
 @app.post("/apply-eq")
@@ -98,14 +101,15 @@ async def apply_eq(file: UploadFile = File(...), target: str = "vocals"):
         f.write(await file.read())
 
     try:
-        output_path = await asyncio.to_thread(apply_eq_to_file, input_path, target) 
+        output_path = await asyncio.to_thread(apply_eq_to_file, input_path, target)
         return FileResponse(
             output_path,
             media_type="audio/wav",
-            filename=os.path.basename(output_path)
+            filename=os.path.basename(output_path),
         )
     except Exception as e:
         return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
+
 
 @app.post("/apply-compressor")
 async def apply_compressor(file: UploadFile = File(...), strength: str = "medium"):
@@ -121,7 +125,7 @@ async def apply_compressor(file: UploadFile = File(...), strength: str = "medium
         return FileResponse(
             output_path,
             media_type="audio/wav",
-            filename=os.path.basename(output_path)
+            filename=os.path.basename(output_path),
         )
     except Exception as e:
         return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
@@ -143,7 +147,7 @@ async def pitch_shift(file: UploadFile = File(...), steps: float = 0):
         return FileResponse(
             result_path,
             media_type="audio/wav",
-            filename=os.path.basename(result_path)
+            filename=os.path.basename(result_path),
         )
     except Exception as e:
         return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
@@ -151,7 +155,7 @@ async def pitch_shift(file: UploadFile = File(...), steps: float = 0):
         if os.path.exists(input_path):
             os.remove(input_path)
 
-            
+
 @app.post("/analyze")
 async def analyze(file: UploadFile = File(...)):
     file_id = str(uuid4())
@@ -169,19 +173,3 @@ async def analyze(file: UploadFile = File(...)):
     finally:
         if os.path.exists(input_path):
             os.remove(input_path)
-
-@app.post("/process-audio")
-async def process_audio(file: UploadFile = File(...)):
-    steps = [
-        {"message": "📤 กำลังอัปโหลดไฟล์...", "progress": 10},
-        {"message": "🎧 กำลังแยกเสียงร้องและดนตรี...", "progress": 40},
-        {"message": "🎚️ ปรับ EQ และใส่ Compressor...", "progress": 75},
-        {"message": "💾 บันทึกไฟล์และ metadata...", "progress": 100}
-    ]
-
-    results = []
-    for step in steps:
-        await asyncio.sleep(2)
-        results.append(step)
-
-#     return JSONResponse(content={"steps": results})
