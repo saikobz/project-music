@@ -6,7 +6,7 @@ import MultiStemLivePlayer from "./MultiStemLivePlayer";
 import AudioAnalysis from "./AudioAnalysis";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
-const MAX_SIZE_BYTES = 50 * 1024 * 1024; // 50MB
+const MAX_SIZE_BYTES = 100 * 1024 * 1024; // 100MB
 
 function UploadBox() {
     const [file, setFile] = useState<File | null>(null);

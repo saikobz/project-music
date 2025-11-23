@@ -22,7 +22,7 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 allow_origins_env = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000")
 allow_origins = [origin.strip() for origin in allow_origins_env.split(",") if origin.strip()]
 cleanup_ttl = int(os.getenv("SEPARATE_TTL_SECONDS", "21600"))  # 6 hours by default
-MAX_UPLOAD_BYTES = 50 * 1024 * 1024  # 50MB
+MAX_UPLOAD_BYTES = 100 * 1024 * 1024  # 100MB
 
 app.add_middleware(
     CORSMiddleware,
