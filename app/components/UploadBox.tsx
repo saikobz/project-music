@@ -5,6 +5,8 @@ import WaveformPlayer from "./WaveformPlayer";
 import MultiStemLivePlayer from "./MultiStemLivePlayer";
 import AudioAnalysis from "./AudioAnalysis";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+
 function UploadBox() {
     const [file, setFile] = useState<File | null>(null);
     const [action, setAction] = useState("separate");
@@ -20,6 +22,7 @@ function UploadBox() {
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [analysis, setAnalysis] = useState<{ tempo: number; key: string; pitch: string | null } | null>(null);
+    const [statusText, setStatusText] = useState<string | null>(null);
 
     const handleUpload = async () => {
         if (!file) {
@@ -36,6 +39,7 @@ function UploadBox() {
         setErrorMessage(null);
         setSuccessMessage(null);
         setAnalysis(null);
+        setStatusText("กำลังประมวลผล...");
 
         const formData = new FormData();
         formData.append("file", file);
@@ -47,41 +51,45 @@ function UploadBox() {
             let suffix = "";
 
             if (action === "separate") {
-                response = await axios.post("http://localhost:8000/separate", formData);
+                response = await axios.post(`${API_BASE}/separate`, formData);
                 const { file_id, zip_url } = response.data;
                 setFileId(file_id);
                 setZipUrl(zip_url);
                 setSuccessMessage("แยกสเต็มสำเร็จ พร้อมให้ดาวน์โหลด");
+                setStatusText("แยกสเต็มเสร็จสิ้น");
             }
 
             if (action === "eq") {
-                response = await axios.post(`http://localhost:8000/apply-eq?target=${target}`, formData, {
+                response = await axios.post(`${API_BASE}/apply-eq?target=${target}`, formData, {
                     responseType: "blob",
                 });
                 const url = window.URL.createObjectURL(new Blob([response.data]));
                 setDownloadUrl(url);
                 suffix = `_eq_${target}`;
                 setSuccessMessage("ปรับ EQ สำเร็จ พร้อมให้ดาวน์โหลด");
+                setStatusText("ปรับ EQ เสร็จสิ้น");
             }
 
             if (action === "compressor") {
-                response = await axios.post(`http://localhost:8000/apply-compressor?strength=${strength}`, formData, {
+                response = await axios.post(`${API_BASE}/apply-compressor?strength=${strength}`, formData, {
                     responseType: "blob",
                 });
                 const url = window.URL.createObjectURL(new Blob([response.data]));
                 setDownloadUrl(url);
                 suffix = `_compressed_${strength}`;
                 setSuccessMessage("ปรับ Compressor สำเร็จ พร้อมให้ดาวน์โหลด");
+                setStatusText("ปรับ Compressor เสร็จสิ้น");
             }
 
             if (action === "pitch") {
-                response = await axios.post(`http://localhost:8000/pitch-shift?steps=${pitchSteps}`, formData, {
+                response = await axios.post(`${API_BASE}/pitch-shift?steps=${pitchSteps}`, formData, {
                     responseType: "blob",
                 });
                 const url = window.URL.createObjectURL(new Blob([response.data]));
                 setDownloadUrl(url);
                 suffix = `_pitch_${pitchSteps}`;
                 setSuccessMessage("ปรับ Pitch สำเร็จ พร้อมให้ดาวน์โหลด");
+                setStatusText("ปรับ Pitch เสร็จสิ้น");
             }
 
             if (file && suffix) {
@@ -92,7 +100,7 @@ function UploadBox() {
             const analyzeData = new FormData();
             analyzeData.append("file", file);
             try {
-                const analyzeResp = await axios.post("http://localhost:8000/analyze", analyzeData);
+                const analyzeResp = await axios.post(`${API_BASE}/analyze`, analyzeData);
                 setAnalysis(analyzeResp.data);
             } catch (err) {
                 console.error("Analyze error", err);
@@ -116,125 +124,167 @@ function UploadBox() {
                 }
             }
             setErrorMessage(message);
+            setStatusText(null);
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="p-6 bg-purple-600 text-white rounded-xl shadow-xl max-w-xl mx-auto mt-8 space-y-4">
-            <h2 className="text-center text-2xl font-bold">อัปโหลดไฟล์เพื่อประมวลผลเสียง</h2>
+        <div className="grid gap-6 md:grid-cols-2 p-6">
+            <div className="space-y-4">
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
+                    <p className="text-sm text-cyan-100">ขั้นตอนที่ 1</p>
+                    <h2 className="text-2xl font-bold">อัปโหลดไฟล์ WAV</h2>
+                    <p className="text-sm text-slate-200">ลากวางหรือเลือกไฟล์ WAV (สเตอริโอ)</p>
 
-            <input
-                type="file"
-                accept="audio/wav"
-                onChange={(e) => setFile(e.target.files?.[0] || null)}
-                className="text-black w-full p-2 bg-amber-50 rounded-lg"
-            />
+                    <label className="mt-3 flex h-28 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-cyan-400 bg-cyan-500/10 text-center text-cyan-100 hover:border-cyan-200 hover:bg-cyan-500/15 transition">
+                        <input
+                            type="file"
+                            accept="audio/wav"
+                            className="hidden"
+                            onChange={(e) => setFile(e.target.files?.[0] || null)}
+                        />
+                        {file ? (
+                            <span className="font-semibold">{file.name}</span>
+                        ) : (
+                            <span>ลากไฟล์มาวางที่นี่ หรือคลิกเพื่อเลือก</span>
+                        )}
+                    </label>
+                </div>
 
-            <div>
-                <label className="block mt-2">เลือกงานประมวลผล:</label>
-                <select value={action} onChange={(e) => setAction(e.target.value)} className="w-full text-black p-2 bg-amber-50 rounded-lg">
-                    <option value="separate">แยกสเต็ม (AI Stem)</option>
-                    <option value="eq">ปรับ EQ</option>
-                    <option value="compressor">ปรับ Compressor</option>
-                    <option value="pitch">ปรับ Pitch</option>
-                </select>
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur space-y-3">
+                    <p className="text-sm text-cyan-100">ขั้นตอนที่ 2</p>
+                    <h3 className="text-xl font-semibold">เลือกงานประมวลผล</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                        {[
+                            { value: "separate", label: "แยกสเต็ม" },
+                            { value: "eq", label: "ปรับ EQ" },
+                            { value: "compressor", label: "Compressor" },
+                            { value: "pitch", label: "ปรับ Pitch" },
+                        ].map((item) => (
+                            <button
+                                key={item.value}
+                                onClick={() => setAction(item.value)}
+                                className={`rounded-lg px-3 py-2 text-sm font-semibold border ${
+                                    action === item.value ? "bg-cyan-500 text-white border-cyan-400" : "bg-white/10 border-white/20 text-slate-100"
+                                }`}
+                                disabled={loading}
+                            >
+                                {item.label}
+                            </button>
+                        ))}
+                    </div>
+
+                    {action === "eq" && (
+                        <div>
+                            <label className="block text-sm mb-1">Preset EQ</label>
+                            <select
+                                value={target}
+                                onChange={(e) => setTarget(e.target.value)}
+                                className="w-full rounded-lg bg-slate-800 p-2 text-white"
+                                disabled={loading}
+                            >
+                                <option value="vocals">Vocals</option>
+                                <option value="drums">Drums</option>
+                                <option value="bass">Bass</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    )}
+
+                    {action === "compressor" && (
+                        <div>
+                            <label className="block text-sm mb-1">ความแรง (Strength)</label>
+                            <select
+                                value={strength}
+                                onChange={(e) => setStrength(e.target.value)}
+                                className="w-full rounded-lg bg-slate-800 p-2 text-white"
+                                disabled={loading}
+                            >
+                                <option value="soft">Soft</option>
+                                <option value="medium">Medium</option>
+                                <option value="hard">Hard</option>
+                            </select>
+                        </div>
+                    )}
+
+                    {action === "pitch" && (
+                        <div>
+                            <label className="block text-sm mb-1">ขยับ pitch (half-steps +/-)</label>
+                            <input
+                                type="number"
+                                value={pitchSteps}
+                                onChange={(e) => setPitchSteps(parseFloat(e.target.value))}
+                                className="w-full rounded-lg bg-slate-800 p-2 text-white"
+                                disabled={loading}
+                            />
+                        </div>
+                    )}
+
+                    <button
+                        onClick={handleUpload}
+                        disabled={loading}
+                        className={`w-full rounded-xl py-3 text-lg font-bold transition ${
+                            loading ? "bg-cyan-400/60 cursor-not-allowed" : "bg-cyan-500 hover:bg-cyan-600"
+                        }`}
+                    >
+                        {loading ? "กำลังประมวลผล..." : "เริ่มประมวลผล"}
+                    </button>
+                    {statusText && (
+                        <div className="rounded-lg bg-slate-800/70 border border-white/10 p-2 text-sm text-cyan-100">
+                            {statusText}
+                        </div>
+                    )}
+                    {processingTime && (
+                        <div className="text-sm text-green-200">เวลาในการประมวลผล: {processingTime}</div>
+                    )}
+                    {errorMessage && (
+                        <div className="rounded-lg bg-red-600/70 border border-red-400 p-2 text-sm text-white">
+                            {errorMessage}
+                        </div>
+                    )}
+                    {successMessage && (
+                        <div className="rounded-lg bg-green-600/70 border border-green-400 p-2 text-sm text-white">
+                            {successMessage}
+                        </div>
+                    )}
+                </div>
             </div>
 
-            {action === "eq" && (
-                <div>
-                    <label className="block mt-2">Preset EQ:</label>
-                    <select value={target} onChange={(e) => setTarget(e.target.value)} className="w-full text-black p-2 rounded-lg bg-amber-50">
-                        <option value="vocals">Vocals</option>
-                        <option value="drums">Drums</option>
-                        <option value="bass">Bass</option>
-                        <option value="other">Other</option>
-                    </select>
-                </div>
-            )}
+            <div className="space-y-4">
+                {analysis && <AudioAnalysis data={analysis} />}
 
-            {action === "compressor" && (
-                <div>
-                    <label className="block mt-2">ความแรง (Strength):</label>
-                    <select value={strength} onChange={(e) => setStrength(e.target.value)} className="w-full text-black p-2 rounded-lg bg-amber-50">
-                        <option value="soft">Soft</option>
-                        <option value="medium">Medium</option>
-                        <option value="hard">Hard</option>
-                    </select>
-                </div>
-            )}
+                {fileId && (
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
+                        <h3 className="text-xl font-semibold mb-2">Multi-stem Player</h3>
+                        <MultiStemLivePlayer fileId={fileId} />
+                    </div>
+                )}
 
-            {action === "pitch" && (
-                <div>
-                    <label className="block mt-2">ขยับ pitch (half-steps +/-):</label>
-                    <input
-                        type="number"
-                        value={pitchSteps}
-                        onChange={(e) => setPitchSteps(parseFloat(e.target.value))}
-                        className="w-full text-black p-2 rounded-lg bg-amber-50"
-                    />
-                </div>
-            )}
-
-            <button
-                onClick={handleUpload}
-                disabled={loading}
-                className={`mt-4 w-full text-white font-bold py-2 px-4 rounded-lg cursor-pointer ${
-                    loading ? "bg-green-400 cursor-not-allowed" : "bg-green-500 hover:bg-green-600"
-                }`}
-            >
-                {loading ? "กำลังประมวลผล..." : "เริ่มประมวลผล"}
-            </button>
-
-            {processingTime && (
-                <div className="text-center text-green-300 font-medium mt-2">
-                    เวลาในการประมวลผล: {processingTime}
-                </div>
-            )}
-
-            {errorMessage && (
-                <div className="text-center text-red-300 font-medium mt-2">
-                    {errorMessage}
-                </div>
-            )}
-
-            {successMessage && (
-                <div className="text-center text-green-200 font-medium mt-2">
-                    {successMessage}
-                </div>
-            )}
-
-            {analysis && <AudioAnalysis data={analysis} />}
-
-            {fileId && (
-                <div className="mt-6">
-                    <MultiStemLivePlayer fileId={fileId} />
-                </div>
-            )}
-
-            {zipUrl && (
-                <a
-                    href={zipUrl}
-                    download="separated.zip"
-                    className="mt-4 block w-full text-center bg-yellow-600 hover:bg-yellow-700 text-white font-semibold py-2 px-4 rounded-lg"
-                >
-                    ดาวน์โหลดไฟล์สเต็ม (ZIP)
-                </a>
-            )}
-
-            {downloadUrl && downloadFileName && !downloadFileName.endsWith(".zip") && (
-                <>
+                {zipUrl && (
                     <a
-                        href={downloadUrl}
-                        download={downloadFileName}
-                        className="mt-4 block w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg"
+                        href={zipUrl}
+                        download="separated.zip"
+                        className="block w-full text-center rounded-xl bg-yellow-500 hover:bg-yellow-600 text-black font-semibold py-3"
                     >
-                        ดาวน์โหลดไฟล์ (WAV)
+                        ดาวน์โหลดไฟล์สเต็ม (ZIP)
                     </a>
-                    <WaveformPlayer audioUrl={downloadUrl} />
-                </>
-            )}
+                )}
+
+                {downloadUrl && downloadFileName && !downloadFileName.endsWith(".zip") && (
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur space-y-3">
+                        <a
+                            href={downloadUrl}
+                            download={downloadFileName}
+                            className="block w-full text-center rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3"
+                        >
+                            ดาวน์โหลดไฟล์ (WAV)
+                        </a>
+                        <WaveformPlayer audioUrl={downloadUrl} />
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
