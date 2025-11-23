@@ -6,6 +6,7 @@ import MultiStemLivePlayer from "./MultiStemLivePlayer";
 import AudioAnalysis from "./AudioAnalysis";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+const MAX_SIZE_BYTES = 50 * 1024 * 1024; // 50MB
 
 function UploadBox() {
     const [file, setFile] = useState<File | null>(null);
@@ -24,9 +25,26 @@ function UploadBox() {
     const [analysis, setAnalysis] = useState<{ tempo: number; key: string; pitch: string | null } | null>(null);
     const [statusText, setStatusText] = useState<string | null>(null);
 
+    const handleFileSelect = (selected: File | null) => {
+        setErrorMessage(null);
+        setSuccessMessage(null);
+        setFile(null);
+        if (!selected) return;
+        const ext = selected.name.toLowerCase().split(".").pop();
+        if (ext !== "wav") {
+            setErrorMessage("รองรับเฉพาะไฟล์ .wav");
+            return;
+        }
+        if (selected.size > MAX_SIZE_BYTES) {
+            setErrorMessage("ขนาดไฟล์ต้องไม่เกิน 50MB");
+            return;
+        }
+        setFile(selected);
+    };
+
     const handleUpload = async () => {
         if (!file) {
-            setErrorMessage("โปรดเลือกไฟล์ WAV ก่อนเริ่มประมวลผล");
+            setErrorMessage("โปรดเลือกไฟล์ WAV (ไม่เกิน 50MB) ก่อนเริ่มประมวลผล");
             return;
         }
 
@@ -113,7 +131,9 @@ function UploadBox() {
             setProcessingTime(`${minutes} นาที ${seconds} วินาที`);
         } catch (err: any) {
             let message = "เกิดข้อผิดพลาดระหว่างประมวลผล";
-            if (err.code === "ERR_NETWORK") {
+            if (err?.response?.data?.detail) {
+                message = err.response.data.detail;
+            } else if (err.code === "ERR_NETWORK") {
                 message = "เชื่อมต่อ backend ไม่ได้ (ตรวจสอบเซิร์ฟเวอร์หรือ CORS)";
             } else if (err.response?.status) {
                 const status = err.response.status;
@@ -136,19 +156,19 @@ function UploadBox() {
                 <div className="rounded-2xl border border-[#5B21B6]/30 bg-[#0F172A] p-4 backdrop-blur shadow-inner shadow-purple-900/30">
                     <p className="text-sm text-[#A78BFA]">ขั้นตอนที่ 1</p>
                     <h2 className="text-2xl font-bold">อัปโหลดไฟล์ WAV</h2>
-                    <p className="text-sm text-[#EDE9FE]/80">ลากวางหรือเลือกไฟล์ WAV (สเตอริโอ)</p>
+                    <p className="text-sm text-[#EDE9FE]/80">รองรับเฉพาะ .wav และขนาดไม่เกิน 50MB</p>
 
                     <label className="mt-3 flex h-28 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-[#8B5CF6] bg-[#5B21B6]/20 text-center text-[#EDE9FE] hover:border-[#22D3EE] hover:bg-[#5B21B6]/30 transition">
                         <input
                             type="file"
                             accept="audio/wav"
                             className="hidden"
-                            onChange={(e) => setFile(e.target.files?.[0] || null)}
+                            onChange={(e) => handleFileSelect(e.target.files?.[0] || null)}
                         />
                         {file ? (
                             <span className="font-semibold">{file.name}</span>
                         ) : (
-                            <span>ลากไฟล์มาวางที่นี่ หรือคลิกเพื่อเลือก</span>
+                            <span>ลากไฟล์มาวาง หรือคลิกเพื่อเลือก</span>
                         )}
                     </label>
                 </div>
