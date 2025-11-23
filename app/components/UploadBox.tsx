@@ -131,14 +131,14 @@ function UploadBox() {
     };
 
     return (
-        <div className="grid gap-6 md:grid-cols-2 p-6">
+        <div className="grid gap-6 md:grid-cols-2 p-6 text-[#EDE9FE]">
             <div className="space-y-4">
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
-                    <p className="text-sm text-cyan-100">ขั้นตอนที่ 1</p>
+                <div className="rounded-2xl border border-[#7C3AED]/30 bg-[#1C162C] p-4 backdrop-blur">
+                    <p className="text-sm text-[#A78BFA]">ขั้นตอนที่ 1</p>
                     <h2 className="text-2xl font-bold">อัปโหลดไฟล์ WAV</h2>
-                    <p className="text-sm text-slate-200">ลากวางหรือเลือกไฟล์ WAV (สเตอริโอ)</p>
+                    <p className="text-sm text-[#EDE9FE]/80">ลากวางหรือเลือกไฟล์ WAV (สเตอริโอ)</p>
 
-                    <label className="mt-3 flex h-28 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-cyan-400 bg-cyan-500/10 text-center text-cyan-100 hover:border-cyan-200 hover:bg-cyan-500/15 transition">
+                    <label className="mt-3 flex h-28 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-[#A78BFA] bg-[#7C3AED]/15 text-center text-[#EDE9FE] hover:border-[#F472B6] hover:bg-[#7C3AED]/25 transition">
                         <input
                             type="file"
                             accept="audio/wav"
@@ -153,8 +153,8 @@ function UploadBox() {
                     </label>
                 </div>
 
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur space-y-3">
-                    <p className="text-sm text-cyan-100">ขั้นตอนที่ 2</p>
+                <div className="rounded-2xl border border-[#7C3AED]/30 bg-[#1C162C] p-4 backdrop-blur space-y-3">
+                    <p className="text-sm text-[#A78BFA]">ขั้นตอนที่ 2</p>
                     <h3 className="text-xl font-semibold">เลือกงานประมวลผล</h3>
                     <div className="grid grid-cols-2 gap-2">
                         {[
@@ -166,8 +166,10 @@ function UploadBox() {
                             <button
                                 key={item.value}
                                 onClick={() => setAction(item.value)}
-                                className={`rounded-lg px-3 py-2 text-sm font-semibold border ${
-                                    action === item.value ? "bg-cyan-500 text-white border-cyan-400" : "bg-white/10 border-white/20 text-slate-100"
+                                className={`rounded-lg px-3 py-2 text-sm font-semibold border cursor-pointer transition ${
+                                    action === item.value
+                                        ? "bg-[#7C3AED] text-white border-[#A78BFA]"
+                                        : "bg-[#1C162C] border-[#7C3AED]/40 text-[#EDE9FE]"
                                 }`}
                                 disabled={loading}
                             >
@@ -182,7 +184,7 @@ function UploadBox() {
                             <select
                                 value={target}
                                 onChange={(e) => setTarget(e.target.value)}
-                                className="w-full rounded-lg bg-slate-800 p-2 text-white"
+                                className="w-full rounded-lg bg-[#0F0B1D] border border-[#7C3AED]/40 p-2 text-[#EDE9FE]"
                                 disabled={loading}
                             >
                                 <option value="vocals">Vocals</option>
@@ -199,7 +201,7 @@ function UploadBox() {
                             <select
                                 value={strength}
                                 onChange={(e) => setStrength(e.target.value)}
-                                className="w-full rounded-lg bg-slate-800 p-2 text-white"
+                                className="w-full rounded-lg bg-[#0F0B1D] border border-[#7C3AED]/40 p-2 text-[#EDE9FE]"
                                 disabled={loading}
                             >
                                 <option value="soft">Soft</option>
@@ -216,7 +218,7 @@ function UploadBox() {
                                 type="number"
                                 value={pitchSteps}
                                 onChange={(e) => setPitchSteps(parseFloat(e.target.value))}
-                                className="w-full rounded-lg bg-slate-800 p-2 text-white"
+                                className="w-full rounded-lg bg-[#0F0B1D] border border-[#7C3AED]/40 p-2 text-[#EDE9FE]"
                                 disabled={loading}
                             />
                         </div>
@@ -226,26 +228,26 @@ function UploadBox() {
                         onClick={handleUpload}
                         disabled={loading}
                         className={`w-full rounded-xl py-3 text-lg font-bold transition ${
-                            loading ? "bg-cyan-400/60 cursor-not-allowed" : "bg-cyan-500 hover:bg-cyan-600"
+                            loading ? "bg-[#A78BFA]/60 cursor-not-allowed" : "bg-[#7C3AED] hover:bg-[#A78BFA] cursor-pointer"
                         }`}
                     >
                         {loading ? "กำลังประมวลผล..." : "เริ่มประมวลผล"}
                     </button>
                     {statusText && (
-                        <div className="rounded-lg bg-slate-800/70 border border-white/10 p-2 text-sm text-cyan-100">
+                        <div className="rounded-lg bg-[#0F0B1D]/70 border border-[#7C3AED]/30 p-2 text-sm text-[#A78BFA]">
                             {statusText}
                         </div>
                     )}
                     {processingTime && (
-                        <div className="text-sm text-green-200">เวลาในการประมวลผล: {processingTime}</div>
+                        <div className="text-sm text-[#A78BFA]">เวลาในการประมวลผล: {processingTime}</div>
                     )}
                     {errorMessage && (
-                        <div className="rounded-lg bg-red-600/70 border border-red-400 p-2 text-sm text-white">
+                        <div className="rounded-lg bg-red-700/70 border border-red-400 p-2 text-sm text-white">
                             {errorMessage}
                         </div>
                     )}
                     {successMessage && (
-                        <div className="rounded-lg bg-green-600/70 border border-green-400 p-2 text-sm text-white">
+                        <div className="rounded-lg bg-[#7C3AED]/30 border border-[#A78BFA] p-2 text-sm text-[#EDE9FE]">
                             {successMessage}
                         </div>
                     )}
@@ -256,7 +258,7 @@ function UploadBox() {
                 {analysis && <AudioAnalysis data={analysis} />}
 
                 {fileId && (
-                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
+                    <div className="rounded-2xl border border-[#7C3AED]/30 bg-[#1C162C] p-4 backdrop-blur">
                         <h3 className="text-xl font-semibold mb-2">Multi-stem Player</h3>
                         <MultiStemLivePlayer fileId={fileId} />
                     </div>
@@ -266,18 +268,18 @@ function UploadBox() {
                     <a
                         href={zipUrl}
                         download="separated.zip"
-                        className="block w-full text-center rounded-xl bg-yellow-500 hover:bg-yellow-600 text-black font-semibold py-3"
+                        className="block w-full text-center rounded-xl bg-[#A78BFA] hover:bg-[#7C3AED] text-black font-semibold py-3"
                     >
                         ดาวน์โหลดไฟล์สเต็ม (ZIP)
                     </a>
                 )}
 
                 {downloadUrl && downloadFileName && !downloadFileName.endsWith(".zip") && (
-                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur space-y-3">
+                    <div className="rounded-2xl border border-[#7C3AED]/30 bg-[#1C162C] p-4 backdrop-blur space-y-3">
                         <a
                             href={downloadUrl}
                             download={downloadFileName}
-                            className="block w-full text-center rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3"
+                            className="block w-full text-center rounded-xl bg-[#7C3AED] hover:bg-[#A78BFA] text-white font-semibold py-3"
                         >
                             ดาวน์โหลดไฟล์ (WAV)
                         </a>
