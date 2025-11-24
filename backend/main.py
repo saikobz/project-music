@@ -43,11 +43,11 @@ async def save_upload(file: UploadFile, upload_dir: str = UPLOAD_DIR) -> Tuple[s
     filename = file.filename or ""
     _, ext = os.path.splitext(filename)
     if ext.lower() != ".wav":
-        raise HTTPException(status_code=400, detail="รองรับเฉพาะไฟล์ .wav")
+        raise HTTPException(status_code=400, detail="รองรับเฉพาะไฟล์ WAV (.wav)")
 
     data = await file.read()
     if len(data) > MAX_UPLOAD_BYTES:
-        raise HTTPException(status_code=400, detail="ขนาดไฟล์เกิน 100MB")
+        raise HTTPException(status_code=400, detail="ไฟล์ต้องมีขนาดไม่เกิน 100MB")
 
     file_id = str(uuid4())
     stored_name = f"{file_id}_{filename}"
@@ -122,8 +122,7 @@ async def download_zip(file_id: str):
             media_type="application/zip",
             filename="separated.zip",
         )
-    else:
-        return JSONResponse(status_code=404, content={"status": "error", "message": "ไม่พบไฟล์ zip"})
+    return JSONResponse(status_code=404, content={"status": "error", "message": "ไม่พบไฟล์ zip สำหรับดาวน์โหลด"})
 
 
 @app.get("/separated/{file_id}/{stem}.wav")
@@ -134,8 +133,7 @@ async def get_stem(file_id: str, stem: str):
 
     if os.path.exists(path):
         return FileResponse(path, media_type="audio/wav")
-    else:
-        return JSONResponse(status_code=404, content={"status": "error", "message": f"ไม่พบไฟล์ {stem}.wav"})
+    return JSONResponse(status_code=404, content={"status": "error", "message": f"ไม่พบไฟล์ {stem}.wav"})
 
 
 @app.post("/apply-eq")
@@ -182,7 +180,7 @@ async def pitch_shift(file: UploadFile = File(...), steps: float = 0):
         file_id, input_path = await save_upload(file)
         output_filename = f"{file_id}_pitch.wav"
         output_path = os.path.join(UPLOAD_DIR, output_filename)
-        # pitch_shift_audio รับ (input_path, steps, output_path)
+        # pitch_shift_audio will return the output path
         result_path = await asyncio.to_thread(pitch_shift_audio, input_path, steps, output_path)
         return FileResponse(
             result_path,
