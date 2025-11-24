@@ -6,7 +6,7 @@ import zipfile
 from uuid import uuid4
 from typing import Tuple
 
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 
@@ -137,10 +137,14 @@ async def get_stem(file_id: str, stem: str):
 
 
 @app.post("/apply-eq")
-async def apply_eq(file: UploadFile = File(...), target: str = "vocals"):
+async def apply_eq(
+    file: UploadFile = File(...),
+    target: str = "vocals",
+    genre: str = Query("general", description="แนวเพลง เช่น pop, rock, trap, country, soul"),
+):
     try:
         _, input_path = await save_upload(file)
-        output_path = await asyncio.to_thread(apply_eq_to_file, input_path, target)
+        output_path = await asyncio.to_thread(apply_eq_to_file, input_path, target, genre)
         return FileResponse(
             output_path,
             media_type="audio/wav",
@@ -156,10 +160,14 @@ async def apply_eq(file: UploadFile = File(...), target: str = "vocals"):
 
 
 @app.post("/apply-compressor")
-async def apply_compressor(file: UploadFile = File(...), strength: str = "medium"):
+async def apply_compressor(
+    file: UploadFile = File(...),
+    strength: str = "medium",
+    genre: str = Query("general", description="แนวเพลง เช่น pop, rock, trap, country, soul"),
+):
     try:
         _, input_path = await save_upload(file)
-        output_path = await asyncio.to_thread(apply_compression, input_path, strength)
+        output_path = await asyncio.to_thread(apply_compression, input_path, strength, genre)
         return FileResponse(
             output_path,
             media_type="audio/wav",
