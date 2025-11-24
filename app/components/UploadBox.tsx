@@ -36,7 +36,7 @@ function UploadBox() {
             return;
         }
         if (selected.size > MAX_SIZE_BYTES) {
-            setErrorMessage("ขนาดไฟล์ต้องไม่เกิน 50MB");
+            setErrorMessage("ขนาดไฟล์ต้องไม่เกิน 100MB");
             return;
         }
         setFile(selected);
@@ -44,7 +44,7 @@ function UploadBox() {
 
     const handleUpload = async () => {
         if (!file) {
-            setErrorMessage("โปรดเลือกไฟล์ WAV (ไม่เกิน 50MB) ก่อนเริ่มประมวลผล");
+            setErrorMessage("โปรดเลือกไฟล์ WAV (ไม่เกิน 100MB) ก่อนเริ่มประมวลผล");
             return;
         }
 
@@ -156,7 +156,7 @@ function UploadBox() {
                 <div className="rounded-2xl border border-[#5B21B6]/30 bg-[#0F172A] p-4 backdrop-blur shadow-inner shadow-purple-900/30">
                     <p className="text-sm text-[#A78BFA]">ขั้นตอนที่ 1</p>
                     <h2 className="text-2xl font-bold">อัปโหลดไฟล์ WAV</h2>
-                    <p className="text-sm text-[#EDE9FE]/80">รองรับเฉพาะ .wav และขนาดไม่เกิน 50MB</p>
+                    <p className="text-sm text-[#EDE9FE]/80">รองรับเฉพาะ .wav และขนาดไม่เกิน 100MB</p>
 
                     <label className="mt-3 flex h-28 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-[#8B5CF6] bg-[#5B21B6]/20 text-center text-[#EDE9FE] hover:border-[#22D3EE] hover:bg-[#5B21B6]/30 transition">
                         <input
