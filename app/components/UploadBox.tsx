@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import axios from "axios";
 import WaveformPlayer from "./WaveformPlayer";
 import MultiStemLivePlayer from "./MultiStemLivePlayer";
@@ -24,6 +24,8 @@ function UploadBox() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<{ tempo: number; key: string; pitch: string | null } | null>(null);
   const [statusText, setStatusText] = useState<string | null>(null);
+  const [progress, setProgress] = useState(0);
+  const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleFileSelect = (selected: File | null) => {
     setErrorMessage(null);
@@ -58,6 +60,17 @@ function UploadBox() {
     setSuccessMessage(null);
     setAnalysis(null);
     setStatusText("กำลังอัปโหลดและประมวลผล...");
+    setProgress(0);
+    if (progressTimerRef.current) {
+      clearInterval(progressTimerRef.current);
+    }
+    // Simulate progress bar while waiting for backend response
+    progressTimerRef.current = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 90) return prev; // stop at 90% until completion
+        return prev + 2;
+      });
+    }, 200);
 
     const formData = new FormData();
     formData.append("file", file);
@@ -129,6 +142,9 @@ function UploadBox() {
       const minutes = Math.floor(duration / 60);
       const seconds = duration % 60;
       setProcessingTime(`${minutes} นาที ${seconds} วินาที`);
+      setProgress(100);
+      setStatusText("เสร็จแล้ว! ดาวน์โหลดหรือเล่นไฟล์ได้เลย");
+      setSuccessMessage((prev) => prev || "ประมวลผลเสร็จแล้ว");
     } catch (err: any) {
       let message = "เกิดข้อผิดพลาดระหว่างประมวลผล กรุณาลองใหม่";
       if (err?.response?.data?.detail) {
@@ -145,7 +161,12 @@ function UploadBox() {
       }
       setErrorMessage(message);
       setStatusText(null);
+      setProgress(100);
     } finally {
+      if (progressTimerRef.current) {
+        clearInterval(progressTimerRef.current);
+        progressTimerRef.current = null;
+      }
       setLoading(false);
     }
   };
@@ -253,6 +274,16 @@ function UploadBox() {
           >
             {loading ? "กำลังประมวลผล..." : "เริ่มประมวลผล"}
           </button>
+          <div className="h-2 w-full rounded-full bg-[#0B1021] overflow-hidden border border-[#5B21B6]/40">
+            <div
+              className="h-full bg-gradient-to-r from-[#5B21B6] via-[#22D3EE] to-[#5B21B6] transition-[width] duration-200"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <div className="flex justify-between text-xs text-[#A78BFA]">
+            <span>สถานะ: {statusText || (loading ? "กำลังประมวลผล..." : "รอเริ่มงาน")}</span>
+            <span>{progress}%</span>
+          </div>
           {statusText && (
             <div className="rounded-lg bg-[#0F0B1D]/70 border border-[#7C3AED]/30 p-2 text-sm text-[#A78BFA]">
               {statusText}
