@@ -1,18 +1,20 @@
-# HarmoniQ - การตั้งค่า รัน และเช็กสุขภาพ
+# HarmoniQ – AI Music Stem & Mastering Toolkit
 
-โครงสร้าง:
-- Backend: `backend/` (FastAPI + PyTorch/Open-Unmix)
-- Frontend: Next.js ที่รากโปรเจกต์ (โฟลเดอร์ `app/`)
+เว็บแอปสำหรับแยกสเตมจากไฟล์ WAV ด้วย AI พร้อม EQ, Compressor, Pitch Shift, และเครื่องมือวิเคราะห์คีย์/เทมโป/โทนเสียง มีเครื่องเล่นหลายสเตมบนหน้าเว็บให้ลองฟังและดาวน์โหลดรายแทร็ก
 
-## สิ่งที่ต้องมี
-- Python 3.10 (64-bit) พร้อม `venv`
-- Node.js 20+ และ npm
-- FFmpeg อยู่ใน PATH
-- อินเทอร์เน็ตครั้งแรกเพื่อดาวน์โหลด Torch/Open-Unmix (ขนาดใหญ่)
-- GPU ไม่บังคับ แต่มี CUDA จะเร่งการแยกสเต็ม
+## คุณสมบัติหลัก
+- แยกสเตมด้วย Open-Unmix (vocals, drums, bass, other) แล้วแพ็กเป็น ZIP
+- ใส่ EQ แบบ preset ตามสเตม, Compressor หลายระดับ, และ Pitch Shift
+- วิเคราะห์เพลง: Tempo, Key, Median Pitch (โน้ต)
+- ตัวเล่นเสียงแบบ Multi-Stem (ควบคุม mute/play/seek ต่อแทร็ก) และตัวเล่นไฟล์เดี่ยวแบบ waveform
 
-## Backend (FastAPI)
-```
+## ความต้องการระบบ
+- Python 3.10 (64-bit), Node.js 20+
+- FFmpeg ต้องอยู่ใน PATH
+- GPU + CUDA (ถ้ามี) จะช่วยให้ Open-Unmix ทำงานเร็วขึ้น
+
+## ตั้งค่า Backend (FastAPI)
+```bash
 cd backend
 py -3.10 -m venv venv
 .\venv\Scripts\activate
@@ -20,22 +22,27 @@ python -m pip install --upgrade pip
 pip install -r requirements.txt
 uvicorn backend.main:app --reload --port 8000
 ```
-- ไฟล์อัปโหลดเก็บที่ `uploads/`; ไฟล์สเต็มที่แยกเก็บที่ `separated/` (ถูก ignore)
-- ตั้งค่า CORS ผ่าน env `ALLOWED_ORIGINS` (คั่นด้วย comma) ไม่ตั้งค่าจะใช้ `http://localhost:3000`
+- ค่าอัปโหลดสูงสุด 100MB ต่อไฟล์ (`.wav` เท่านั้น)
+- ตัวแปรแนะนำ:
+  - `ALLOWED_ORIGINS` (ค่าเริ่มต้น `http://localhost:3000`)
+  - `SEPARATE_TTL_SECONDS` อายุไฟล์/โฟลเดอร์ที่สร้างก่อนตั้งเวลาลบ (ดีฟอลต์ 6 ชม.)
+- เอาต์พุตหลัก: `uploads/` (ไฟล์ต้นฉบับ/ZIP), `separated/` (ไฟล์สเตม), `eq_applied/`, `compressed/`
 
-## Frontend (Next.js 15)
-```
+## ตั้งค่า Frontend (Next.js 15)
+```bash
 cd C:\Users\nopma\Desktop\project-music
 npm install
-npm run dev   # เริ่มที่พอร์ต 3000
+npm run dev          # โหมดพัฒนา (พอร์ต 3000)
+npm run build        # สร้าง production
+npm start            # รัน production หลัง build แล้ว
 ```
-- UI เรียก backend ที่ `http://localhost:8000/...`
+- ตั้ง API base ได้ที่ `NEXT_PUBLIC_API_BASE` (ดีฟอลต์ `http://localhost:8000`)
 
-## การทดสอบ/Health Check
-- เช็ก backend ว่ารันอยู่หรือไม่: `curl http://localhost:8000/health` (คาดหวัง `{"status":"ok"}`)
-- ใช้ Postman/เบราว์เซอร์เปิด `/health` ได้เหมือนกัน
+## Health Check
+```
+curl http://localhost:8000/health    # ควรได้ {"status": "ok"}
+```
 
-## ทิปส์
-- ถ้าเปลี่ยนพอร์ต/โดเมน frontend ให้ตั้ง `ALLOWED_ORIGINS` ให้ตรงก่อนรัน backend
-- ตรวจ FFmpeg หลังติดตั้งด้วย `ffmpeg -version`
-- ดีเพนเดนซี Torch/Open-Unmix ใหญ่ ใช้เวลาติดตั้งและพื้นที่ดิสก์พอสมควร
+## หมายเหตุ
+- ไฟล์ที่สร้างจะถูกตั้ง timer ลบตาม `SEPARATE_TTL_SECONDS` เพื่อลดการใช้ดิสก์
+- หากปรับพอร์ตหรือโดเมน backend ให้ตั้ง `NEXT_PUBLIC_API_BASE` และ CORS (`ALLOWED_ORIGINS`) ให้ตรงกัน

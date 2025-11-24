@@ -6,9 +6,10 @@ import torch
 from torchaudio.functional import equalizer_biquad
 from pydub import AudioSegment
 
+
 def apply_eq(waveform: torch.Tensor, sample_rate: int, target: str) -> torch.Tensor:
     """
-    ปรับ EQ ตามประเภทเช่น vocals, drums, ...
+    Apply a simple EQ preset per stem.
     """
     if target == "vocals":
         waveform = equalizer_biquad(waveform, sample_rate, center_freq=1500, gain=6.0, Q=1.0)
@@ -20,9 +21,10 @@ def apply_eq(waveform: torch.Tensor, sample_rate: int, target: str) -> torch.Ten
     elif target == "other":
         waveform = equalizer_biquad(waveform, sample_rate, center_freq=4000, gain=3.0, Q=0.5)
     else:
-        print(f"⚠️ ไม่รู้จัก target: {target}, ข้าม EQ ไปเลย")
+        print(f"ไม่รู้จัก target: {target}, ข้ามการปรับ EQ")
 
     return waveform
+
 
 def apply_eq_to_file(input_path: str, target: str, output_dir: str = "eq_applied") -> str:
     os.makedirs(output_dir, exist_ok=True)
@@ -33,8 +35,9 @@ def apply_eq_to_file(input_path: str, target: str, output_dir: str = "eq_applied
     output_path = os.path.join(output_dir, f"{target}_eq.wav")
     torchaudio.save(output_path, eq_waveform.cpu(), sample_rate=rate)
 
-    print(f"✅ EQ สำหรับ {target} เสร็จแล้ว: {output_path}")
+    print(f"EQ ({target}) เสร็จแล้ว: {output_path}")
     return output_path
+
 
 def apply_compression(input_path: str, strength: str = "medium", output_dir: str = "compressed") -> str:
     os.makedirs(output_dir, exist_ok=True)
@@ -53,5 +56,5 @@ def apply_compression(input_path: str, strength: str = "medium", output_dir: str
 
     audio = audio.normalize().compress_dynamic_range(**kwargs)
     audio.export(output_path, format="wav")
-    print(f"✅ Compression ({strength}) เสร็จแล้ว: {output_path}")
+    print(f"Compression ({strength}) เสร็จแล้ว: {output_path}")
     return output_path
