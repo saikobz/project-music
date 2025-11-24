@@ -47,7 +47,7 @@ async def save_upload(file: UploadFile, upload_dir: str = UPLOAD_DIR) -> Tuple[s
 
     data = await file.read()
     if len(data) > MAX_UPLOAD_BYTES:
-        raise HTTPException(status_code=400, detail="ขนาดไฟล์เกิน 50MB")
+        raise HTTPException(status_code=400, detail="ขนาดไฟล์เกิน 100MB")
 
     file_id = str(uuid4())
     stored_name = f"{file_id}_{filename}"
