@@ -13,6 +13,7 @@ function UploadBox() {
   const [action, setAction] = useState("separate");
   const [target, setTarget] = useState("vocals");
   const [strength, setStrength] = useState("medium");
+  const [genre, setGenre] = useState("general");
   const [pitchSteps, setPitchSteps] = useState(0);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [downloadFileName, setDownloadFileName] = useState<string | null>(null);
@@ -91,7 +92,7 @@ function UploadBox() {
       }
 
       if (action === "eq") {
-        response = await axios.post(`${API_BASE}/apply-eq?target=${target}`, formData, {
+        response = await axios.post(`${API_BASE}/apply-eq?target=${target}&genre=${genre}`, formData, {
           responseType: "blob",
         });
         const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -102,7 +103,7 @@ function UploadBox() {
       }
 
       if (action === "compressor") {
-        response = await axios.post(`${API_BASE}/apply-compressor?strength=${strength}`, formData, {
+        response = await axios.post(`${API_BASE}/apply-compressor?strength=${strength}&genre=${genre}`, formData, {
           responseType: "blob",
         });
         const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -248,6 +249,25 @@ function UploadBox() {
                 <option value="soft">Soft</option>
                 <option value="medium">Medium</option>
                 <option value="hard">Hard</option>
+              </select>
+            </div>
+          )}
+
+          {(action === "eq" || action === "compressor") && (
+            <div>
+              <label className="block text-sm mb-1">แนวเพลง (Genre)</label>
+              <select
+                value={genre}
+                onChange={(e) => setGenre(e.target.value)}
+                className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
+                disabled={loading}
+              >
+                <option value="general">ทั่วไป</option>
+                <option value="pop">Pop</option>
+                <option value="rock">Rock</option>
+                <option value="trap">Trap</option>
+                <option value="country">Country</option>
+                <option value="soul">Soul</option>
               </select>
             </div>
           )}
