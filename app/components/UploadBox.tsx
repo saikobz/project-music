@@ -10,6 +10,7 @@ const MAX_SIZE_BYTES = 100 * 1024 * 1024; // 100MB
 
 function UploadBox() {
   const [file, setFile] = useState<File | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const [action, setAction] = useState("separate");
   const [target, setTarget] = useState("vocals");
   const [strength, setStrength] = useState("medium");
@@ -43,6 +44,23 @@ function UploadBox() {
       return;
     }
     setFile(selected);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const droppedFile = e.dataTransfer.files?.[0];
+    handleFileSelect(droppedFile || null);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    if (!isDragging) setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
   };
 
   const handleUpload = async () => {
@@ -180,7 +198,14 @@ function UploadBox() {
           <h2 className="text-2xl font-bold">เลือกไฟล์ WAV</h2>
           <p className="text-sm text-[#EDE9FE]/80">รองรับไฟล์ .wav ขนาดไม่เกิน 100MB</p>
 
-          <label className="mt-3 flex h-28 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-[#8B5CF6] bg-[#5B21B6]/20 text-center text-[#EDE9FE] hover:border-[#22D3EE] hover:bg-[#5B21B6]/30 transition">
+          <label
+            className={`mt-3 flex h-28 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed text-center text-[#EDE9FE] transition
+            ${isDragging ? "border-[#22D3EE] bg-[#5B21B6]/40" : "border-[#8B5CF6] bg-[#5B21B6]/20 hover:border-[#22D3EE] hover:bg-[#5B21B6]/30"}`}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragEnter={handleDragOver}
+            onDragLeave={handleDragLeave}
+          >
             <input
               type="file"
               accept="audio/wav"
