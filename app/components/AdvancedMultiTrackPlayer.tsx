@@ -197,8 +197,8 @@ export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {
                   onClick={() => toggleMute(stem)}
                   className={`text-xs px-3 py-1 rounded-lg border font-semibold cursor-pointer ${
                     mutedTracks[stem]
-                      ? "bg-[#0B1021] border-[#5B21B6]/60 text-[#EDE9FE]"
-                      : "bg-[#5B21B6] border-[#22D3EE]/40 text-white"
+                      ? "bg-[#246e41] border-[#5B21B6]/60 text-[#EDE9FE]"
+                      : "bg-[#b62121] border-[#22D3EE]/40 text-white"
                   }`}
                 >
                   {mutedTracks[stem] ? "Unmute" : "Mute"}
