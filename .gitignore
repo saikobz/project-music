@@ -30,6 +30,8 @@ venv/
 # uploads and output
 uploads/
 separated/
+eq_applied/
+compressed/
 
 # misc
 .DS_Store
