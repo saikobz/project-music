@@ -12,9 +12,8 @@ function UploadBox() {
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [action, setAction] = useState("separate");
-  const [target, setTarget] = useState("vocals");
   const [strength, setStrength] = useState("medium");
-  const [genre, setGenre] = useState("general");
+  const [genre, setGenre] = useState("pop");
   const [pitchSteps, setPitchSteps] = useState(0);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [downloadFileName, setDownloadFileName] = useState<string | null>(null);
@@ -110,12 +109,12 @@ function UploadBox() {
       }
 
       if (action === "eq") {
-        response = await axios.post(`${API_BASE}/apply-eq?target=${target}&genre=${genre}`, formData, {
+        response = await axios.post(`${API_BASE}/apply-eq?genre=${genre}`, formData, {
           responseType: "blob",
         });
         const url = window.URL.createObjectURL(new Blob([response.data]));
         setDownloadUrl(url);
-        suffix = `_eq_${target}`;
+        suffix = `_eq_${genre}`;
         setSuccessMessage("ประมวลผล EQ เสร็จแล้ว ดาวน์โหลดไฟล์เพื่อฟังผลลัพธ์ได้");
         setStatusText("กำลังสร้างไฟล์ EQ...");
       }
@@ -245,23 +244,6 @@ function UploadBox() {
             ))}
           </div>
 
-          {action === "eq" && (
-            <div>
-              <label className="block text-sm mb-1">Preset EQ</label>
-              <select
-                value={target}
-                onChange={(e) => setTarget(e.target.value)}
-                className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
-                disabled={loading}
-              >
-                <option value="vocals">Vocals</option>
-                <option value="drums">Drums</option>
-                <option value="bass">Bass</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-          )}
-
           {action === "compressor" && (
             <div>
               <label className="block text-sm mb-1">ความแรง (Strength)</label>
@@ -287,7 +269,6 @@ function UploadBox() {
                 className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
                 disabled={loading}
               >
-                <option value="general">ทั่วไป</option>
                 <option value="pop">Pop</option>
                 <option value="rock">Rock</option>
                 <option value="trap">Trap</option>

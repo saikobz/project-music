@@ -8,7 +8,6 @@ from pydub import AudioSegment
 
 # EQ preset ต่อแนวเพลง (ปรับ gain/center_freq/Q ได้ตามต้องการ)
 EQ_GENRE_PRESETS = {
-    "general": {},
     "pop": {"boost_mid": (1500, 4.0, 1.0), "air": (8000, 2.5, 0.8)},
     "rock": {"low_punch": (120, 3.5, 0.9), "presence": (3000, 3.0, 1.0)},
     "trap": {"sub": (60, 5.0, 1.2), "snap": (8000, 3.5, 0.9)},
@@ -28,42 +27,31 @@ COMP_GENRE_PRESETS = {
 
 
 def _apply_genre_eq(waveform: torch.Tensor, sample_rate: int, genre: str) -> torch.Tensor:
-    preset = EQ_GENRE_PRESETS.get(genre, EQ_GENRE_PRESETS["general"])
+    preset = EQ_GENRE_PRESETS.get(genre, {})
     for name, (freq, gain, q) in preset.items():
         waveform = equalizer_biquad(waveform, sample_rate, center_freq=freq, gain=gain, Q=q)
     return waveform
 
 
-def apply_eq(waveform: torch.Tensor, sample_rate: int, target: str, genre: str) -> torch.Tensor:
+def apply_eq(waveform: torch.Tensor, sample_rate: int, genre: str) -> torch.Tensor:
     """
-    Apply a stem preset first, then genre color EQ.
+    Apply only genre EQ (ไม่มี preset ต่อ stem).
     """
-    if target == "vocals":
-        waveform = equalizer_biquad(waveform, sample_rate, center_freq=1500, gain=6.0, Q=1.0)
-    elif target == "drums":
-        waveform = equalizer_biquad(waveform, sample_rate, center_freq=100, gain=-4.0, Q=0.7)
-        waveform = equalizer_biquad(waveform, sample_rate, center_freq=8000, gain=5.0, Q=0.7)
-    elif target == "bass":
-        waveform = equalizer_biquad(waveform, sample_rate, center_freq=80, gain=6.0, Q=0.8)
-    elif target == "other":
-        waveform = equalizer_biquad(waveform, sample_rate, center_freq=4000, gain=3.0, Q=0.5)
-    else:
-        print(f"ไม่รู้จัก target: {target}, ข้ามการปรับ EQ target")
-
     waveform = _apply_genre_eq(waveform, sample_rate, genre)
     return waveform
 
 
-def apply_eq_to_file(input_path: str, target: str, genre: str, output_dir: str = "eq_applied") -> str:
+def apply_eq_to_file(input_path: str, genre: str, output_dir: str = "eq_applied") -> str:
     os.makedirs(output_dir, exist_ok=True)
 
     waveform, rate = torchaudio.load(input_path)
-    eq_waveform = apply_eq(waveform, rate, target, genre)
+    eq_waveform = apply_eq(waveform, rate, genre)
 
-    output_path = os.path.join(output_dir, f"{target}_{genre}_eq.wav")
+    base = os.path.splitext(os.path.basename(input_path))[0]
+    output_path = os.path.join(output_dir, f"{base}_{genre}_eq.wav")
     torchaudio.save(output_path, eq_waveform.cpu(), sample_rate=rate)
 
-    print(f"EQ ({target}, genre={genre}) เสร็จแล้ว: {output_path}")
+    print(f"EQ (genre={genre}) เสร็จแล้ว: {output_path}")
     return output_path
 
 

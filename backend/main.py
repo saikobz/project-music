@@ -139,12 +139,11 @@ async def get_stem(file_id: str, stem: str):
 @app.post("/apply-eq")
 async def apply_eq(
     file: UploadFile = File(...),
-    target: str = "vocals",
-    genre: str = Query("general", description="แนวเพลง เช่น pop, rock, trap, country, soul"),
+    genre: str = Query("pop", description="แนวเพลง เช่น pop, rock, trap, country, soul"),
 ):
     try:
         _, input_path = await save_upload(file)
-        output_path = await asyncio.to_thread(apply_eq_to_file, input_path, target, genre)
+        output_path = await asyncio.to_thread(apply_eq_to_file, input_path, genre)
         return FileResponse(
             output_path,
             media_type="audio/wav",
