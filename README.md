@@ -1,9 +1,9 @@
 # HarmoniQ – AI Music Stem & Mastering Toolkit
 
-เว็บแอปสำหรับแยกสเตมจากไฟล์ WAV ด้วย AI พร้อม EQ, Compressor, Pitch Shift, และเครื่องมือวิเคราะห์คีย์/เทมโป/โทนเสียง มีเครื่องเล่นหลายสเตมบนหน้าเว็บให้ลองฟังและดาวน์โหลดรายแทร็ก
+เว็บแอปสำหรับแยกเสียงจากไฟล์ WAV ด้วย AI พร้อม EQ, Compressor, Pitch Shift, และเครื่องมือวิเคราะห์คีย์/เทมโป/โทนเสียง มีเครื่องเล่นหลายสเตมบนหน้าเว็บให้ลองฟังและดาวน์โหลดรายแทร็ก
 
 ## คุณสมบัติหลัก
-- แยกสเตมด้วย Open-Unmix (vocals, drums, bass, other) แล้วแพ็กเป็น ZIP
+- แยกเสียงด้วย Open-Unmix (vocals, drums, bass, other) แล้วแพ็กเป็น ZIP
 - ใส่ EQ แบบ preset ตามสเตม, Compressor หลายระดับ, และ Pitch Shift
 - วิเคราะห์เพลง: Tempo, Key, Median Pitch (โน้ต)
 - ตัวเล่นเสียงแบบ Multi-Stem (ควบคุม mute/play/seek ต่อแทร็ก) และตัวเล่นไฟล์เดี่ยวแบบ waveform

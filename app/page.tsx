@@ -12,7 +12,7 @@ export default function Home() {
             HarmoniQ — AI Music Stem &amp; Mastering Toolkit
           </h1>
           <p className="text-lg text-[#EDE9FE]/80 max-w-3xl">
-            อัปโหลดไฟล์ WAV เพื่อแยกสเตมด้วย AI พร้อม EQ, Compressor, Pitch Shift และการวิเคราะห์
+            อัปโหลดไฟล์ WAV เพื่อแยกเสียงด้วย AI พร้อม EQ, Compressor, Pitch Shift และการวิเคราะห์
             Tempo/Key/Pitch มีเครื่องเล่นหลายสเตมให้เปิดฟัง ปรับ mute/seek ต่อแทร็ก และดาวน์โหลดผลลัพธ์กลับไปใช้ต่อ
           </p>
         </header>

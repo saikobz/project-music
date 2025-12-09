@@ -104,7 +104,7 @@ function UploadBox() {
         const { file_id, zip_url } = response.data;
         setFileId(file_id);
         setZipUrl(zip_url);
-        setSuccessMessage("แยกสเตมเสร็จแล้ว ดาวน์โหลด ZIP หรือลองเล่นทีละสเตมได้เลย");
+        setSuccessMessage("แยกเสียงเสร็จแล้ว ดาวน์โหลด ZIP หรือลองเล่นทีละสเตมได้เลย");
         setStatusText("กำลังเตรียมไฟล์สเตม...");
       }
 
@@ -224,7 +224,7 @@ function UploadBox() {
           <h3 className="text-xl font-semibold">เลือกงานที่ต้องการ</h3>
           <div className="grid grid-cols-2 gap-2">
             {[
-              { value: "separate", label: "แยกสเตม" },
+              { value: "separate", label: "แยกเสียง" },
               { value: "eq", label: "EQ" },
               { value: "compressor", label: "Compressor" },
               { value: "pitch", label: "ปรับ Pitch" },

@@ -42,7 +42,7 @@ def separate_audio(input_path: str, output_dir: str = "separated") -> str:
                 sample_rate=rate,
             )
 
-        print("แยกสเตมเสร็จแล้ว:", output_dir)
+        print("แยกเสียงเสร็จแล้ว:", output_dir)
         return output_dir
 
     except Exception as e:
