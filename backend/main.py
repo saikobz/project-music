@@ -12,6 +12,7 @@ from fastapi.responses import FileResponse, JSONResponse
 
 from backend.process_audio import separate_audio, analyze_audio, pitch_shift_audio
 from backend.eq_compressor import apply_eq_to_file, apply_compression
+from backend.auto_eq_inference import apply_auto_eq_file
 
 
 app = FastAPI()
@@ -148,6 +149,30 @@ async def apply_eq(
             output_path,
             media_type="audio/wav",
             filename=os.path.basename(output_path),
+        )
+    except HTTPException as http_exc:
+        raise http_exc
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
+    finally:
+        if "input_path" in locals() and os.path.exists(input_path):
+            os.remove(input_path)
+
+
+@app.post("/apply-eq-ai")
+async def apply_eq_ai(
+    file: UploadFile = File(...),
+    genre: str = Query("pop", description="แนวเพลง เช่น pop, rock, trap, country, soul"),
+):
+    try:
+        file_id, input_path = await save_upload(file)
+        output_filename = f"{file_id}_eq_ai_{genre}.wav"
+        output_path = os.path.join("eq_applied", output_filename)
+        result_path = await asyncio.to_thread(apply_auto_eq_file, input_path, output_path)
+        return FileResponse(
+            result_path,
+            media_type="audio/wav",
+            filename=os.path.basename(result_path),
         )
     except HTTPException as http_exc:
         raise http_exc

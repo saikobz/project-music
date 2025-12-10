@@ -5,6 +5,7 @@
 ## คุณสมบัติหลัก
 - แยกเสียงด้วย Open-Unmix (vocals, drums, bass, other) แล้วแพ็กเป็น ZIP
 - ใส่ EQ แบบ preset ตามสเตม, Compressor หลายระดับ, และ Pitch Shift
+- Auto-EQ (AI) ด้วยโมเดล `autoeq_cnn_v1.pt`
 - วิเคราะห์เพลง: Tempo, Key, Median Pitch (โน้ต)
 - ตัวเล่นเสียงแบบ Multi-Stem (ควบคุม mute/play/seek ต่อแทร็ก) และตัวเล่นไฟล์เดี่ยวแบบ waveform
 
@@ -26,7 +27,7 @@ uvicorn backend.main:app --reload --port 8000
 - ตัวแปรแนะนำ:
   - `ALLOWED_ORIGINS` (ค่าเริ่มต้น `http://localhost:3000`)
   - `SEPARATE_TTL_SECONDS` อายุไฟล์/โฟลเดอร์ที่สร้างก่อนตั้งเวลาลบ (ดีฟอลต์ 6 ชม.)
-- เอาต์พุตหลัก: `uploads/` (ไฟล์ต้นฉบับ/ZIP), `separated/` (ไฟล์สเตม), `eq_applied/`, `compressed/`
+- เอาต์พุตหลัก: `uploads/` (ไฟล์ต้นฉบับ/ZIP), `separated/` (ไฟล์สเตม), `eq_applied/` (รวม Auto-EQ), `compressed/`
 
 ## ตั้งค่า Frontend (Next.js 15)
 ```bash
@@ -38,9 +39,10 @@ npm start            # รัน production หลัง build แล้ว
 ```
 - ตั้ง API base ได้ที่ `NEXT_PUBLIC_API_BASE` (ดีฟอลต์ `http://localhost:8000`)
 
-## Health Check
+## Health Check / API สำคัญ
 ```
 curl http://localhost:8000/health    # ควรได้ {"status": "ok"}
+POST /apply-eq-ai (multipart "file")  # Auto-EQ ด้วยโมเดล CNN
 ```
 
 ## หมายเหตุ

@@ -108,15 +108,15 @@ function UploadBox() {
         setStatusText("กำลังเตรียมไฟล์สเตม...");
       }
 
-      if (action === "eq") {
-        response = await axios.post(`${API_BASE}/apply-eq?genre=${genre}`, formData, {
+      if (action === "eq-ai") {
+        response = await axios.post(`${API_BASE}/apply-eq-ai?genre=${genre}`, formData, {
           responseType: "blob",
         });
         const url = window.URL.createObjectURL(new Blob([response.data]));
         setDownloadUrl(url);
-        suffix = `_eq_${genre}`;
-        setSuccessMessage("ประมวลผล EQ เสร็จแล้ว ดาวน์โหลดไฟล์เพื่อฟังผลลัพธ์ได้");
-        setStatusText("กำลังสร้างไฟล์ EQ...");
+        suffix = `_eq_ai_${genre}`;
+        setSuccessMessage("ประมวลผล Auto-EQ เสร็จแล้ว ดาวน์โหลดไฟล์เพื่อฟังผลลัพธ์ได้");
+        setStatusText("กำลังสร้างไฟล์ Auto-EQ...");
       }
 
       if (action === "compressor") {
@@ -225,7 +225,7 @@ function UploadBox() {
           <div className="grid grid-cols-2 gap-2">
             {[
               { value: "separate", label: "แยกเสียง" },
-              { value: "eq", label: "EQ" },
+              { value: "eq-ai", label: "EQ (AI)" },
               { value: "compressor", label: "Compressor" },
               { value: "pitch", label: "ปรับ Pitch" },
             ].map((item) => (
@@ -244,23 +244,7 @@ function UploadBox() {
             ))}
           </div>
 
-          {action === "compressor" && (
-            <div>
-              <label className="block text-sm mb-1">ความแรง (Strength)</label>
-              <select
-                value={strength}
-                onChange={(e) => setStrength(e.target.value)}
-                className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
-                disabled={loading}
-              >
-                <option value="soft">Soft</option>
-                <option value="medium">Medium</option>
-                <option value="hard">Hard</option>
-              </select>
-            </div>
-          )}
-
-          {(action === "eq" || action === "compressor") && (
+          {(action === "eq-ai" || action === "compressor") && (
             <div>
               <label className="block text-sm mb-1">แนวเพลง (Genre)</label>
               <select
@@ -274,6 +258,22 @@ function UploadBox() {
                 <option value="trap">Trap</option>
                 <option value="country">Country</option>
                 <option value="soul">Soul</option>
+              </select>
+            </div>
+          )}
+
+          {action === "compressor" && (
+            <div>
+              <label className="block text-sm mb-1">ความแรง (Strength)</label>
+              <select
+                value={strength}
+                onChange={(e) => setStrength(e.target.value)}
+                className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
+                disabled={loading}
+              >
+                <option value="soft">Soft</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
               </select>
             </div>
           )}

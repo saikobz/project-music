@@ -15,9 +15,7 @@ const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl }) => {
   useEffect(() => {
     if (!containerRef.current) return;
 
-    if (waveSurferRef.current) {
-      waveSurferRef.current.destroy();
-    }
+    waveSurferRef.current?.destroy();
 
     waveSurferRef.current = WaveSurfer.create({
       container: containerRef.current,
@@ -32,8 +30,15 @@ const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl }) => {
 
     waveSurferRef.current.load(audioUrl);
     waveSurferRef.current.on("finish", () => setIsPlaying(false));
+    waveSurferRef.current.on("error", (e) => {
+      // ปล่อยผ่าน error ที่เกิดจากการ destroy/abort
+      if ((e as any)?.name === "AbortError") return;
+      console.error("WaveSurfer error", e);
+    });
 
-    return () => waveSurferRef.current?.destroy();
+    return () => {
+      waveSurferRef.current?.destroy();
+    };
   }, [audioUrl]);
 
   const seekToPointer = (clientX: number) => {

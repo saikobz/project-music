@@ -2,6 +2,7 @@
 
 import os
 import torch
+import warnings
 import torchaudio
 import numpy as np
 import librosa
@@ -55,7 +56,10 @@ def analyze_audio(input_path: str) -> dict:
     try:
         y, sr = librosa.load(input_path, sr=None, mono=True)
 
-        tempo = float(librosa.beat.tempo(y=y, sr=sr)[0])
+        # ใช้ beat.tempo (ใน librosa 0.11 ยังมี alias) และละเว้น FutureWarning
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=FutureWarning)
+            tempo = float(librosa.beat.tempo(y=y, sr=sr)[0])
 
         f0 = librosa.yin(y, fmin=librosa.note_to_hz("C2"), fmax=librosa.note_to_hz("C7"))
         f0 = f0[~np.isnan(f0)]
