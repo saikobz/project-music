@@ -5,7 +5,7 @@
 ## คุณสมบัติหลัก
 - แยกเสียงด้วย Open-Unmix (vocals, drums, bass, other) แล้วแพ็กเป็น ZIP
 - ใส่ EQ แบบ preset ตามสเตม, Compressor หลายระดับ, และ Pitch Shift
-- Auto-EQ (AI) ด้วยโมเดล `autoeq_cnn_v1.pt`
+- Auto-EQ (AI) ด้วยโมเดล `autoeq_cnn_v1.pt` (Conv-BN-Conv 16ch, ประมวลผลเป็นบล็อก 5 วินาที)
 - วิเคราะห์เพลง: Tempo, Key, Median Pitch (โน้ต)
 - ตัวเล่นเสียงแบบ Multi-Stem (ควบคุม mute/play/seek ต่อแทร็ก) และตัวเล่นไฟล์เดี่ยวแบบ waveform
 
@@ -21,7 +21,12 @@ py -3.10 -m venv venv
 .\venv\Scripts\activate
 python -m pip install --upgrade pip
 pip install -r requirements.txt
-uvicorn backend.main:app --reload --port 8000
+uvicorn backend.main:app --port 8000
+
+cd D:\project-music
+backend\venv\Scripts\activate
+set PYTHONPATH=D:\project-music
+uvicorn backend.main:app --port 8000
 ```
 - ค่าอัปโหลดสูงสุด 100MB ต่อไฟล์ (`.wav` เท่านั้น)
 - ตัวแปรแนะนำ:
@@ -37,12 +42,7 @@ npm run dev          # โหมดพัฒนา (พอร์ต 3000)
 npm run build        # สร้าง production
 npm start            # รัน production หลัง build แล้ว
 ```
-- ตั้ง API base ได้ที่ `NEXT_PUBLIC_API_BASE` (ดีฟอลต์ `http://localhost:8000`)
-
-## Health Check / API สำคัญ
-```
-curl http://localhost:8000/health    # ควรได้ {"status": "ok"}
-POST /apply-eq-ai (multipart "file")  # Auto-EQ ด้วยโมเดล CNN
+- ตั้ง API base ได้ที่ `NEXT_PUBLIC_API_BASE` (`http://localhost:8000`)
 ```
 
 ## หมายเหตุ

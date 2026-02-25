@@ -6,7 +6,6 @@ import numpy as np
 import soundfile as sf
 import torch
 import torch.nn as nn
-from functools import lru_cache
 
 # พารามิเตอร์เหมือนตอนเทรน
 SR = 44100

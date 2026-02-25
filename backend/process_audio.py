@@ -14,6 +14,7 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 def separate_audio(input_path: str, output_dir: str = "separated") -> str:
     try:
         from openunmix.predict import separate
+        from openunmix import utils as openunmix_utils
     except ImportError as exc:
         raise RuntimeError("ต้องติดตั้ง openunmix ก่อน: pip install openunmix") from exc
 
@@ -25,17 +26,52 @@ def separate_audio(input_path: str, output_dir: str = "separated") -> str:
 
     try:
         audio_tensor, rate = torchaudio.load(input_path)
+        input_frames = int(audio_tensor.shape[-1])
+        separator = openunmix_utils.load_separator(
+            model_str_or_path="umxl",
+            targets=["vocals", "drums", "bass", "other"],
+            niter=1,
+            residual=False,
+            wiener_win_len=300,
+            device=str(DEVICE),
+            pretrained=True,
+            filterbank="torch",
+        )
+        separator.freeze()
+        separator = separator.to(DEVICE)
+        separator_rate = int(
+            separator.sample_rate.item()
+            if isinstance(separator.sample_rate, torch.Tensor)
+            else separator.sample_rate
+        )
+        expected_model_frames = int(round(input_frames * (separator_rate / float(rate))))
 
         estimates = separate(
             audio=audio_tensor.to(DEVICE),
             rate=rate,
             targets=["vocals", "drums", "bass", "other"],
+            separator=separator,
             device=str(DEVICE),
         )
 
         for target, waveform in estimates.items():
             if waveform.ndim == 3:
                 waveform = waveform.squeeze(0)
+
+            estimate_frames = int(waveform.shape[-1])
+            if abs(estimate_frames - expected_model_frames) <= 8:
+                estimate_rate = separator_rate
+            elif abs(estimate_frames - input_frames) <= 8:
+                estimate_rate = rate
+            else:
+                estimate_rate = separator_rate
+
+            if estimate_rate != rate:
+                waveform = torchaudio.functional.resample(
+                    waveform,
+                    orig_freq=estimate_rate,
+                    new_freq=rate,
+                )
 
             torchaudio.save(
                 os.path.join(output_dir, f"{target}.wav"),

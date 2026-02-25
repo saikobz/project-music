@@ -329,19 +329,45 @@ def waveform_to_mel_db(y: np.ndarray) -> np.ndarray:
         n_mels=n_mels,
         power=2.0,
     )
-    mel_db = librosa.power_to_db(mel, ref=np.max)
+    mel_db = librosa.power_to_db(mel)
+    mel_db = np.clip(mel_db, -80.0, 0.0)  # กันหลุด range
     return mel_db.astype(np.float32)
 
-def mel_db_to_waveform(mel_db: np.ndarray, n_iter: int = 16) -> np.ndarray:
+def mel_db_to_waveform_with_input_phase(
+    mel_db: np.ndarray,
+    y_ref: np.ndarray,
+) -> np.ndarray:
     """
-    mel_db: (128, T) ในสเกล dB
-    คืน: waveform mono sr=44100
+    ใช้ magnitude จาก mel ที่โมเดลทำนาย
+    + ใช้ phase จาก STFT ของเสียงต้นฉบับ (y_ref)
+    เพื่อลดอาการเสียงวู้ ๆ แบบ Griffin-Lim
     """
+    # mel dB -> power
     mel = librosa.db_to_power(mel_db)
-    stft = librosa.feature.inverse.mel_to_stft(
-        mel, sr=sr, n_fft=n_fft
-    )
-    y = librosa.griffinlim(stft, hop_length=hop, n_iter=n_iter)
+
+    # mel -> magnitude STFT (linear frequency)
+    mag_pred = librosa.feature.inverse.mel_to_stft(
+        mel,
+        sr=sr,
+        n_fft=n_fft,
+    )  # (n_fft//2+1, T_pred)
+
+    # STFT ของเสียงต้นฉบับ (ใช้ phase)
+    stft_ref = librosa.stft(
+        y_ref,
+        n_fft=n_fft,
+        hop_length=hop,
+    )  # (n_fft//2+1, T_ref)
+
+    # ให้ time-axis เท่ากัน
+    T = min(mag_pred.shape[1], stft_ref.shape[1])
+    mag_pred = mag_pred[:, :T]
+    stft_ref = stft_ref[:, :T]
+
+    phase = np.angle(stft_ref)
+    stft_new = mag_pred * np.exp(1j * phase)
+
+    y = librosa.istft(stft_new, hop_length=hop)
     return y.astype(np.float32)
 
 def match_loudness_rms(y_ref: np.ndarray, y_out: np.ndarray, eps: float = 1e-8) -> np.ndarray:
@@ -364,7 +390,7 @@ def enhance_waveform(
 ) -> np.ndarray:
     """
     y_raw: waveform mono (1D) sr=44100
-    return: waveform ที่ผ่าน Auto-EQ แล้ว + ชดเชยความดังแล้ว
+    return: waveform ที่ผ่าน Auto-EQ + ใช้ phase เดิม + ชดเชยความดังแล้ว
     """
     model.eval()
     with torch.no_grad():
@@ -374,15 +400,15 @@ def enhance_waveform(
 
         mel_pred = model(mel_tensor).cpu().squeeze(0).squeeze(0).numpy()  # (128, T)
 
-    y_enh = mel_db_to_waveform(mel_pred, n_iter=16)
+    # 🆕 ใช้ phase จาก y_raw แทน Griffin-Lim
+    y_enh = mel_db_to_waveform_with_input_phase(mel_pred, y_ref=y_raw)
 
-    # match loudness ให้ใกล้ต้นฉบับ
+    # ชดเชยความดังให้ใกล้ต้นฉบับ
     if loudness_mode == "peak":
         y_enh = match_loudness_peak(y_raw, y_enh)
     else:
         y_enh = match_loudness_rms(y_raw, y_enh)
 
-    # กัน clip
     y_enh = np.clip(y_enh, -1.0, 1.0)
     return y_enh
 
