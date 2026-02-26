@@ -1,5 +1,7 @@
+import logging
 import os
 from functools import lru_cache
+from typing import Any, Mapping
 
 import librosa
 import numpy as np
@@ -7,36 +9,35 @@ import soundfile as sf
 import torch
 import torch.nn as nn
 
-# พารามิเตอร์เหมือนตอนเทรน
 SR = 44100
 N_FFT = 2048
 HOP = 512
 N_MELS = 128
-SEGMENT_SECONDS = 5  # โมเดลเทรนด้วย segment 5 วินาที
-N_ITER = 16  # รอบ griffin-lim ตามสคริปต์เทรน (ลดได้ถ้าต้องการเร็วกว่า)
+SEGMENT_SECONDS = 5
+OVERLAP_SECONDS = 0.25
 
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "models", "autoeq_cnn_v1.pt")
+logger = logging.getLogger(__name__)
+
+
+class AutoEQModelLoadError(RuntimeError):
+    """Raised when an Auto-EQ checkpoint cannot be loaded."""
 
 
 class AutoEQCNN(nn.Module):
-    """
-    สถาปัตยกรรมเดียวกับตอนเทรน (CNN residual บน Mel-spectrogram)
-    """
-
-    def __init__(self):
+    def __init__(self, ch1: int = 16, ch2: int = 16, ch3: int = 16):
         super().__init__()
-        # โครงสร้างตาม auto_eq.py ล่าสุด (channels = 16 ตลอด)
         self.body = nn.Sequential(
-            nn.Conv2d(1, 16, kernel_size=3, padding=1),
-            nn.BatchNorm2d(16),
+            nn.Conv2d(1, ch1, kernel_size=3, padding=1),
+            nn.BatchNorm2d(ch1),
             nn.ReLU(),
-            nn.Conv2d(16, 16, kernel_size=3, padding=1),
-            nn.BatchNorm2d(16),
+            nn.Conv2d(ch1, ch2, kernel_size=3, padding=1),
+            nn.BatchNorm2d(ch2),
             nn.ReLU(),
-            nn.Conv2d(16, 16, kernel_size=3, padding=1),
-            nn.BatchNorm2d(16),
+            nn.Conv2d(ch2, ch3, kernel_size=3, padding=1),
+            nn.BatchNorm2d(ch3),
             nn.ReLU(),
-            nn.Conv2d(16, 1, kernel_size=1),
+            nn.Conv2d(ch3, 1, kernel_size=1),
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -57,25 +58,23 @@ def waveform_to_mel_db(y: np.ndarray) -> np.ndarray:
     return mel_db.astype(np.float32)
 
 
-@lru_cache(maxsize=1)
-def _mel_pinv():
-    mel_basis = librosa.filters.mel(sr=SR, n_fft=N_FFT, n_mels=N_MELS).astype(np.float32)
-    inv_mel = np.linalg.pinv(mel_basis).astype(np.float32)
-    return inv_mel
+def mel_db_to_waveform_with_input_phase(mel_db: np.ndarray, y_ref: np.ndarray) -> np.ndarray:
+    mel = librosa.db_to_power(mel_db).astype(np.float32)
+    mag_pred = librosa.feature.inverse.mel_to_stft(mel, sr=SR, n_fft=N_FFT)
+    stft_ref = librosa.stft(y_ref, n_fft=N_FFT, hop_length=HOP)
 
+    if mag_pred.ndim != 2 or stft_ref.ndim != 2:
+        raise ValueError("Invalid spectrogram dimensions for phase reconstruction.")
 
-def mel_db_to_waveform(mel_db: np.ndarray) -> np.ndarray:
-    """
-    แปลง mel (dB) -> power -> inverse mel (pseudoinverse) -> magnitude -> griffin-lim
-    ใช้ pseudoinverse แทน nnls เพื่อหลีกเลี่ยงปัญหา memory จาก scipy.optimize
-    """
-    mel_power = librosa.db_to_power(mel_db).astype(np.float32)  # (n_mels, T)
-    inv_mel = _mel_pinv()  # (n_fft//2+1, n_mels)
-    linear_power = np.dot(inv_mel, mel_power)  # (n_fft//2+1, T)
-    linear_power = np.maximum(linear_power, 0.0)
-    linear_mag = np.sqrt(linear_power, dtype=np.float32)
-    audio = librosa.griffinlim(linear_mag, hop_length=HOP, n_iter=N_ITER)
-    return audio.astype(np.float32)
+    time_bins = min(mag_pred.shape[1], stft_ref.shape[1])
+    if time_bins <= 0:
+        return np.zeros(len(y_ref), dtype=np.float32)
+
+    mag_pred = mag_pred[:, :time_bins]
+    phase = np.angle(stft_ref[:, :time_bins])
+    stft_new = mag_pred * np.exp(1j * phase)
+    y = librosa.istft(stft_new, hop_length=HOP, length=len(y_ref))
+    return y.astype(np.float32)
 
 
 def match_loudness_rms(y_ref: np.ndarray, y_out: np.ndarray, eps: float = 1e-8) -> np.ndarray:
@@ -85,29 +84,95 @@ def match_loudness_rms(y_ref: np.ndarray, y_out: np.ndarray, eps: float = 1e-8) 
     return y_out * gain
 
 
+def extract_model_state_dict(checkpoint: Any) -> Mapping[str, torch.Tensor]:
+    if isinstance(checkpoint, Mapping) and "state_dict" in checkpoint:
+        state = checkpoint["state_dict"]
+    elif isinstance(checkpoint, Mapping):
+        state = checkpoint
+    else:
+        raise AutoEQModelLoadError("Checkpoint format is invalid (expected mapping or mapping['state_dict']).")
+
+    if not isinstance(state, Mapping):
+        raise AutoEQModelLoadError("Checkpoint 'state_dict' is not a mapping.")
+    return state
+
+
+def normalize_state_dict_keys(state: Mapping[str, torch.Tensor]) -> dict[str, torch.Tensor]:
+    normalized: dict[str, torch.Tensor] = {}
+    for key, value in state.items():
+        if not isinstance(key, str) or not torch.is_tensor(value):
+            continue
+
+        new_key = key
+        if new_key.startswith("module."):
+            new_key = new_key[len("module.") :]
+        if new_key.startswith("net."):
+            new_key = "body." + new_key[len("net.") :]
+
+        normalized[new_key] = value
+
+    if not normalized:
+        raise AutoEQModelLoadError("No tensor parameters found in checkpoint state dict.")
+    return normalized
+
+
+def infer_arch_from_state_dict(state: Mapping[str, torch.Tensor]) -> tuple[int, int, int]:
+    required = ("body.0.weight", "body.3.weight", "body.6.weight", "body.9.weight")
+    missing = [key for key in required if key not in state]
+    if missing:
+        raise AutoEQModelLoadError(f"Checkpoint missing required layer weights: {', '.join(missing)}")
+
+    w0 = state["body.0.weight"]
+    w3 = state["body.3.weight"]
+    w6 = state["body.6.weight"]
+    w9 = state["body.9.weight"]
+
+    if any(weight.ndim != 4 for weight in (w0, w3, w6, w9)):
+        raise AutoEQModelLoadError("Checkpoint contains invalid convolution weight dimensions.")
+
+    ch1 = int(w0.shape[0])
+    ch2 = int(w3.shape[0])
+    ch3 = int(w6.shape[0])
+
+    if int(w3.shape[1]) != ch1:
+        raise AutoEQModelLoadError("Checkpoint shape mismatch: body.3.weight input channels do not match body.0.")
+    if int(w6.shape[1]) != ch2:
+        raise AutoEQModelLoadError("Checkpoint shape mismatch: body.6.weight input channels do not match body.3.")
+    if int(w9.shape[1]) != ch3 or int(w9.shape[0]) != 1:
+        raise AutoEQModelLoadError("Checkpoint shape mismatch: body.9.weight is incompatible with inferred channels.")
+
+    return ch1, ch2, ch3
+
+
 @lru_cache(maxsize=1)
 def load_auto_eq_model(device: str = "cpu") -> AutoEQCNN:
-    model = AutoEQCNN()
-    state = torch.load(MODEL_PATH, map_location=device)
-    # รองรับ state_dict ทั้งที่ใช้ body.* (ตามไฟล์ใหม่) หรือ net.* (ไฟล์เก่า)
-    new_state = {}
-    for k, v in state.items():
-        if k.startswith("net."):
-            new_key = k.replace("net.", "body.")
-        else:
-            new_key = k
-        new_state[new_key] = v
-    model.load_state_dict(new_state, strict=False)
-    model.to(device)
-    model.eval()
-    return model
+    try:
+        checkpoint = torch.load(MODEL_PATH, map_location=device)
+        raw_state = extract_model_state_dict(checkpoint)
+        state = normalize_state_dict_keys(raw_state)
+        ch1, ch2, ch3 = infer_arch_from_state_dict(state)
+
+        logger.info(
+            "Loading Auto-EQ model path=%s device=%s channels=(%d,%d,%d)",
+            MODEL_PATH,
+            device,
+            ch1,
+            ch2,
+            ch3,
+        )
+
+        model = AutoEQCNN(ch1=ch1, ch2=ch2, ch3=ch3)
+        model.load_state_dict(state, strict=True)
+        model.to(device)
+        model.eval()
+        return model
+    except AutoEQModelLoadError:
+        raise
+    except Exception as exc:
+        raise AutoEQModelLoadError(f"Failed to load Auto-EQ model from {MODEL_PATH}: {exc}") from exc
 
 
 def apply_auto_eq_file(input_path: str, output_path: str) -> str:
-    """
-    โหลดไฟล์ -> แปลงเป็น mel dB -> โมเดลปรับ EQ -> กลับเป็น waveform -> บันทึก
-    ทำงานแบบ chunk 5 วินาทีเพื่อไม่กินหน่วยความจำ
-    """
     y, _ = librosa.load(input_path, sr=SR, mono=True)
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
@@ -115,22 +180,50 @@ def apply_auto_eq_file(input_path: str, output_path: str) -> str:
     model = load_auto_eq_model(device)
 
     segment_samples = SEGMENT_SECONDS * SR
-    outputs: list[np.ndarray] = []
+    overlap_samples = min(int(OVERLAP_SECONDS * SR), max(segment_samples // 2, 1))
+    step_samples = max(segment_samples - overlap_samples, 1)
 
-    for start in range(0, len(y), segment_samples):
+    mixed = np.zeros(len(y), dtype=np.float32)
+    weight = np.zeros(len(y), dtype=np.float32)
+
+    for start in range(0, len(y), step_samples):
         end = min(start + segment_samples, len(y))
         chunk = y[start:end]
+        if chunk.size == 0:
+            continue
         mel_db = waveform_to_mel_db(chunk)
 
         mel_tensor = torch.from_numpy(mel_db).unsqueeze(0).unsqueeze(0).to(device)
         with torch.no_grad():
             pred_mel = model(mel_tensor).squeeze(0).squeeze(0).cpu().numpy()
 
-        enhanced_chunk = mel_db_to_waveform(pred_mel)
-        # match loudness ให้ใกล้ต้นฉบับ
-        enhanced_chunk = match_loudness_rms(chunk, enhanced_chunk)
-        outputs.append(enhanced_chunk)
+        # Clamp extreme values from model output before inversion.
+        pred_mel = np.clip(pred_mel, -80.0, 5.0)
 
-    enhanced = np.concatenate(outputs) if outputs else np.array([], dtype=np.float32)
+        enhanced_chunk = mel_db_to_waveform_with_input_phase(pred_mel, chunk)
+        if enhanced_chunk.shape[0] != chunk.shape[0]:
+            if enhanced_chunk.shape[0] > chunk.shape[0]:
+                enhanced_chunk = enhanced_chunk[: chunk.shape[0]]
+            else:
+                pad = chunk.shape[0] - enhanced_chunk.shape[0]
+                enhanced_chunk = np.pad(enhanced_chunk, (0, pad))
+
+        enhanced_chunk = match_loudness_rms(chunk, enhanced_chunk)
+        enhanced_chunk = np.clip(enhanced_chunk, -1.0, 1.0).astype(np.float32)
+
+        chunk_weight = np.ones(chunk.shape[0], dtype=np.float32)
+        fade = min(overlap_samples, chunk.shape[0] // 2)
+        if fade > 0 and start > 0:
+            chunk_weight[:fade] = np.linspace(0.0, 1.0, num=fade, dtype=np.float32)
+        if fade > 0 and end < len(y):
+            chunk_weight[-fade:] = np.minimum(
+                chunk_weight[-fade:],
+                np.linspace(1.0, 0.0, num=fade, dtype=np.float32),
+            )
+
+        mixed[start:end] += enhanced_chunk * chunk_weight
+        weight[start:end] += chunk_weight
+
+    enhanced = np.divide(mixed, np.maximum(weight, 1e-8), out=np.zeros_like(mixed), where=weight > 0)
     sf.write(output_path, enhanced, SR)
     return output_path

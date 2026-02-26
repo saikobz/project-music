@@ -3,6 +3,7 @@ import asyncio
 import shutil
 import threading
 import zipfile
+import logging
 from uuid import uuid4
 from typing import Tuple
 
@@ -12,10 +13,11 @@ from fastapi.responses import FileResponse, JSONResponse
 
 from backend.process_audio import separate_audio, analyze_audio, pitch_shift_audio
 from backend.eq_compressor import apply_eq_to_file, apply_compression
-from backend.auto_eq_inference import apply_auto_eq_file
+from backend.auto_eq_inference import apply_auto_eq_file, AutoEQModelLoadError
 
 
 app = FastAPI()
+logger = logging.getLogger(__name__)
 
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -176,6 +178,16 @@ async def apply_eq_ai(
         )
     except HTTPException as http_exc:
         raise http_exc
+    except AutoEQModelLoadError as model_exc:
+        logger.exception("Auto-EQ model unavailable: %s", model_exc)
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "error",
+                "error_code": "AUTO_EQ_MODEL_UNAVAILABLE",
+                "message": str(model_exc),
+            },
+        )
     except Exception as e:
         return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
     finally:
