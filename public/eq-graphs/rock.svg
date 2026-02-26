@@ -1,0 +1,83 @@
+<svg width="1200" height="420" viewBox="0 0 1200 420" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg-rock" x1="0" y1="0" x2="1200" y2="420" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#130A07"/>
+      <stop offset="1" stop-color="#2A1710"/>
+    </linearGradient>
+    <linearGradient id="line-rock" x1="60" y1="0" x2="1080" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FB923C" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#F97316"/>
+    </linearGradient>
+    <filter id="glow-rock" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect x="0" y="0" width="1200" height="420" fill="url(#bg-rock)"/>
+  <rect x="42" y="44" width="1116" height="332" rx="16" fill="#180E09" stroke="#7C2D12" stroke-opacity="0.6"/>
+
+  <g stroke="#78350F" stroke-opacity="0.4">
+    <line x1="80" y1="84" x2="1080" y2="84"/>
+    <line x1="80" y1="132" x2="1080" y2="132"/>
+    <line x1="80" y1="180" x2="1080" y2="180"/>
+    <line x1="80" y1="228" x2="1080" y2="228"/>
+    <line x1="80" y1="276" x2="1080" y2="276"/>
+  </g>
+
+  <g stroke="#78350F" stroke-opacity="0.3">
+    <line x1="80" y1="72" x2="80" y2="320"/>
+    <line x1="170" y1="72" x2="170" y2="320"/>
+    <line x1="280" y1="72" x2="280" y2="320"/>
+    <line x1="390" y1="72" x2="390" y2="320"/>
+    <line x1="500" y1="72" x2="500" y2="320"/>
+    <line x1="610" y1="72" x2="610" y2="320"/>
+    <line x1="720" y1="72" x2="720" y2="320"/>
+    <line x1="830" y1="72" x2="830" y2="320"/>
+    <line x1="1040" y1="72" x2="1040" y2="320"/>
+  </g>
+
+  <line x1="80" y1="180" x2="1080" y2="180" stroke="#FDBA74" stroke-opacity="0.65" stroke-dasharray="6 6"/>
+
+  <polyline
+    points="80,246 170,182 260,154 350,166 440,190 530,206 620,194 710,170 800,150 890,136 980,158 1070,184"
+    fill="none"
+    stroke="url(#line-rock)"
+    stroke-width="6"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    filter="url(#glow-rock)"
+  />
+
+  <circle cx="170" cy="182" r="7" fill="#F97316" stroke="#FDE68A" stroke-width="1.5"/>
+  <circle cx="800" cy="150" r="7" fill="#F97316" stroke="#FDE68A" stroke-width="1.5"/>
+
+  <text x="188" y="172" fill="#FDE68A" font-size="14" font-weight="700">120Hz +3.5dB</text>
+  <text x="818" y="140" fill="#FDE68A" font-size="14" font-weight="700">3kHz +3.0dB</text>
+
+  <text x="84" y="30" fill="#FB923C" font-size="24" font-weight="800">ROCK EQ PROFILE</text>
+  <text x="84" y="52" fill="#FED7AA" font-size="14">Low Punch + Presence</text>
+
+  <g fill="#C2410C" font-size="12">
+    <text x="18" y="88">+6dB</text>
+    <text x="18" y="136">+3dB</text>
+    <text x="26" y="184">0dB</text>
+    <text x="18" y="232">-3dB</text>
+    <text x="18" y="280">-6dB</text>
+  </g>
+
+  <g fill="#C2410C" font-size="12">
+    <text x="72" y="342">60</text>
+    <text x="161" y="342">120</text>
+    <text x="272" y="342">250</text>
+    <text x="384" y="342">500</text>
+    <text x="492" y="342">1k</text>
+    <text x="603" y="342">2k</text>
+    <text x="714" y="342">4k</text>
+    <text x="824" y="342">8k</text>
+    <text x="1028" y="342">16k</text>
+  </g>
+</svg>

@@ -1,5 +1,6 @@
 import UploadBox from "./components/UploadBox";
 import EqKnowledgePanel from "./components/EqKnowledgePanel";
+import GenreEqCards from "./components/GenreEqCards";
 
 export default function Home() {
   return (
@@ -21,6 +22,10 @@ export default function Home() {
 
         <section className="bg-[#111827]/80 border border-[#5B21B6]/30 rounded-2xl shadow-[0_20px_60px_rgba(12,10,26,0.55)] backdrop-blur-lg">
           <UploadBox />
+        </section>
+
+        <section className="rounded-2xl border border-[#5B21B6]/30 bg-[#111827]/65 p-5 shadow-[0_20px_60px_rgba(12,10,26,0.38)] backdrop-blur-lg md:p-6">
+          <GenreEqCards />
         </section>
       </div>
     </main>

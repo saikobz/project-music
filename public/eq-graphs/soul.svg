@@ -1,0 +1,83 @@
+<svg width="1200" height="420" viewBox="0 0 1200 420" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg-soul" x1="0" y1="0" x2="1200" y2="420" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#061610"/>
+      <stop offset="1" stop-color="#0D2A1F"/>
+    </linearGradient>
+    <linearGradient id="line-soul" x1="60" y1="0" x2="1080" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#86EFAC" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#34D399"/>
+    </linearGradient>
+    <filter id="glow-soul" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect x="0" y="0" width="1200" height="420" fill="url(#bg-soul)"/>
+  <rect x="42" y="44" width="1116" height="332" rx="16" fill="#071A13" stroke="#065F46" stroke-opacity="0.62"/>
+
+  <g stroke="#065F46" stroke-opacity="0.4">
+    <line x1="80" y1="84" x2="1080" y2="84"/>
+    <line x1="80" y1="132" x2="1080" y2="132"/>
+    <line x1="80" y1="180" x2="1080" y2="180"/>
+    <line x1="80" y1="228" x2="1080" y2="228"/>
+    <line x1="80" y1="276" x2="1080" y2="276"/>
+  </g>
+
+  <g stroke="#065F46" stroke-opacity="0.3">
+    <line x1="80" y1="72" x2="80" y2="320"/>
+    <line x1="170" y1="72" x2="170" y2="320"/>
+    <line x1="280" y1="72" x2="280" y2="320"/>
+    <line x1="390" y1="72" x2="390" y2="320"/>
+    <line x1="500" y1="72" x2="500" y2="320"/>
+    <line x1="610" y1="72" x2="610" y2="320"/>
+    <line x1="720" y1="72" x2="720" y2="320"/>
+    <line x1="830" y1="72" x2="830" y2="320"/>
+    <line x1="1040" y1="72" x2="1040" y2="320"/>
+  </g>
+
+  <line x1="80" y1="180" x2="1080" y2="180" stroke="#6EE7B7" stroke-opacity="0.62" stroke-dasharray="6 6"/>
+
+  <polyline
+    points="80,252 170,214 260,172 350,154 440,162 530,178 620,182 710,166 800,146 890,136 980,146 1070,170"
+    fill="none"
+    stroke="url(#line-soul)"
+    stroke-width="6"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    filter="url(#glow-soul)"
+  />
+
+  <circle cx="230" cy="188" r="7" fill="#34D399" stroke="#D1FAE5" stroke-width="1.5"/>
+  <circle cx="790" cy="150" r="7" fill="#34D399" stroke="#D1FAE5" stroke-width="1.5"/>
+
+  <text x="248" y="178" fill="#D1FAE5" font-size="14" font-weight="700">180Hz +3.0dB</text>
+  <text x="808" y="140" fill="#D1FAE5" font-size="14" font-weight="700">6kHz +2.5dB</text>
+
+  <text x="84" y="30" fill="#34D399" font-size="24" font-weight="800">SOUL EQ PROFILE</text>
+  <text x="84" y="52" fill="#A7F3D0" font-size="14">Warm + Silk</text>
+
+  <g fill="#A7F3D0" font-size="12">
+    <text x="18" y="88">+6dB</text>
+    <text x="18" y="136">+3dB</text>
+    <text x="26" y="184">0dB</text>
+    <text x="18" y="232">-3dB</text>
+    <text x="18" y="280">-6dB</text>
+  </g>
+
+  <g fill="#A7F3D0" font-size="12">
+    <text x="72" y="342">60</text>
+    <text x="161" y="342">120</text>
+    <text x="272" y="342">250</text>
+    <text x="384" y="342">500</text>
+    <text x="492" y="342">1k</text>
+    <text x="603" y="342">2k</text>
+    <text x="714" y="342">4k</text>
+    <text x="824" y="342">8k</text>
+    <text x="1028" y="342">16k</text>
+  </g>
+</svg>
