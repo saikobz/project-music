@@ -14,7 +14,10 @@ N_FFT = 2048
 HOP = 512
 N_MELS = 128
 SEGMENT_SECONDS = 5
-OVERLAP_SECONDS = 0.25
+OVERLAP_SECONDS = 0.0
+MEL_DB_MIN = -80.0
+MEL_DB_MAX = 0.0
+DELTA_CLAMP_DB = 6.0
 
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "models", "autoeq_cnn_v1.pt")
 logger = logging.getLogger(__name__)
@@ -25,7 +28,7 @@ class AutoEQModelLoadError(RuntimeError):
 
 
 class AutoEQCNN(nn.Module):
-    def __init__(self, ch1: int = 16, ch2: int = 16, ch3: int = 16):
+    def __init__(self, ch1: int = 32, ch2: int = 64, ch3: int = 128):
         super().__init__()
         self.body = nn.Sequential(
             nn.Conv2d(1, ch1, kernel_size=3, padding=1),
@@ -55,11 +58,12 @@ def waveform_to_mel_db(y: np.ndarray) -> np.ndarray:
         power=2.0,
     )
     mel_db = librosa.power_to_db(mel, ref=np.max)
+    mel_db = np.clip(mel_db, MEL_DB_MIN, MEL_DB_MAX)
     return mel_db.astype(np.float32)
 
 
 def mel_db_to_waveform_with_input_phase(mel_db: np.ndarray, y_ref: np.ndarray) -> np.ndarray:
-    mel = librosa.db_to_power(mel_db).astype(np.float32)
+    mel = librosa.db_to_power(np.clip(mel_db, MEL_DB_MIN, MEL_DB_MAX)).astype(np.float32)
     mag_pred = librosa.feature.inverse.mel_to_stft(mel, sr=SR, n_fft=N_FFT)
     stft_ref = librosa.stft(y_ref, n_fft=N_FFT, hop_length=HOP)
 
@@ -197,10 +201,11 @@ def apply_auto_eq_file(input_path: str, output_path: str) -> str:
         with torch.no_grad():
             pred_mel = model(mel_tensor).squeeze(0).squeeze(0).cpu().numpy()
 
-        # Clamp extreme values from model output before inversion.
-        pred_mel = np.clip(pred_mel, -80.0, 5.0)
+        # Keep model correction bounded, matching training-side inference helper.
+        delta = np.clip(pred_mel - mel_db, -DELTA_CLAMP_DB, DELTA_CLAMP_DB)
+        mel_out = np.clip(mel_db + delta, MEL_DB_MIN, MEL_DB_MAX)
 
-        enhanced_chunk = mel_db_to_waveform_with_input_phase(pred_mel, chunk)
+        enhanced_chunk = mel_db_to_waveform_with_input_phase(mel_out, chunk)
         if enhanced_chunk.shape[0] != chunk.shape[0]:
             if enhanced_chunk.shape[0] > chunk.shape[0]:
                 enhanced_chunk = enhanced_chunk[: chunk.shape[0]]

@@ -26,7 +26,7 @@ const GENRE_PRESETS: GenreEqPreset[] = [
   {
     id: "pop",
     title: "Pop",
-    subtitle: "Focus on vocal presence and airy highs.",
+    subtitle: "โฟกัส vocal ให้เด่น และเติม high ให้ airy.",
     accent: "#22D3EE",
     profileLabel: "Vocal Presence",
     graphImage: "/eq-graphs/pop.svg",
@@ -38,7 +38,7 @@ const GENRE_PRESETS: GenreEqPreset[] = [
   {
     id: "rock",
     title: "Rock",
-    subtitle: "Push punch and attack in low and upper-mid bands.",
+    subtitle: "ดัน punch และ attack ในย่าน low และ upper-mid.",
     accent: "#F97316",
     profileLabel: "Punch + Attack",
     graphImage: "/eq-graphs/rock.svg",
@@ -50,7 +50,7 @@ const GENRE_PRESETS: GenreEqPreset[] = [
   {
     id: "trap",
     title: "Trap",
-    subtitle: "Heavy sub foundation with bright top-end snap.",
+    subtitle: "เน้น sub ให้หนัก พร้อม top-end ที่สว่างและมี snap.",
     accent: "#EF4444",
     profileLabel: "Sub + Snap",
     graphImage: "/eq-graphs/trap.svg",
@@ -62,7 +62,7 @@ const GENRE_PRESETS: GenreEqPreset[] = [
   {
     id: "country",
     title: "Country",
-    subtitle: "Add low-mid body and clean upper clarity.",
+    subtitle: "เติม low-mid ให้มี body และเพิ่ม upper clarity ที่สะอาด.",
     accent: "#FACC15",
     profileLabel: "Body + Clarity",
     graphImage: "/eq-graphs/country.svg",
@@ -74,7 +74,7 @@ const GENRE_PRESETS: GenreEqPreset[] = [
   {
     id: "soul",
     title: "Soul",
-    subtitle: "Keep warm lows and silky high texture.",
+    subtitle: "คง low ให้อุ่น และให้ high texture ที่ silky.",
     accent: "#34D399",
     profileLabel: "Warm + Silk",
     graphImage: "/eq-graphs/soul.svg",
@@ -114,9 +114,9 @@ export default function GenreEqCards() {
     <section className="space-y-4">
       <div className="flex flex-col gap-2">
         <p className="text-sm uppercase tracking-[0.22em] text-[#A78BFA]">EQ Profiles</p>
-        <h2 className="text-2xl font-bold md:text-3xl">Genre EQ Visualizer</h2>
+        <h2 className="text-2xl font-bold md:text-3xl">EQ Genre</h2>
         <p className="max-w-3xl text-sm text-[#EDE9FE]/75 md:text-base">
-          Select a genre from the dropdown to view its EQ graph image and preset details.
+          เลือก genre จาก dropdown เพื่อดูภาพ EQ graph และรายละเอียด preset.
         </p>
       </div>
 
@@ -129,7 +129,7 @@ export default function GenreEqCards() {
               </svg>
             </span>
             <div>
-              <p className="text-xs uppercase tracking-wide text-[#A78BFA]">Selected Genre</p>
+              <p className="text-xs uppercase tracking-wide text-[#A78BFA]">Genre ที่เลือก</p>
               <p className="text-lg font-semibold text-[#EDE9FE]">
                 {selected.title}
                 <span className="ml-2 rounded-full border border-[#5B21B6]/45 bg-[#111827] px-2 py-0.5 text-xs text-[#C4B5FD]">
@@ -191,7 +191,7 @@ export default function GenreEqCards() {
         <div className="overflow-hidden rounded-xl border border-[#5B21B6]/28 bg-[#070B18]">
           <Image
             src={selected.graphImage}
-            alt={`${selected.title} EQ graph`}
+            alt={`${selected.title} EQ กราฟ`}
             width={1200}
             height={420}
             className="h-auto w-full object-cover"
@@ -213,4 +213,3 @@ export default function GenreEqCards() {
     </section>
   );
 }
-
