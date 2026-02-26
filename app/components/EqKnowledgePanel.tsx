@@ -17,7 +17,7 @@ const EQ_GUIDE_LINKS: EqGuideLink[] = [
     tag: "พื้นฐาน",
   },
   {
-    title: "iZotope Learn (EQ)",
+    title: "iZotope Learn (EQ.)",
     source: "iZotope",
     url: "https://www.izotope.com/en/learn.html",
     tag: "พื้นฐาน",
