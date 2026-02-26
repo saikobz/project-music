@@ -1,8 +1,10 @@
 import UploadBox from "./components/UploadBox";
+import EqKnowledgePanel from "./components/EqKnowledgePanel";
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-[#0B1021] via-[#111827] to-[#312E81] text-[#EDE9FE]">
+      <EqKnowledgePanel />
       <div className="max-w-6xl mx-auto px-4 py-12 space-y-10">
         <header className="flex flex-col gap-3">
           <span className="inline-flex items-center gap-2 self-start rounded-full bg-[#5B21B6] px-4 py-1 text-sm font-semibold uppercase tracking-wide text-white shadow-lg shadow-purple-900/40">
