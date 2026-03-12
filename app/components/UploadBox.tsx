@@ -14,6 +14,14 @@ function UploadBox() {
   const [action, setAction] = useState("separate");
   const [strength, setStrength] = useState("medium");
   const [genre, setGenre] = useState("pop");
+  const [compThreshold, setCompThreshold] = useState("");
+  const [compRatio, setCompRatio] = useState("");
+  const [compAttack, setCompAttack] = useState("");
+  const [compRelease, setCompRelease] = useState("");
+  const [compKnee, setCompKnee] = useState("6");
+  const [compMakeupGain, setCompMakeupGain] = useState("0");
+  const [compDryWet, setCompDryWet] = useState("100");
+  const [compOutputCeiling, setCompOutputCeiling] = useState("");
   const [pitchSteps, setPitchSteps] = useState(0);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [downloadFileName, setDownloadFileName] = useState<string | null>(null);
@@ -120,7 +128,20 @@ function UploadBox() {
       }
 
       if (action === "compressor") {
-        response = await axios.post(`${API_BASE}/apply-compressor?strength=${strength}&genre=${genre}`, formData, {
+        const params = new URLSearchParams({
+          strength,
+          genre,
+          knee: compKnee || "6",
+          makeup_gain: compMakeupGain || "0",
+          dry_wet: compDryWet || "100",
+        });
+        if (compThreshold) params.set("threshold", compThreshold);
+        if (compRatio) params.set("ratio", compRatio);
+        if (compAttack) params.set("attack", compAttack);
+        if (compRelease) params.set("release", compRelease);
+        if (compOutputCeiling) params.set("output_ceiling", compOutputCeiling);
+
+        response = await axios.post(`${API_BASE}/apply-compressor?${params.toString()}`, formData, {
           responseType: "blob",
         });
         const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -221,7 +242,7 @@ function UploadBox() {
 
         <div className="rounded-2xl border border-[#5B21B6]/30 bg-[#0F172A] p-4 backdrop-blur space-y-3 shadow-inner shadow-purple-900/30">
           <p className="text-sm text-[#A78BFA]">ขั้นตอนที่ 2</p>
-          <h3 className="text-xl font-semibold">เลือกงานที่ต้องการ</h3>
+          <h3 className="text-xl font-semibold">เลือกระบบที่ต้องการ</h3>
           <div className="grid grid-cols-2 gap-2">
             {[
               { value: "separate", label: "แยกเสียง" },
@@ -263,18 +284,118 @@ function UploadBox() {
           )}
 
           {action === "compressor" && (
-            <div>
-              <label className="block text-sm mb-1">ความแรง (Strength)</label>
-              <select
-                value={strength}
-                onChange={(e) => setStrength(e.target.value)}
-                className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
-                disabled={loading}
-              >
-                <option value="soft">Soft</option>
-                <option value="medium">Medium</option>
-                <option value="hard">Hard</option>
-              </select>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm mb-1">Strength</label>
+                <select
+                  value={strength}
+                  onChange={(e) => setStrength(e.target.value)}
+                  className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
+                  disabled={loading}
+                >
+                  <option value="soft">Soft</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs mb-1">Threshold (dBFS)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    placeholder="Preset"
+                    value={compThreshold}
+                    onChange={(e) => setCompThreshold(e.target.value)}
+                    className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
+                    disabled={loading}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs mb-1">Ratio</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    placeholder="Preset"
+                    value={compRatio}
+                    onChange={(e) => setCompRatio(e.target.value)}
+                    className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
+                    disabled={loading}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs mb-1">Attack (ms)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    placeholder="Preset"
+                    value={compAttack}
+                    onChange={(e) => setCompAttack(e.target.value)}
+                    className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
+                    disabled={loading}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs mb-1">Release (ms)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    placeholder="Preset"
+                    value={compRelease}
+                    onChange={(e) => setCompRelease(e.target.value)}
+                    className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
+                    disabled={loading}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs mb-1">Knee (dB)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={compKnee}
+                    onChange={(e) => setCompKnee(e.target.value)}
+                    className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
+                    disabled={loading}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs mb-1">Makeup Gain (dB)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={compMakeupGain}
+                    onChange={(e) => setCompMakeupGain(e.target.value)}
+                    className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
+                    disabled={loading}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs mb-1">Dry/Wet (%)</label>
+                  <input
+                    type="number"
+                    step="1"
+                    min="0"
+                    max="100"
+                    value={compDryWet}
+                    onChange={(e) => setCompDryWet(e.target.value)}
+                    className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
+                    disabled={loading}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs mb-1">Output Ceiling (dBFS)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    placeholder="Off"
+                    value={compOutputCeiling}
+                    onChange={(e) => setCompOutputCeiling(e.target.value)}
+                    className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
+                    disabled={loading}
+                  />
+                </div>
+              </div>
             </div>
           )}
 

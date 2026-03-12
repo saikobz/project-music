@@ -1,12 +1,12 @@
-# backend/eq_compressor.py
-
+import math
 import os
+
+import numpy as np
 import torchaudio
 import torch
 from torchaudio.functional import equalizer_biquad
-from pydub import AudioSegment
 
-# EQ preset ต่อแนวเพลง (ปรับ gain/center_freq/Q ได้ตามต้องการ)
+# EQ presets by genre.
 EQ_GENRE_PRESETS = {
     "pop": {"boost_mid": (1500, 4.0, 1.0), "air": (8000, 2.5, 0.8)},
     "rock": {"low_punch": (120, 3.5, 0.9), "presence": (3000, 3.0, 1.0)},
@@ -15,7 +15,7 @@ EQ_GENRE_PRESETS = {
     "soul": {"warm": (180, 3.0, 1.0), "silk": (6000, 2.5, 0.8)},
 }
 
-# Compressor preset ต่อแนวเพลง (ค่า default/generic)
+# Compressor presets by genre.
 COMP_GENRE_PRESETS = {
     "general": {"threshold": -24.0, "ratio": 4.0, "attack": 5, "release": 80},
     "pop": {"threshold": -22.0, "ratio": 3.5, "attack": 5, "release": 100},
@@ -28,14 +28,14 @@ COMP_GENRE_PRESETS = {
 
 def _apply_genre_eq(waveform: torch.Tensor, sample_rate: int, genre: str) -> torch.Tensor:
     preset = EQ_GENRE_PRESETS.get(genre, {})
-    for name, (freq, gain, q) in preset.items():
+    for _, (freq, gain, q) in preset.items():
         waveform = equalizer_biquad(waveform, sample_rate, center_freq=freq, gain=gain, Q=q)
     return waveform
 
 
 def apply_eq(waveform: torch.Tensor, sample_rate: int, genre: str) -> torch.Tensor:
     """
-    Apply only genre EQ (ไม่มี preset ต่อ stem).
+    Apply only genre EQ (no stem-specific preset).
     """
     waveform = _apply_genre_eq(waveform, sample_rate, genre)
     return waveform
@@ -51,30 +51,190 @@ def apply_eq_to_file(input_path: str, genre: str, output_dir: str = "eq_applied"
     output_path = os.path.join(output_dir, f"{base}_{genre}_eq.wav")
     torchaudio.save(output_path, eq_waveform.cpu(), sample_rate=rate)
 
-    print(f"EQ (genre={genre}) เสร็จแล้ว: {output_path}")
+    print(f"EQ (genre={genre}) done: {output_path}")
     return output_path
 
 
-def apply_compression(input_path: str, strength: str = "medium", genre: str = "general", output_dir: str = "compressed") -> str:
+def _normalize_mix_value(dry_wet: float) -> float:
+    mix = float(dry_wet)
+    if mix < 0.0:
+        raise ValueError("dry_wet must be >= 0.")
+    if mix > 1.0:
+        if mix <= 100.0:
+            mix /= 100.0
+        else:
+            raise ValueError("dry_wet must be in range 0..1 or 0..100.")
+    return mix
+
+
+def _compute_gain_reduction_db(
+    levels_db: np.ndarray,
+    threshold_db: float,
+    ratio: float,
+    knee_db: float,
+) -> np.ndarray:
+    slope = 1.0 - (1.0 / ratio)
+    if knee_db <= 0.0:
+        over = np.maximum(levels_db - threshold_db, 0.0)
+        return -(over * slope)
+
+    lower = threshold_db - (knee_db / 2.0)
+    upper = threshold_db + (knee_db / 2.0)
+    reduction_db = np.zeros_like(levels_db, dtype=np.float32)
+
+    high = levels_db >= upper
+    if np.any(high):
+        over = levels_db[high] - threshold_db
+        reduction_db[high] = -(over * slope)
+
+    mid = (levels_db > lower) & (levels_db < upper)
+    if np.any(mid):
+        x = levels_db[mid] - lower
+        reduction_db[mid] = -(slope * (x**2) / (2.0 * knee_db))
+
+    return reduction_db
+
+
+def _compress_waveform(
+    waveform: torch.Tensor,
+    sample_rate: int,
+    threshold: float,
+    ratio: float,
+    attack: float,
+    release: float,
+    knee: float,
+    makeup_gain: float,
+    dry_wet: float,
+    output_ceiling: float | None,
+    control_hop: int = 64,
+) -> torch.Tensor:
+    if sample_rate <= 0:
+        raise ValueError("sample_rate must be > 0.")
+    if ratio < 1.0:
+        raise ValueError("ratio must be >= 1.")
+    if attack <= 0.0:
+        raise ValueError("attack must be > 0.")
+    if release <= 0.0:
+        raise ValueError("release must be > 0.")
+    if knee < 0.0:
+        raise ValueError("knee must be >= 0.")
+    if output_ceiling is not None and output_ceiling > 0.0:
+        raise ValueError("output_ceiling must be <= 0 dBFS.")
+
+    mix = _normalize_mix_value(dry_wet)
+
+    wave = waveform.detach().cpu().numpy().astype(np.float32)
+    if wave.ndim == 1:
+        wave = wave[np.newaxis, :]
+    if wave.shape[1] == 0:
+        return waveform
+
+    dry = wave.copy()
+    sidechain = np.max(np.abs(wave), axis=0)
+
+    hop = max(int(control_hop), 1)
+    pad_len = (-sidechain.shape[0]) % hop
+    if pad_len > 0:
+        sidechain_padded = np.pad(sidechain, (0, pad_len), mode="constant", constant_values=0.0)
+    else:
+        sidechain_padded = sidechain
+
+    peaks = sidechain_padded.reshape(-1, hop).max(axis=1).astype(np.float32)
+    envelope = np.zeros_like(peaks, dtype=np.float32)
+
+    attack_s = max(float(attack), 0.1) / 1000.0
+    release_s = max(float(release), 0.1) / 1000.0
+    frame_time_s = hop / float(sample_rate)
+    attack_coeff = math.exp(-frame_time_s / attack_s)
+    release_coeff = math.exp(-frame_time_s / release_s)
+
+    env_prev = 0.0
+    for idx, peak in enumerate(peaks):
+        coeff = attack_coeff if peak > env_prev else release_coeff
+        env_prev = coeff * env_prev + (1.0 - coeff) * peak
+        envelope[idx] = env_prev
+
+    levels_db = 20.0 * np.log10(np.maximum(envelope, 1e-8))
+    reduction_db = _compute_gain_reduction_db(
+        levels_db,
+        threshold_db=float(threshold),
+        ratio=float(ratio),
+        knee_db=float(knee),
+    )
+
+    total_gain_db = reduction_db + float(makeup_gain)
+    gain_frames = np.power(10.0, total_gain_db / 20.0).astype(np.float32)
+    gain_samples = np.repeat(gain_frames, hop)[: sidechain.shape[0]]
+
+    wet = wave * gain_samples[np.newaxis, :]
+    mixed = dry * (1.0 - mix) + wet * mix
+
+    if output_ceiling is not None:
+        ceiling_lin = 10.0 ** (float(output_ceiling) / 20.0)
+        peak = float(np.max(np.abs(mixed)))
+        if peak > ceiling_lin and peak > 1e-8:
+            mixed *= ceiling_lin / peak
+
+    mixed = np.clip(mixed, -1.0, 1.0).astype(np.float32)
+    return torch.from_numpy(mixed)
+
+
+def apply_compression(
+    input_path: str,
+    strength: str = "medium",
+    genre: str = "general",
+    output_dir: str = "compressed",
+    *,
+    threshold: float | None = None,
+    ratio: float | None = None,
+    attack: float | None = None,
+    release: float | None = None,
+    knee: float | None = None,
+    makeup_gain: float = 0.0,
+    dry_wet: float = 100.0,
+    output_ceiling: float | None = None,
+) -> str:
     os.makedirs(output_dir, exist_ok=True)
 
     filename = os.path.basename(input_path)
     output_path = os.path.join(output_dir, f"{os.path.splitext(filename)[0]}_{genre}_compressed.wav")
 
-    audio = AudioSegment.from_wav(input_path)
+    waveform, sample_rate = torchaudio.load(input_path)
 
-    # เริ่มจาก preset ต่อ genre
     genre_kwargs = COMP_GENRE_PRESETS.get(genre, COMP_GENRE_PRESETS["general"]).copy()
 
-    # ปรับตาม strength (แบบง่าย: scale threshold/ratio)
     if strength == "soft":
         genre_kwargs["threshold"] += 4.0
         genre_kwargs["ratio"] = max(2.0, genre_kwargs["ratio"] - 1.0)
     elif strength == "hard":
         genre_kwargs["threshold"] -= 4.0
         genre_kwargs["ratio"] = genre_kwargs["ratio"] + 1.5
+    elif strength != "medium":
+        raise ValueError(f"Invalid strength '{strength}'. Use soft, medium, or hard.")
 
-    audio = audio.normalize().compress_dynamic_range(**genre_kwargs)
-    audio.export(output_path, format="wav")
-    print(f"Compression ({strength}, genre={genre}) เสร็จแล้ว: {output_path}")
+    if threshold is not None:
+        genre_kwargs["threshold"] = float(threshold)
+    if ratio is not None:
+        genre_kwargs["ratio"] = float(ratio)
+    if attack is not None:
+        genre_kwargs["attack"] = float(attack)
+    if release is not None:
+        genre_kwargs["release"] = float(release)
+    knee_value = 6.0 if knee is None else float(knee)
+
+    compressed = _compress_waveform(
+        waveform=waveform,
+        sample_rate=sample_rate,
+        threshold=genre_kwargs["threshold"],
+        ratio=genre_kwargs["ratio"],
+        attack=genre_kwargs["attack"],
+        release=genre_kwargs["release"],
+        knee=knee_value,
+        makeup_gain=float(makeup_gain),
+        dry_wet=float(dry_wet),
+        output_ceiling=output_ceiling,
+    )
+
+    torchaudio.save(output_path, compressed.cpu(), sample_rate=sample_rate)
+    print(f"Compression ({strength}, genre={genre}) done: {output_path}")
     return output_path

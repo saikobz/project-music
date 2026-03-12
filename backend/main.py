@@ -198,12 +198,34 @@ async def apply_eq_ai(
 @app.post("/apply-compressor")
 async def apply_compressor(
     file: UploadFile = File(...),
-    strength: str = "medium",
-    genre: str = Query("general", description="แนวเพลง เช่น pop, rock, trap, country, soul"),
+    strength: str = Query("medium", pattern="^(soft|medium|hard)$"),
+    genre: str = Query("general", description="general, pop, rock, trap, country, soul"),
+    threshold: float | None = Query(None, ge=-80.0, le=0.0, description="dBFS"),
+    ratio: float | None = Query(None, ge=1.0, le=20.0),
+    attack: float | None = Query(None, ge=0.1, le=200.0, description="ms"),
+    release: float | None = Query(None, ge=0.1, le=1000.0, description="ms"),
+    knee: float | None = Query(None, ge=0.0, le=24.0, description="dB"),
+    makeup_gain: float = Query(0.0, ge=-24.0, le=24.0, description="dB"),
+    dry_wet: float = Query(100.0, ge=0.0, le=100.0, description="percent"),
+    output_ceiling: float | None = Query(None, ge=-20.0, le=0.0, description="dBFS"),
 ):
     try:
         _, input_path = await save_upload(file)
-        output_path = await asyncio.to_thread(apply_compression, input_path, strength, genre)
+        output_path = await asyncio.to_thread(
+            apply_compression,
+            input_path,
+            strength,
+            genre,
+            "compressed",
+            threshold=threshold,
+            ratio=ratio,
+            attack=attack,
+            release=release,
+            knee=knee,
+            makeup_gain=makeup_gain,
+            dry_wet=dry_wet,
+            output_ceiling=output_ceiling,
+        )
         return FileResponse(
             output_path,
             media_type="audio/wav",
@@ -211,12 +233,13 @@ async def apply_compressor(
         )
     except HTTPException as http_exc:
         raise http_exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
     except Exception as e:
         return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
     finally:
         if "input_path" in locals() and os.path.exists(input_path):
             os.remove(input_path)
-
 
 @app.post("/pitch-shift")
 async def pitch_shift(file: UploadFile = File(...), steps: float = 0):
