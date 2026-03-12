@@ -17,7 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 
 from backend.process_audio import separate_audio, analyze_audio, pitch_shift_audio
-from backend.eq_compressor import apply_eq_to_file, apply_compression
+from backend.eq_compressor import apply_compression
 from backend.auto_eq_inference import apply_auto_eq_file, AutoEQModelLoadError
 
 
@@ -150,29 +150,6 @@ async def get_stem(file_id: str, stem: str):
     return JSONResponse(status_code=404, content={"status": "error", "message": f"ไม่พบไฟล์ {stem}.wav"})
 
 
-# api EQ แบบ preset
-@app.post("/apply-eq")
-async def apply_eq(
-    file: UploadFile = File(...),
-    genre: str = Query("pop", description="แนวเพลง เช่น pop, rock, trap, country, soul"),
-):
-    try:
-        _, input_path = await save_upload(file)
-        output_path = await asyncio.to_thread(apply_eq_to_file, input_path, genre)
-        return FileResponse(
-            output_path,
-            media_type="audio/wav",
-            filename=os.path.basename(output_path),
-        )
-    except HTTPException as http_exc:
-        raise http_exc
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
-    finally:
-        if "input_path" in locals() and os.path.exists(input_path):
-            os.remove(input_path)
-
-
 # เส้นทาง Auto-EQ แบบ AI
 @app.post("/apply-eq-ai")
 async def apply_eq_ai(
@@ -208,7 +185,7 @@ async def apply_eq_ai(
             os.remove(input_path)
 
 
-# เส้นทางบีบอัดเสียง
+# api compressor
 @app.post("/apply-compressor")
 async def apply_compressor(
     file: UploadFile = File(...),

@@ -229,6 +229,7 @@ function UploadBox() {
     <div className="grid gap-6 md:grid-cols-2 p-6 text-[#EDE9FE]">
       {/* ส่วนอัปโหลดไฟล์และตัวเลือกการทำงาน */}
       <div className="space-y-4">
+        {/* การ์ดเลือกไฟล์ WAV และพื้นที่ drag-and-drop */}
         <div className="rounded-2xl border border-[#5B21B6]/30 bg-[#0F172A] p-4 backdrop-blur shadow-inner shadow-purple-900/30">
           <p className="text-sm text-[#A78BFA]">ขั้นตอนที่ 1</p>
           <h2 className="text-2xl font-bold">เลือกไฟล์ WAV</h2>
@@ -256,8 +257,9 @@ function UploadBox() {
           </label>
         </div>
 
+        {/* การ์ดเลือก action และตั้งค่าพารามิเตอร์ของงานที่เลือก */}
         <div className="rounded-2xl border border-[#5B21B6]/30 bg-[#0F172A] p-4 backdrop-blur space-y-3 shadow-inner shadow-purple-900/30">
-          <p className="text-sm text-[#A78BFA]">ขั้นตอนที่ 2</p>
+          <p className="text-sm text-[#A78BFA] font-semibold">ขั้นตอนที่ 2</p>
           <h3 className="text-xl font-semibold">เลือกระบบที่ต้องการ</h3>
           <div className="grid grid-cols-2 gap-2">
             {[
@@ -281,13 +283,14 @@ function UploadBox() {
             ))}
           </div>
 
+          {/* ตัวเลือก genre ใช้กับ Auto-EQ และ Compressor */}
           {(action === "eq-ai" || action === "compressor") && (
             <div>
               <label className="block text-sm mb-1">แนวเพลง (Genre)</label>
               <select
                 value={genre}
                 onChange={(e) => setGenre(e.target.value)}
-                className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
+                className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#fee9e9]"
                 disabled={loading}
               >
                 <option value="pop">Pop</option>
@@ -299,6 +302,7 @@ function UploadBox() {
             </div>
           )}
 
+          {/* ฟอร์มตั้งค่า compressor แบบละเอียด จะแสดงเฉพาะเมื่อเลือก action นี้ */}
           {action === "compressor" && (
             <div className="space-y-3">
               <div>
@@ -415,6 +419,7 @@ function UploadBox() {
             </div>
           )}
 
+          {/* ฟอร์มปรับจำนวน half-steps สำหรับ pitch shift */}
           {action === "pitch" && (
             <div>
               <label className="block text-sm mb-1">ปรับ pitch (half-steps ±)</label>
@@ -428,6 +433,7 @@ function UploadBox() {
             </div>
           )}
 
+          {/* ปุ่มเริ่มประมวลผลจะส่งคำขอหลักไปยัง backend */}
           <button
             onClick={handleUpload}
             disabled={loading}
@@ -437,6 +443,7 @@ function UploadBox() {
           >
             {loading ? "กำลังประมวลผล..." : "เริ่มประมวลผล"}
           </button>
+          {/* แถบ progress และตัวเลขสถานะระหว่างรอผลจาก backend */}
           <div className="h-2 w-full rounded-full bg-[#0B1021] overflow-hidden border border-[#5B21B6]/40">
             <div
               className="h-full bg-gradient-to-r from-[#5B21B6] via-[#22D3EE] to-[#5B21B6] transition-[width] duration-200"
@@ -447,6 +454,7 @@ function UploadBox() {
             <span>สถานะ: {statusText || (loading ? "กำลังประมวลผล..." : "รอเริ่มงาน")}</span>
             <span>{progress}%</span>
           </div>
+          {/* กลุ่มข้อความ feedback จากการประมวลผล เช่น status, เวลา, error และ success */}
           {statusText && (
             <div className="rounded-lg bg-[#0F0B1D]/70 border border-[#7C3AED]/30 p-2 text-sm text-[#A78BFA]">
               {statusText}
@@ -470,8 +478,10 @@ function UploadBox() {
 
       {/* ส่วนแสดงผลวิเคราะห์ ตัวเล่น และลิงก์ดาวน์โหลด */}
       <div className="space-y-4">
+        {/* การ์ดสรุป tempo / key / pitch ของไฟล์ต้นฉบับ */}
         {analysis && <AudioAnalysis data={analysis} />}
 
+        {/* ส่วนเครื่องเล่นหลายสเตม จะแสดงเมื่อ backend แยก stem สำเร็จแล้ว */}
         {fileId && (
           <div className="rounded-2xl border border-[#5B21B6]/30 bg-[#0F172A] p-4 backdrop-blur">
             <h3 className="text-xl font-semibold mb-2">Multi-stem Player</h3>
@@ -479,6 +489,7 @@ function UploadBox() {
           </div>
         )}
 
+        {/* ปุ่มดาวน์โหลด ZIP ของ stem ทั้งหมดจากงานแยกเสียง */}
         {zipUrl && (
           <a
             href={zipUrl}
@@ -489,6 +500,7 @@ function UploadBox() {
           </a>
         )}
 
+        {/* ส่วนดาวน์โหลดไฟล์เดี่ยวที่ประมวลผลแล้ว พร้อม waveform player สำหรับฟังผลลัพธ์ */}
         {downloadUrl && downloadFileName && !downloadFileName.endsWith(".zip") && (
           <div className="rounded-2xl border border-[#5B21B6]/30 bg-[#0F172A] p-4 backdrop-blur space-y-3">
             <a
