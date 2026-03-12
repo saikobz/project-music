@@ -1,3 +1,8 @@
+# หน้าที่ของไฟล์นี้:
+# - เป็นศูนย์กลางของ FastAPI backend และประกาศ API routes ทั้งหมดของระบบ
+# - รับไฟล์อัปโหลด ตรวจสอบชนิด/ขนาดไฟล์ แล้วส่งงานไปยังโมดูลประมวลผลเสียงแต่ละตัว
+# - จัดการเรื่อง response, error handling และ cleanup ไฟล์ชั่วคราวหลังประมวลผล
+
 import os
 import asyncio
 import shutil
@@ -16,12 +21,15 @@ from backend.eq_compressor import apply_eq_to_file, apply_compression
 from backend.auto_eq_inference import apply_auto_eq_file, AutoEQModelLoadError
 
 
+# การตั้งค่าแอปพลิเคชัน
 app = FastAPI()
 logger = logging.getLogger(__name__)
 
+# โฟลเดอร์ทำงานและข้อจำกัดของไฟล์
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+# ค่าคอนฟิกระหว่างรัน
 allow_origins_env = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000")
 allow_origins = [origin.strip() for origin in allow_origins_env.split(",") if origin.strip()]
 cleanup_ttl = int(os.getenv("SEPARATE_TTL_SECONDS", "21600"))  # 6 hours by default
@@ -36,13 +44,15 @@ app.add_middleware(
 )
 
 
+
 @app.get("/health")
 async def health():
     return {"status": "ok"}
 
 
+# ตั้งค่าอัปโหลดไฟล์
 async def save_upload(file: UploadFile, upload_dir: str = UPLOAD_DIR) -> Tuple[str, str]:
-    """Validate and save upload. Returns (file_id, path)."""
+    
     filename = file.filename or ""
     _, ext = os.path.splitext(filename)
     if ext.lower() != ".wav":
@@ -61,7 +71,7 @@ async def save_upload(file: UploadFile, upload_dir: str = UPLOAD_DIR) -> Tuple[s
 
 
 def schedule_cleanup(path: str, delay: int = 0):
-    """Schedule cleanup to prevent disk bloat."""
+    
 
     def _cleanup():
         try:
@@ -77,6 +87,7 @@ def schedule_cleanup(path: str, delay: int = 0):
     timer.start()
 
 
+# api stem
 @app.post("/separate")
 async def separate(file: UploadFile = File(...)):
     try:
@@ -139,6 +150,7 @@ async def get_stem(file_id: str, stem: str):
     return JSONResponse(status_code=404, content={"status": "error", "message": f"ไม่พบไฟล์ {stem}.wav"})
 
 
+# api EQ แบบ preset
 @app.post("/apply-eq")
 async def apply_eq(
     file: UploadFile = File(...),
@@ -161,6 +173,7 @@ async def apply_eq(
             os.remove(input_path)
 
 
+# เส้นทาง Auto-EQ แบบ AI
 @app.post("/apply-eq-ai")
 async def apply_eq_ai(
     file: UploadFile = File(...),
@@ -195,6 +208,7 @@ async def apply_eq_ai(
             os.remove(input_path)
 
 
+# เส้นทางบีบอัดเสียง
 @app.post("/apply-compressor")
 async def apply_compressor(
     file: UploadFile = File(...),
@@ -241,6 +255,7 @@ async def apply_compressor(
         if "input_path" in locals() and os.path.exists(input_path):
             os.remove(input_path)
 
+# เส้นทางปรับ pitch
 @app.post("/pitch-shift")
 async def pitch_shift(file: UploadFile = File(...), steps: float = 0):
     try:
@@ -263,6 +278,7 @@ async def pitch_shift(file: UploadFile = File(...), steps: float = 0):
             os.remove(input_path)
 
 
+# เส้นทางวิเคราะห์เสียง
 @app.post("/analyze")
 async def analyze(file: UploadFile = File(...)):
     try:

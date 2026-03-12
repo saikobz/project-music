@@ -1,19 +1,16 @@
+"""
+หน้าที่ของไฟล์นี้:
+- เก็บ logic การบีบอัดเสียง (compressor) ที่ใช้ทั้ง preset ตาม genre และค่าที่ผู้ใช้ override เอง
+- คำนวณ envelope, gain reduction, dry/wet mix และ output ceiling ในระดับสัญญาณเสียงจริง
+- ส่งออกไฟล์ WAV ที่ผ่านการ compression แล้วกลับไปให้ API layer ใช้งานต่อ
+"""
+
 import math
 import os
 
 import numpy as np
 import torchaudio
 import torch
-from torchaudio.functional import equalizer_biquad
-
-# EQ presets by genre.
-EQ_GENRE_PRESETS = {
-    "pop": {"boost_mid": (1500, 4.0, 1.0), "air": (8000, 2.5, 0.8)},
-    "rock": {"low_punch": (120, 3.5, 0.9), "presence": (3000, 3.0, 1.0)},
-    "trap": {"sub": (60, 5.0, 1.2), "snap": (8000, 3.5, 0.9)},
-    "country": {"body": (250, 2.5, 0.9), "clarity": (4000, 3.0, 0.9)},
-    "soul": {"warm": (180, 3.0, 1.0), "silk": (6000, 2.5, 0.8)},
-}
 
 # Compressor presets by genre.
 COMP_GENRE_PRESETS = {
@@ -26,40 +23,12 @@ COMP_GENRE_PRESETS = {
 }
 
 
-def _apply_genre_eq(waveform: torch.Tensor, sample_rate: int, genre: str) -> torch.Tensor:
-    preset = EQ_GENRE_PRESETS.get(genre, {})
-    for _, (freq, gain, q) in preset.items():
-        waveform = equalizer_biquad(waveform, sample_rate, center_freq=freq, gain=gain, Q=q)
-    return waveform
-
-
-def apply_eq(waveform: torch.Tensor, sample_rate: int, genre: str) -> torch.Tensor:
-    """
-    Apply only genre EQ (no stem-specific preset).
-    """
-    waveform = _apply_genre_eq(waveform, sample_rate, genre)
-    return waveform
-
-
-def apply_eq_to_file(input_path: str, genre: str, output_dir: str = "eq_applied") -> str:
-    os.makedirs(output_dir, exist_ok=True)
-
-    waveform, rate = torchaudio.load(input_path)
-    eq_waveform = apply_eq(waveform, rate, genre)
-
-    base = os.path.splitext(os.path.basename(input_path))[0]
-    output_path = os.path.join(output_dir, f"{base}_{genre}_eq.wav")
-    torchaudio.save(output_path, eq_waveform.cpu(), sample_rate=rate)
-
-    print(f"EQ (genre={genre}) done: {output_path}")
-    return output_path
-
-
 def _normalize_mix_value(dry_wet: float) -> float:
     mix = float(dry_wet)
     if mix < 0.0:
         raise ValueError("dry_wet must be >= 0.")
     if mix > 1.0:
+        # ยอมรับทั้งรูปแบบ 0..1 และ 0..100 เพื่อให้เรียกจาก API ได้สะดวกขึ้น
         if mix <= 100.0:
             mix /= 100.0
         else:
@@ -78,6 +47,7 @@ def _compute_gain_reduction_db(
         over = np.maximum(levels_db - threshold_db, 0.0)
         return -(over * slope)
 
+    # soft knee จะค่อย ๆ เริ่มลด gain รอบ threshold แทนที่จะหักมุมทันที
     lower = threshold_db - (knee_db / 2.0)
     upper = threshold_db + (knee_db / 2.0)
     reduction_db = np.zeros_like(levels_db, dtype=np.float32)
@@ -130,6 +100,7 @@ def _compress_waveform(
         return waveform
 
     dry = wave.copy()
+    # ใช้ peak ของทุก channel เป็น sidechain กลางสำหรับบีบอัดทั้งสัญญาณ
     sidechain = np.max(np.abs(wave), axis=0)
 
     hop = max(int(control_hop), 1)
@@ -150,6 +121,7 @@ def _compress_waveform(
 
     env_prev = 0.0
     for idx, peak in enumerate(peaks):
+        # ใช้ attack/release คนละ coefficient เพื่อให้ envelope ตอบสนองแบบ compressor จริง
         coeff = attack_coeff if peak > env_prev else release_coeff
         env_prev = coeff * env_prev + (1.0 - coeff) * peak
         envelope[idx] = env_prev
@@ -164,9 +136,11 @@ def _compress_waveform(
 
     total_gain_db = reduction_db + float(makeup_gain)
     gain_frames = np.power(10.0, total_gain_db / 20.0).astype(np.float32)
+    # ขยาย gain จากระดับ frame control ให้กลับมาเป็น sample-by-sample ก่อนคูณกับคลื่นเสียง
     gain_samples = np.repeat(gain_frames, hop)[: sidechain.shape[0]]
 
     wet = wave * gain_samples[np.newaxis, :]
+    # dry/wet ช่วยผสมสัญญาณเดิมกลับเข้าไปได้แบบ parallel compression
     mixed = dry * (1.0 - mix) + wet * mix
 
     if output_ceiling is not None:
@@ -201,6 +175,7 @@ def apply_compression(
 
     waveform, sample_rate = torchaudio.load(input_path)
 
+    # เริ่มจาก preset ตาม genre แล้วค่อยขยับตาม strength และค่าที่ผู้ใช้ส่ง override มา
     genre_kwargs = COMP_GENRE_PRESETS.get(genre, COMP_GENRE_PRESETS["general"]).copy()
 
     if strength == "soft":

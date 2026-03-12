@@ -11,6 +11,7 @@ const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl }) => {
   const waveSurferRef = useRef<WaveSurfer | null>(null);
   const isDraggingRef = useRef(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [volume, setVolume] = useState(85);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -25,14 +26,14 @@ const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl }) => {
       height: 140,
       barGap: 2,
       barWidth: 2,
-      responsive: true,
     });
 
     waveSurferRef.current.load(audioUrl);
+    waveSurferRef.current.setVolume(volume / 100);
     waveSurferRef.current.on("finish", () => setIsPlaying(false));
     waveSurferRef.current.on("error", (e) => {
-      // ปล่อยผ่าน error ที่เกิดจากการ destroy/abort
-      if ((e as any)?.name === "AbortError") return;
+      // ปล่อยผ่าน error ที่เกิดจากการ destroy หรือ abort ระหว่างโหลดไฟล์
+      if ((e as { name?: string })?.name === "AbortError") return;
       console.error("WaveSurfer error", e);
     });
 
@@ -40,6 +41,10 @@ const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl }) => {
       waveSurferRef.current?.destroy();
     };
   }, [audioUrl]);
+
+  useEffect(() => {
+    waveSurferRef.current?.setVolume(volume / 100);
+  }, [volume]);
 
   const seekToPointer = (clientX: number) => {
     if (!waveSurferRef.current || !containerRef.current) return;
@@ -72,6 +77,12 @@ const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl }) => {
     setIsPlaying(false);
   };
 
+  const handleVolumeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const nextVolume = Number(event.target.value);
+    setVolume(nextVolume);
+    waveSurferRef.current?.setVolume(nextVolume / 100);
+  };
+
   return (
     <div className="space-y-3 rounded-2xl border border-[#7C3AED]/30 bg-[#1C162C] p-4 backdrop-blur">
       <div className="flex items-center justify-between text-sm font-semibold text-[#EDE9FE]">
@@ -100,9 +111,29 @@ const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl }) => {
           หยุด
         </button>
       </div>
-      <p className="text-center text-xs text-[#EDE9FE]/70">
-        เลื่อนเพื่อ seek ไปยังตำแหน่งที่ต้องการบน waveform ได้ทันที
-      </p>
+      <div className="rounded-xl border border-[#7C3AED]/25 bg-[#120E22] px-3 py-2">
+        <div className="mb-2 flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-[#A78BFA]">
+          <span>Volume</span>
+          <span className="rounded-full border border-[#22D3EE]/35 bg-[#0F172A] px-2 py-0.5 text-[#EDE9FE]">{volume}%</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="rounded-md border border-[#22D3EE]/35 bg-[#0F172A] px-2 py-1 text-[10px] font-semibold text-[#22D3EE]">
+            VOL
+          </span>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            step="1"
+            value={volume}
+            onChange={handleVolumeChange}
+            className="h-2 w-full cursor-pointer rounded-full bg-[#312E81]"
+            style={{ accentColor: "#22D3EE" }}
+            aria-label="ปรับระดับเสียงไฟล์ที่ประมวลผลแล้ว"
+          />
+        </div>
+      </div>
+      <p className="text-center text-xs text-[#EDE9FE]/70">เลื่อนเพื่อ seek ไปยังตำแหน่งที่ต้องการบน waveform ได้ทันที</p>
     </div>
   );
 };

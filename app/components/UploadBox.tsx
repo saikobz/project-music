@@ -1,3 +1,7 @@
+// หน้าที่ของไฟล์นี้:
+// - เป็นฟอร์มหลักของหน้าเว็บสำหรับรับไฟล์ WAV และเลือกประเภทการประมวลผล
+// - เรียก backend ตาม action ที่ผู้ใช้เลือก เช่น แยก stem, Auto-EQ, Compressor และ Pitch Shift
+// - จัดการสถานะของ UI เช่น progress, error, ผลวิเคราะห์, ลิงก์ดาวน์โหลด และตัวเล่นผลลัพธ์
 "use client";
 import React, { useRef, useState } from "react";
 import axios from "axios";
@@ -5,10 +9,12 @@ import WaveformPlayer from "./WaveformPlayer";
 import MultiStemLivePlayer from "./MultiStemLivePlayer";
 import AudioAnalysis from "./AudioAnalysis";
 
+// ค่าตั้งต้นของ API และข้อจำกัดการอัปโหลด
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
 const MAX_SIZE_BYTES = 100 * 1024 * 1024; // 100MB
 
 function UploadBox() {
+  // สถานะของไฟล์และตัวเลือกการประมวลผล
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [action, setAction] = useState("separate");
@@ -23,11 +29,15 @@ function UploadBox() {
   const [compDryWet, setCompDryWet] = useState("100");
   const [compOutputCeiling, setCompOutputCeiling] = useState("");
   const [pitchSteps, setPitchSteps] = useState(0);
+
+  // สถานะผลลัพธ์สำหรับดาวน์โหลดและผลวิเคราะห์
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [downloadFileName, setDownloadFileName] = useState<string | null>(null);
   const [processingTime, setProcessingTime] = useState<string | null>(null);
   const [fileId, setFileId] = useState<string | null>(null);
   const [zipUrl, setZipUrl] = useState<string | null>(null);
+
+  // สถานะข้อความและการตอบสนองของ UI
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -36,6 +46,7 @@ function UploadBox() {
   const [progress, setProgress] = useState(0);
   const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // ตัวช่วยสำหรับเลือกไฟล์และลากวาง
   const handleFileSelect = (selected: File | null) => {
     setErrorMessage(null);
     setSuccessMessage(null);
@@ -70,6 +81,7 @@ function UploadBox() {
     setIsDragging(false);
   };
 
+  // โฟลว์หลักสำหรับประมวลผลทุก action
   const handleUpload = async () => {
     if (!file) {
       setErrorMessage("กรุณาเลือกไฟล์ WAV (≤100MB) ก่อนเริ่มประมวลผล");
@@ -90,7 +102,7 @@ function UploadBox() {
     if (progressTimerRef.current) {
       clearInterval(progressTimerRef.current);
     }
-    // Simulate progress bar while waiting for backend response
+    // ทำ progress แบบจำลองไว้ก่อน เพราะ backend ไม่ได้ส่งสถานะระหว่างประมวลผลกลับมา
     progressTimerRef.current = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 90) return prev; // stop at 90% until completion
@@ -107,6 +119,7 @@ function UploadBox() {
       let response;
       let suffix = "";
 
+      // แตก flow ตาม action เพื่อให้ UI ตัวเดียวรองรับหลาย endpoint
       if (action === "separate") {
         response = await axios.post(`${API_BASE}/separate`, formData);
         const { file_id, zip_url } = response.data;
@@ -167,6 +180,7 @@ function UploadBox() {
         setDownloadFileName(`${baseName}${suffix}.wav`);
       }
 
+      // วิเคราะห์ tempo / key / pitch หลังงานหลักเสร็จ โดยใช้ไฟล์ต้นฉบับก้อนเดียวกัน
       const analyzeData = new FormData();
       analyzeData.append("file", file);
       try {
@@ -185,6 +199,7 @@ function UploadBox() {
       setStatusText("เสร็จแล้ว! ดาวน์โหลดหรือเล่นไฟล์ได้เลย");
       setSuccessMessage((prev) => prev || "ประมวลผลเสร็จแล้ว");
     } catch (err: any) {
+      // รวมรูปแบบ error หลายแบบให้เหลือข้อความที่ผู้ใช้เข้าใจได้ง่ายบนหน้าเว็บ
       let message = "เกิดข้อผิดพลาดระหว่างประมวลผล กรุณาลองใหม่";
       if (err?.response?.data?.detail) {
         message = err.response.data.detail;
@@ -212,6 +227,7 @@ function UploadBox() {
 
   return (
     <div className="grid gap-6 md:grid-cols-2 p-6 text-[#EDE9FE]">
+      {/* ส่วนอัปโหลดไฟล์และตัวเลือกการทำงาน */}
       <div className="space-y-4">
         <div className="rounded-2xl border border-[#5B21B6]/30 bg-[#0F172A] p-4 backdrop-blur shadow-inner shadow-purple-900/30">
           <p className="text-sm text-[#A78BFA]">ขั้นตอนที่ 1</p>
@@ -452,6 +468,7 @@ function UploadBox() {
         </div>
       </div>
 
+      {/* ส่วนแสดงผลวิเคราะห์ ตัวเล่น และลิงก์ดาวน์โหลด */}
       <div className="space-y-4">
         {analysis && <AudioAnalysis data={analysis} />}
 

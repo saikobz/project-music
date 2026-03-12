@@ -5,6 +5,13 @@ import WaveSurfer from "wavesurfer.js";
 const stems = ["vocals", "drums", "bass", "other"] as const;
 type StemType = (typeof stems)[number];
 
+const DEFAULT_TRACK_VOLUMES: Record<StemType, number> = {
+  vocals: 85,
+  drums: 85,
+  bass: 85,
+  other: 85,
+};
+
 type Props = {
   baseUrl: string;
 };
@@ -25,6 +32,7 @@ export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {
     bass: false,
     other: false,
   });
+  const [trackVolumes, setTrackVolumes] = useState<Record<StemType, number>>(DEFAULT_TRACK_VOLUMES);
   const [durations, setDurations] = useState<Record<StemType, number>>({
     vocals: 0,
     drums: 0,
@@ -54,13 +62,12 @@ export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {
         height: 70,
         barGap: 2,
         barWidth: 2,
-        responsive: true,
       });
 
       ws.load(`${baseUrl}/${stem}.wav`);
       ws.on("ready", () => {
         waveSurferRefs.current[stem] = ws;
-        if (mutedTracks[stem]) ws.setVolume(0);
+        ws.setVolume(mutedTracks[stem] ? 0 : trackVolumes[stem] / 100);
         setDurations((prev) => ({
           ...prev,
           [stem]: ws.getDuration(),
@@ -72,11 +79,10 @@ export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {
           [stem]: time,
         }));
       });
-      ws.on("seek", (progress: number) => {
-        const dur = ws.getDuration();
+      ws.on("seeking", (currentTime: number) => {
         setCurrentTimes((prev) => ({
           ...prev,
-          [stem]: progress * dur,
+          [stem]: currentTime,
         }));
       });
       ws.on("finish", () => setIsPlaying(false));
@@ -88,6 +94,14 @@ export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {
       });
     };
   }, [baseUrl]);
+
+  useEffect(() => {
+    stems.forEach((stem) => {
+      const ws = waveSurferRefs.current[stem];
+      if (!ws) return;
+      ws.setVolume(mutedTracks[stem] ? 0 : trackVolumes[stem] / 100);
+    });
+  }, [mutedTracks, trackVolumes]);
 
   const seekToPointer = (stem: StemType, clientX: number) => {
     const ws = waveSurferRefs.current[stem];
@@ -128,11 +142,23 @@ export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {
   };
 
   const toggleMute = (stem: StemType) => {
+    const nextMuted = !mutedTracks[stem];
     const ws = waveSurferRefs.current[stem];
-    const isMuted = !mutedTracks[stem];
+
+    setMutedTracks((prev) => ({ ...prev, [stem]: nextMuted }));
     if (ws) {
-      ws.setVolume(isMuted ? 0 : 1);
-      setMutedTracks((prev) => ({ ...prev, [stem]: isMuted }));
+      ws.setVolume(nextMuted ? 0 : trackVolumes[stem] / 100);
+    }
+  };
+
+  const handleVolumeChange = (stem: StemType, value: number) => {
+    const nextVolume = Math.min(Math.max(value, 0), 100);
+    const ws = waveSurferRefs.current[stem];
+
+    setTrackVolumes((prev) => ({ ...prev, [stem]: nextVolume }));
+    setMutedTracks((prev) => ({ ...prev, [stem]: nextVolume === 0 }));
+    if (ws) {
+      ws.setVolume(nextVolume === 0 ? 0 : nextVolume / 100);
     }
   };
 
@@ -156,7 +182,7 @@ export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {
   return (
     <div className="space-y-4 rounded-2xl border border-[#5B21B6]/30 bg-[#0F172A] p-4 backdrop-blur shadow-[0_20px_40px_rgba(17,24,39,0.45)]">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-[#EDE9FE] font-semibold">
+        <div className="flex items-center gap-2 font-semibold text-[#EDE9FE]">
           <span className="text-lg">เครื่องเล่นหลายสเตม</span>
           <span>Stem</span>
         </div>
@@ -169,7 +195,7 @@ export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {
           </button>
           <button
             onClick={resetAll}
-            className="rounded-lg bg-[#111827] border border-[#5B21B6]/50 px-3 py-2 text-sm font-semibold text-[#EDE9FE] hover:bg-[#1F2937] cursor-pointer"
+            className="rounded-lg border border-[#5B21B6]/50 bg-[#111827] px-3 py-2 text-sm font-semibold text-[#EDE9FE] hover:bg-[#1F2937] cursor-pointer"
           >
             เริ่มต้นใหม่
           </button>
@@ -179,7 +205,7 @@ export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {
       <div className="space-y-3">
         {stems.map((stem) => (
           <div key={stem} className="space-y-2 rounded-xl border border-[#5B21B6]/30 bg-[#111827] p-3">
-            <div className="flex justify-between items-center">
+            <div className="flex items-center justify-between">
               <div className="flex flex-col">
                 <span className="capitalize font-semibold text-[#EDE9FE]">{stem}</span>
                 <span className="text-xs text-[#A78BFA]">
@@ -189,20 +215,45 @@ export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {
               <div className="flex gap-2">
                 <button
                   onClick={() => handleDownload(stem)}
-                  className="text-xs px-3 py-1 rounded-lg bg-[#22D3EE] text-black font-semibold hover:bg-[#38E2FF] cursor-pointer"
+                  className="cursor-pointer rounded-lg bg-[#22D3EE] px-3 py-1 text-xs font-semibold text-black hover:bg-[#38E2FF]"
                 >
                   ดาวน์โหลด
                 </button>
                 <button
                   onClick={() => toggleMute(stem)}
-                  className={`text-xs px-3 py-1 rounded-lg border font-semibold cursor-pointer ${
+                  className={`cursor-pointer rounded-lg border px-3 py-1 text-xs font-semibold ${
                     mutedTracks[stem]
                       ? "bg-[#246e41] border-[#5B21B6]/60 text-[#EDE9FE]"
                       : "bg-[#b62121] border-[#22D3EE]/40 text-white"
                   }`}
                 >
-                  {mutedTracks[stem] ? "Unmute" : "Mute"}
+                  {mutedTracks[stem] ? "เปิดเสียง" : "ปิดเสียง"}
                 </button>
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-[#5B21B6]/25 bg-[#0B1021]/80 px-3 py-2">
+              <div className="mb-2 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide text-[#A78BFA]">
+                <span>Volume</span>
+                <span className="rounded-full border border-[#22D3EE]/30 bg-[#111827] px-2 py-0.5 text-[#EDE9FE]">
+                  {mutedTracks[stem] ? "Mute" : `${trackVolumes[stem]}%`}
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="rounded-md border border-[#22D3EE]/30 bg-[#111827] px-2 py-1 text-[10px] font-semibold text-[#22D3EE]">
+                  VOL
+                </span>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="1"
+                  value={trackVolumes[stem]}
+                  onChange={(event) => handleVolumeChange(stem, Number(event.target.value))}
+                  className="h-2 w-full cursor-pointer rounded-full bg-[#312E81]"
+                  style={{ accentColor: "#22D3EE" }}
+                  aria-label={`ปรับระดับเสียงของ ${stem}`}
+                />
               </div>
             </div>
 

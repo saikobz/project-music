@@ -1,4 +1,9 @@
-# backend/process_audio.py
+"""
+หน้าที่ของไฟล์นี้:
+- รวมงานประมวลผลเสียงพื้นฐานของระบบ เช่น แยก stem, วิเคราะห์ tempo/key/pitch และ pitch shift
+- เชื่อมกับไลบรารีด้าน audio อย่าง Open-Unmix, torchaudio และ librosa
+- ส่งผลลัพธ์กลับเป็นไฟล์หรือข้อมูลวิเคราะห์ให้ backend main เรียกใช้ต่อ
+"""
 
 import os
 import torch
@@ -27,6 +32,7 @@ def separate_audio(input_path: str, output_dir: str = "separated") -> str:
     try:
         audio_tensor, rate = torchaudio.load(input_path)
         input_frames = int(audio_tensor.shape[-1])
+        # โหลด separator ของ Open-Unmix แค่ target ที่ต้องใช้ในระบบนี้
         separator = openunmix_utils.load_separator(
             model_str_or_path="umxl",
             targets=["vocals", "drums", "bass", "other"],
@@ -39,6 +45,7 @@ def separate_audio(input_path: str, output_dir: str = "separated") -> str:
         )
         separator.freeze()
         separator = separator.to(DEVICE)
+        # บาง checkpoint เก็บ sample_rate เป็น tensor จึง normalize ให้เป็น int ก่อนใช้เทียบขนาด
         separator_rate = int(
             separator.sample_rate.item()
             if isinstance(separator.sample_rate, torch.Tensor)
@@ -59,6 +66,7 @@ def separate_audio(input_path: str, output_dir: str = "separated") -> str:
                 waveform = waveform.squeeze(0)
 
             estimate_frames = int(waveform.shape[-1])
+            # เดาว่า output ของโมเดลอยู่ใน sample rate ไหน เพื่อ resample กลับให้ตรงกับไฟล์ต้นฉบับ
             if abs(estimate_frames - expected_model_frames) <= 8:
                 estimate_rate = separator_rate
             elif abs(estimate_frames - input_frames) <= 8:
@@ -101,6 +109,7 @@ def analyze_audio(input_path: str) -> dict:
         f0 = f0[~np.isnan(f0)]
         pitch_note = None
         if f0.size:
+            # ใช้ค่ากลางของ pitch เพื่อลดผลกระทบจากโน้ตสั้นหรือเสียงรบกวนบางช่วง
             pitch_hz = float(np.median(f0))
             pitch_note = librosa.hz_to_note(pitch_hz)
 
@@ -121,6 +130,7 @@ def analyze_audio(input_path: str) -> dict:
         maj_idx = int(np.argmax(maj_scores))
         min_idx = int(np.argmax(min_scores))
 
+        # เลือก key จาก profile ที่ได้คะแนน correlation สูงกว่า
         if maj_scores[maj_idx] >= min_scores[min_idx]:
             key = f"{keys[maj_idx]} major"
         else:

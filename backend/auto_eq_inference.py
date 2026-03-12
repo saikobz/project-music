@@ -1,3 +1,10 @@
+"""
+หน้าที่ของไฟล์นี้:
+- โหลดโมเดล Auto-EQ จาก checkpoint และเตรียมโครงสร้างโมเดลให้พร้อมใช้งาน
+- แปลงเสียงเป็น mel spectrogram, รัน inference ทีละช่วง และ reconstruct กลับเป็น waveform
+- ทำ post-processing เช่น clamp การปรับ EQ, match loudness และ blend ช่วงที่ซ้อนกัน
+"""
+
 import logging
 import os
 from functools import lru_cache
@@ -44,6 +51,7 @@ class AutoEQCNN(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        # โมเดลทำนายค่าปรับเพิ่มจาก input เดิม ไม่ได้สร้าง mel ใหม่จากศูนย์
         residual = self.body(x)
         return x + residual
 
@@ -108,6 +116,7 @@ def normalize_state_dict_keys(state: Mapping[str, torch.Tensor]) -> dict[str, to
             continue
 
         new_key = key
+        # รองรับ checkpoint เก่าที่เคยถูก save ผ่าน DataParallel หรือใช้ชื่อชั้นว่า net.*
         if new_key.startswith("module."):
             new_key = new_key[len("module.") :]
         if new_key.startswith("net."):
@@ -145,6 +154,7 @@ def infer_arch_from_state_dict(state: Mapping[str, torch.Tensor]) -> tuple[int, 
     if int(w9.shape[1]) != ch3 or int(w9.shape[0]) != 1:
         raise AutoEQModelLoadError("Checkpoint shape mismatch: body.9.weight is incompatible with inferred channels.")
 
+    # อ่านจำนวน channel ของแต่ละ block จากน้ำหนักจริง เพื่อไม่ผูกกับสถาปัตยกรรมเดียวตายตัว
     return ch1, ch2, ch3
 
 
@@ -169,6 +179,7 @@ def load_auto_eq_model(device: str = "cpu") -> AutoEQCNN:
         model.load_state_dict(state, strict=True)
         model.to(device)
         model.eval()
+        # cache โมเดลไว้หนึ่งชุดเพื่อลดเวลาโหลดซ้ำทุกครั้งที่เรียก endpoint
         return model
     except AutoEQModelLoadError:
         raise
@@ -190,6 +201,7 @@ def apply_auto_eq_file(input_path: str, output_path: str) -> str:
     mixed = np.zeros(len(y), dtype=np.float32)
     weight = np.zeros(len(y), dtype=np.float32)
 
+    # ประมวลผลทีละช่วงเพื่อคุม memory และให้ไฟล์ยาว ๆ ใช้โมเดลได้
     for start in range(0, len(y), step_samples):
         end = min(start + segment_samples, len(y))
         chunk = y[start:end]
@@ -205,6 +217,7 @@ def apply_auto_eq_file(input_path: str, output_path: str) -> str:
         delta = np.clip(pred_mel - mel_db, -DELTA_CLAMP_DB, DELTA_CLAMP_DB)
         mel_out = np.clip(mel_db + delta, MEL_DB_MIN, MEL_DB_MAX)
 
+        # ใช้ phase จากสัญญาณต้นฉบับเพื่อให้ reconstruction เสถียรกว่าเดาสัญญาณใหม่ทั้งหมด
         enhanced_chunk = mel_db_to_waveform_with_input_phase(mel_out, chunk)
         if enhanced_chunk.shape[0] != chunk.shape[0]:
             if enhanced_chunk.shape[0] > chunk.shape[0]:
@@ -213,6 +226,7 @@ def apply_auto_eq_file(input_path: str, output_path: str) -> str:
                 pad = chunk.shape[0] - enhanced_chunk.shape[0]
                 enhanced_chunk = np.pad(enhanced_chunk, (0, pad))
 
+        # match RMS กลับให้ความดังโดยรวมไม่กระโดดเมื่อเทียบกับต้นฉบับ
         enhanced_chunk = match_loudness_rms(chunk, enhanced_chunk)
         enhanced_chunk = np.clip(enhanced_chunk, -1.0, 1.0).astype(np.float32)
 
@@ -229,6 +243,7 @@ def apply_auto_eq_file(input_path: str, output_path: str) -> str:
         mixed[start:end] += enhanced_chunk * chunk_weight
         weight[start:end] += chunk_weight
 
+    # หารด้วยน้ำหนักรวมเพื่อ blend ช่วงที่ซ้อนกันกลับเป็นสัญญาณเดียว
     enhanced = np.divide(mixed, np.maximum(weight, 1e-8), out=np.zeros_like(mixed), where=weight > 0)
     sf.write(output_path, enhanced, SR)
     return output_path
