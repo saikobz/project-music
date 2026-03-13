@@ -25,7 +25,10 @@ class TestApplyEqAiEndpoint(unittest.TestCase):
         async def fake_save_upload(file, upload_dir=main.UPLOAD_DIR):
             return "test-id", input_path
 
-        def fake_apply_auto_eq_file(input_file: str, output_file: str) -> str:
+        captured: dict[str, str] = {}
+
+        def fake_apply_auto_eq_file(input_file: str, output_file: str, genre: str) -> str:
+            captured["genre"] = genre
             raise AutoEQModelLoadError("model mismatch")
 
         with patch.object(main, "save_upload", new=fake_save_upload), patch.object(
@@ -41,6 +44,7 @@ class TestApplyEqAiEndpoint(unittest.TestCase):
         self.assertEqual(body["status"], "error")
         self.assertEqual(body["error_code"], "AUTO_EQ_MODEL_UNAVAILABLE")
         self.assertIn("model mismatch", body["message"])
+        self.assertEqual(captured["genre"], "trap")
         self.assertFalse(os.path.exists(input_path))
 
     def test_apply_eq_ai_returns_audio_on_success(self) -> None:
@@ -52,7 +56,10 @@ class TestApplyEqAiEndpoint(unittest.TestCase):
         async def fake_save_upload(file, upload_dir=main.UPLOAD_DIR):
             return "test-id", input_path
 
-        def fake_apply_auto_eq_file(input_file: str, requested_output_path: str) -> str:
+        captured: dict[str, str] = {}
+
+        def fake_apply_auto_eq_file(input_file: str, requested_output_path: str, genre: str) -> str:
+            captured["genre"] = genre
             with open(output_path, "wb") as file:
                 file.write(b"RIFF0000WAVEfmt ")
             return output_path
@@ -68,6 +75,7 @@ class TestApplyEqAiEndpoint(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.headers.get("content-type", "").startswith("audio/wav"))
         self.assertEqual(response.content, b"RIFF0000WAVEfmt ")
+        self.assertEqual(captured["genre"], "trap")
         self.assertFalse(os.path.exists(input_path))
 
 

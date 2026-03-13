@@ -160,7 +160,7 @@ async def apply_eq_ai(
         file_id, input_path = await save_upload(file)
         output_filename = f"{file_id}_eq_ai_{genre}.wav"
         output_path = os.path.join("eq_applied", output_filename)
-        result_path = await asyncio.to_thread(apply_auto_eq_file, input_path, output_path)
+        result_path = await asyncio.to_thread(apply_auto_eq_file, input_path, output_path, genre)
         return FileResponse(
             result_path,
             media_type="audio/wav",
