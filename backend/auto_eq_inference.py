@@ -35,6 +35,10 @@ MAX_RMS_GAIN_DB = 1.0
 PEAK_LIMIT = 0.98
 HF_TAPER_START = 0.65
 HF_TAPER_END = 0.35
+MIN_BLEND_SCALE = 0.45
+MIN_DELTA_SCALE = 0.50
+LOW_RMS_THRESHOLD = 0.035
+HIGH_HF_RATIO_THRESHOLD = 0.22
 
 GENRES = ["trap", "pop", "rock", "soul", "country"]
 GENRE2ID = {genre: idx for idx, genre in enumerate(GENRES)}
@@ -166,6 +170,36 @@ def limit_peak(y: np.ndarray, peak_limit: float = PEAK_LIMIT) -> np.ndarray:
     return (y * (peak_limit / peak)).astype(np.float32)
 
 
+def compute_adaptive_strength(chunk: np.ndarray, mel_db: np.ndarray) -> tuple[float, float]:
+    chunk_rms = float(np.sqrt(np.mean(chunk**2))) if chunk.size > 0 else 0.0
+    mel_power = librosa.db_to_power(mel_db)
+    if mel_power.ndim != 2 or mel_power.shape[0] < 4:
+        return 1.0, 1.0
+
+    split_bin = max(int(mel_power.shape[0] * 0.65), 1)
+    hf_power = float(np.mean(mel_power[split_bin:, :]))
+    total_power = float(np.mean(mel_power)) + 1e-8
+    hf_ratio = hf_power / total_power
+
+    blend_scale = 1.0
+    delta_scale = 1.0
+
+    if chunk_rms < LOW_RMS_THRESHOLD:
+        # Quiet passages expose artifacts more easily, so back off processing.
+        quiet_scale = max(MIN_BLEND_SCALE, chunk_rms / max(LOW_RMS_THRESHOLD, 1e-8))
+        blend_scale *= quiet_scale
+        delta_scale *= max(MIN_DELTA_SCALE, quiet_scale)
+
+    if hf_ratio > HIGH_HF_RATIO_THRESHOLD:
+        hf_scale = max(MIN_BLEND_SCALE, HIGH_HF_RATIO_THRESHOLD / max(hf_ratio, 1e-8))
+        blend_scale *= hf_scale
+        delta_scale *= max(MIN_DELTA_SCALE, hf_scale)
+
+    blend_scale = float(np.clip(blend_scale, MIN_BLEND_SCALE, 1.0))
+    delta_scale = float(np.clip(delta_scale, MIN_DELTA_SCALE, 1.0))
+    return blend_scale, delta_scale
+
+
 def _smooth_axis(arr: np.ndarray, axis: int, taps: int) -> np.ndarray:
     if taps <= 1:
         return arr
@@ -207,6 +241,23 @@ def taper_high_freq_delta(delta_db: np.ndarray) -> np.ndarray:
     if start_idx < delta_db.shape[0] - 1:
         taper[start_idx:] = np.linspace(1.0, HF_TAPER_END, delta_db.shape[0] - start_idx, dtype=np.float32)
     return (delta_db * taper[:, None]).astype(np.float32)
+
+
+def build_chunk_window(chunk_len: int, fade_len: int) -> np.ndarray:
+    if chunk_len <= 1:
+        return np.ones((max(chunk_len, 1),), dtype=np.float32)
+
+    fade_len = min(max(int(fade_len), 0), chunk_len // 2)
+    if fade_len <= 0:
+        return np.ones((chunk_len,), dtype=np.float32)
+
+    window = np.ones((chunk_len,), dtype=np.float32)
+    fade = np.hanning(fade_len * 2).astype(np.float32)
+    fade_in = fade[:fade_len]
+    fade_out = fade[fade_len:]
+    window[:fade_len] = np.maximum(window[:fade_len] * fade_in, 1e-4)
+    window[-fade_len:] = np.maximum(window[-fade_len:] * fade_out, 1e-4)
+    return window
 
 
 def extract_model_state_dict(checkpoint: Any) -> Mapping[str, torch.Tensor]:
@@ -430,10 +481,12 @@ def apply_auto_eq_file(input_path: str, output_path: str, genre: str | int | Non
 
         mel_db = waveform_to_mel_db(chunk)
         pred_mel_db = predict_mel_db(model, mel_db, device, genre_id)
+        blend_scale, delta_scale = compute_adaptive_strength(chunk, mel_db)
 
         delta = pred_mel_db - mel_db
         delta = smooth_delta_mel(delta)
         delta = taper_high_freq_delta(delta)
+        delta *= delta_scale
         delta = np.clip(delta, -DELTA_CLAMP_DB, DELTA_CLAMP_DB)
         mel_out = np.clip(mel_db + delta, MEL_DB_MIN, MEL_DB_MAX)
 
@@ -445,20 +498,18 @@ def apply_auto_eq_file(input_path: str, output_path: str, genre: str | int | Non
                 pad = chunk.shape[0] - enhanced_chunk.shape[0]
                 enhanced_chunk = np.pad(enhanced_chunk, (0, pad))
 
-        enhanced_chunk = ((1.0 - OUTPUT_BLEND) * chunk + OUTPUT_BLEND * enhanced_chunk).astype(np.float32)
+        output_blend = OUTPUT_BLEND * blend_scale
+        enhanced_chunk = ((1.0 - output_blend) * chunk + output_blend * enhanced_chunk).astype(np.float32)
         enhanced_chunk = match_loudness_rms(chunk, enhanced_chunk)
         enhanced_chunk = limit_peak(enhanced_chunk)
         enhanced_chunk = np.clip(enhanced_chunk, -1.0, 1.0).astype(np.float32)
 
-        chunk_weight = np.ones(chunk.shape[0], dtype=np.float32)
         fade = min(overlap_samples, chunk.shape[0] // 2)
-        if fade > 0 and start > 0:
-            chunk_weight[:fade] = np.linspace(0.0, 1.0, num=fade, dtype=np.float32)
-        if fade > 0 and end < len(y):
-            chunk_weight[-fade:] = np.minimum(
-                chunk_weight[-fade:],
-                np.linspace(1.0, 0.0, num=fade, dtype=np.float32),
-            )
+        chunk_weight = build_chunk_window(chunk.shape[0], fade)
+        if start == 0:
+            chunk_weight[:fade] = 1.0
+        if end >= len(y):
+            chunk_weight[-fade:] = 1.0
 
         mixed[start:end] += enhanced_chunk * chunk_weight
         weight[start:end] += chunk_weight
