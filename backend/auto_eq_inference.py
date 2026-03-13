@@ -455,16 +455,26 @@ def predict_mel_db(
     return pred_mel_db.astype(np.float32)
 
 
-def apply_auto_eq_file(input_path: str, output_path: str, genre: str | int | None = None) -> str:
-    y, _ = librosa.load(input_path, sr=SR, mono=True)
+def load_audio_preserve_channels(input_path: str) -> np.ndarray:
+    audio, sr = sf.read(input_path, dtype="float32", always_2d=True)
+    audio = audio.T  # (channels, samples)
+    if sr != SR:
+        audio = np.stack(
+            [librosa.resample(ch, orig_sr=sr, target_sr=SR).astype(np.float32) for ch in audio],
+            axis=0,
+        )
+    return audio.astype(np.float32)
 
-    output_dir = os.path.dirname(output_path)
-    if output_dir:
-        os.makedirs(output_dir, exist_ok=True)
 
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    model = load_auto_eq_model(device)
-    genre_id = resolve_genre_id(model, genre)
+def apply_auto_eq_waveform(
+    y: np.ndarray,
+    model: nn.Module,
+    device: str,
+    genre_id: int | None,
+) -> np.ndarray:
+    y = np.asarray(y, dtype=np.float32)
+    if y.ndim != 1:
+        raise ValueError("apply_auto_eq_waveform expects a mono waveform.")
 
     segment_samples = int(SEGMENT_SECONDS * SR)
     overlap_samples = min(int(OVERLAP_SECONDS * SR), max(segment_samples // 2, 1))
@@ -514,6 +524,24 @@ def apply_auto_eq_file(input_path: str, output_path: str, genre: str | int | Non
         mixed[start:end] += enhanced_chunk * chunk_weight
         weight[start:end] += chunk_weight
 
-    enhanced = np.divide(mixed, np.maximum(weight, 1e-8), out=np.zeros_like(mixed), where=weight > 0)
-    sf.write(output_path, enhanced, SR)
+    return np.divide(mixed, np.maximum(weight, 1e-8), out=np.zeros_like(mixed), where=weight > 0)
+
+
+def apply_auto_eq_file(input_path: str, output_path: str, genre: str | int | None = None) -> str:
+    audio = load_audio_preserve_channels(input_path)
+
+    output_dir = os.path.dirname(output_path)
+    if output_dir:
+        os.makedirs(output_dir, exist_ok=True)
+
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model = load_auto_eq_model(device)
+    genre_id = resolve_genre_id(model, genre)
+
+    enhanced_channels = [
+        apply_auto_eq_waveform(channel, model, device, genre_id)
+        for channel in audio
+    ]
+    enhanced = np.stack(enhanced_channels, axis=0)
+    sf.write(output_path, enhanced.T, SR)
     return output_path
