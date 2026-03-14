@@ -54,6 +54,7 @@ const TAG_STYLE: Record<EqGuideLink["tag"], string> = {
   โทนเสียง: "border-[#4ADE80]/40 bg-[#14532D]/30 text-[#BBF7D0]",
 };
 
+//icon link สีฟ้า
 function ExternalIcon() {
   return (
     <svg className="h-4 w-4 text-[#22D3EE]" viewBox="0 0 20   20" fill="none" aria-hidden="true">
