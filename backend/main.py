@@ -12,10 +12,12 @@ import logging
 from uuid import uuid4
 from typing import Tuple
 
+# ชุด import ของ FastAPI สำหรับสร้างแอป, รับไฟล์, และส่ง response กลับ
 from fastapi import FastAPI, UploadFile, File, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 
+# import ฟังก์ชันประมวลผลจากโมดูลย่อยของ backend
 from backend.process_audio import separate_audio, analyze_audio, pitch_shift_audio
 from backend.eq_compressor import apply_compression
 from backend.auto_eq_inference import apply_auto_eq_file, AutoEQModelLoadError
@@ -25,6 +27,7 @@ from backend.auto_eq_inference import apply_auto_eq_file, AutoEQModelLoadError
 
 # การตั้งค่าแอปพลิเคชัน
 app = FastAPI()
+# logger ใช้บันทึก error หรือสถานะสำคัญของ backend ระหว่างรันจริง
 logger = logging.getLogger(__name__)
 
 # โฟลเดอร์ทำงานและข้อจำกัดของไฟล์
@@ -32,11 +35,16 @@ UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # ค่าคอนฟิกระหว่างรัน
+# อ่าน origin ที่อนุญาตจาก environment เพื่อให้เปลี่ยนได้โดยไม่ต้องแก้โค้ด
 allow_origins_env = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000")
+# แยกค่า origin ที่คั่นด้วย comma ให้เป็น list สำหรับ CORS middleware
 allow_origins = [origin.strip() for origin in allow_origins_env.split(",") if origin.strip()]
+# เวลาหลังประมวลผลเสร็จที่ไฟล์ชั่วคราวจะถูกลบทิ้งอัตโนมัติ
 cleanup_ttl = int(os.getenv("SEPARATE_TTL_SECONDS", "21600"))  # 6 hours by default
+# จำกัดขนาดไฟล์อัปโหลดสูงสุดเพื่อกันใช้หน่วยความจำมากเกินไป
 MAX_UPLOAD_BYTES = 100 * 1024 * 1024  # 100MB
 
+# เปิด CORS ให้ frontend ที่กำหนดสามารถเรียก API นี้ได้จาก browser
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allow_origins,
@@ -49,11 +57,14 @@ app.add_middleware(
 
 @app.get("/health")
 async def health():
+    # health check แบบง่าย ใช้ตรวจว่า backend ยังตอบสนองได้ตามปกติ
     return {"status": "ok"}
 
 
 # ตั้งค่าอัปโหลดไฟล์
 async def save_upload(file: UploadFile, upload_dir: str = UPLOAD_DIR) -> Tuple[str, str]:
+    # ฟังก์ชันช่วยกลางสำหรับ endpoint ที่ต้องรับไฟล์เสียงเข้ามา
+    # งานของมันคือ validate ไฟล์, สร้างชื่อไม่ซ้ำ, และเขียนไฟล์ลงดิสก์
     # ดึงชื่อไฟล์เดิมจาก request; ถ้าไม่มีชื่อไฟล์ให้ใช้สตริงว่างแทน
     filename = file.filename or ""
 
@@ -81,6 +92,7 @@ async def save_upload(file: UploadFile, upload_dir: str = UPLOAD_DIR) -> Tuple[s
     input_path = os.path.join(upload_dir, stored_name)
 
     # เขียนข้อมูลแบบ binary ลงดิสก์
+    # เขียนไฟล์แบบ binary ลงดิสก์เพื่อให้โมดูลประมวลผลอื่นอ่านต่อได้
     with open(input_path, "wb") as f:
         f.write(data)
 
@@ -94,13 +106,16 @@ def schedule_cleanup(path: str, delay: int = 0):
 
     def _cleanup():
         try:
+            # ถ้าเป็นโฟลเดอร์ให้ลบทั้งโฟลเดอร์ ถ้าเป็นไฟล์ให้ลบเฉพาะไฟล์นั้น
             if os.path.isdir(path):
                 shutil.rmtree(path, ignore_errors=True)
             elif os.path.exists(path):
                 os.remove(path)
         except Exception as exc:
+            # cleanup ไม่ควรทำให้เซิร์ฟเวอร์ล่ม จึงแค่ log ปัญหาแล้วจบ
             print(f"cleanup failed for {path}: {exc}")
 
+    # ใช้ Timer แยก background thread เพื่อรอแล้วค่อยลบทีหลัง
     timer = threading.Timer(delay, _cleanup)
     timer.daemon = True
     timer.start()
@@ -113,25 +128,31 @@ async def separate(file: UploadFile = File(...)):
         # บันทึกไฟล์ที่อัปโหลดก่อน แล้วค่อยส่ง path ให้โมดูลแยก stem ทำงานต่อ
         file_id, input_path = await save_upload(file)
 
+        # โฟลเดอร์ผลลัพธ์จะแยกตาม file_id เพื่อไม่ให้แต่ละงานชนกัน
         output_dir = os.path.join("separated", file_id)
         os.makedirs(output_dir, exist_ok=True)
+        # รันงานแยก stem ใน thread แยก เพื่อไม่ block event loop ของ FastAPI
         await asyncio.to_thread(separate_audio, input_path, output_dir)
 
         # รวม stem ทั้งหมดเป็น ZIP เพื่อให้ frontend ดาวน์โหลดทีเดียวได้
         zip_filename = f"{file_id}_separated.zip"
         zip_path = os.path.join(UPLOAD_DIR, zip_filename)
         with zipfile.ZipFile(zip_path, "w") as zipf:
+            # เดินทุกไฟล์ใน output_dir แล้วเพิ่มเข้า zip โดยคง path ภายในแบบสัมพัทธ์
             for root, _, files in os.walk(output_dir):
                 for name in files:
                     file_path = os.path.join(root, name)
                     arcname = os.path.relpath(file_path, output_dir)
                     zipf.write(file_path, arcname)
 
+        # ลบไฟล์อัปโหลดต้นฉบับทันทีเพราะไม่ต้องใช้ต่อแล้ว
         if os.path.exists(input_path):
             os.remove(input_path)
+        # เก็บ zip และโฟลเดอร์ผลลัพธ์ไว้ชั่วคราวให้ผู้ใช้โหลดได้ก่อน แล้วค่อยลบตาม TTL
         schedule_cleanup(zip_path, cleanup_ttl)
         schedule_cleanup(output_dir, cleanup_ttl)
 
+        # ส่ง URL ที่ frontend ใช้เรียกดาวน์โหลด zip ภายหลัง
         return JSONResponse(
             content={
                 "status": "success",
@@ -141,8 +162,10 @@ async def separate(file: UploadFile = File(...)):
         )
 
     except HTTPException as http_exc:
+        # ถ้าเป็น error ที่ตั้งใจโยนไว้แล้ว เช่น 400 ให้ส่งต่อออกไปตรง ๆ
         raise http_exc
     except Exception as e:
+        # error ที่ไม่คาดคิดจะถูกรวมเป็น 500
         return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
 
 
@@ -153,6 +176,7 @@ async def download_zip(file_id: str):
     zip_path = os.path.join(UPLOAD_DIR, zip_filename)
 
     if os.path.exists(zip_path):
+        # ถ้าเจอไฟล์ zip ก็สตรีมกลับไปเป็นไฟล์ดาวน์โหลด
         return FileResponse(
             zip_path,
             media_type="application/zip",
@@ -169,6 +193,7 @@ async def get_stem(file_id: str, stem: str):
     path = os.path.join(folder, filename)
 
     if os.path.exists(path):
+        # frontend ใช้ endpoint นี้โหลด stem เฉพาะตัวไปทำ multitrack playback
         return FileResponse(path, media_type="audio/wav")
     return JSONResponse(status_code=404, content={"status": "error", "message": f"ไม่พบไฟล์ {stem}.wav"})
 
@@ -182,8 +207,10 @@ async def apply_eq_ai(
     try:
         # บันทึกไฟล์ก่อน แล้วส่ง path ไปให้โมเดล Auto-EQ ประมวลผล
         file_id, input_path = await save_upload(file)
+        # ตั้งชื่อไฟล์ผลลัพธ์ให้สะท้อนว่าเป็นงาน EQ AI และใช้ genre อะไร
         output_filename = f"{file_id}_eq_ai_{genre}.wav"
         output_path = os.path.join("eq_applied", output_filename)
+        # inference รันใน worker thread เพื่อไม่ block FastAPI main loop
         result_path = await asyncio.to_thread(apply_auto_eq_file, input_path, output_path, genre)
         return FileResponse(
             result_path,
@@ -193,6 +220,7 @@ async def apply_eq_ai(
     except HTTPException as http_exc:
         raise http_exc
     except AutoEQModelLoadError as model_exc:
+        # แยกกรณีโมเดลโหลดไม่ได้ออกมาเป็น 503 เพื่อบอกว่าบริการยังไม่พร้อม
         logger.exception("Auto-EQ model unavailable: %s", model_exc)
         return JSONResponse(
             status_code=503,
@@ -205,6 +233,7 @@ async def apply_eq_ai(
     except Exception as e:
         return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
     finally:
+        # ไม่ว่าผลจะสำเร็จหรือ error ให้ลบไฟล์อัปโหลดต้นฉบับเสมอ
         if "input_path" in locals() and os.path.exists(input_path):
             os.remove(input_path)
 
@@ -213,7 +242,9 @@ async def apply_eq_ai(
 @app.post("/apply-compressor")
 async def apply_compressor(
     file: UploadFile = File(...),
+    # strength เป็น preset ความแรงแบบง่ายสำหรับผู้ใช้ทั่วไป
     strength: str = Query("medium", pattern="^(soft|medium|hard)$"),
+    # genre ใช้เลือก preset เริ่มต้นของ compressor ให้เข้ากับแนวเพลง
     genre: str = Query("general", description="general, pop, rock, trap, country, soul"),
     threshold: float | None = Query(None, ge=-80.0, le=0.0, description="dBFS"),
     ratio: float | None = Query(None, ge=1.0, le=20.0),
@@ -227,6 +258,7 @@ async def apply_compressor(
     try:
         # งาน compressor ใช้ทั้ง preset และค่าที่ผู้ใช้ override ผ่าน query string
         _, input_path = await save_upload(file)
+        # เรียกใช้ฟังก์ชัน DSP ใน thread แยก เพราะเป็นงานคำนวณและอ่านเขียนไฟล์
         output_path = await asyncio.to_thread(
             apply_compression,
             input_path,
@@ -250,10 +282,12 @@ async def apply_compressor(
     except HTTPException as http_exc:
         raise http_exc
     except ValueError as exc:
+        # ถ้าค่าพารามิเตอร์ไม่สมเหตุผล ให้ตอบกลับเป็น 400 พร้อมข้อความอธิบาย
         raise HTTPException(status_code=400, detail=str(exc))
     except Exception as e:
         return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
     finally:
+        # ลบไฟล์อัปโหลดต้นทางทุกครั้งหลังประมวลผลเสร็จ
         if "input_path" in locals() and os.path.exists(input_path):
             os.remove(input_path)
 
@@ -263,9 +297,11 @@ async def pitch_shift(file: UploadFile = File(...), steps: float = 0):
     try:
         # บันทึกไฟล์ก่อน จากนั้นสร้างไฟล์ผลลัพธ์ที่ถูก shift pitch แล้วส่งกลับ
         file_id, input_path = await save_upload(file)
+        # ตั้งชื่อไฟล์ผลลัพธ์ใหม่เพื่อไม่เขียนทับต้นฉบับ
         output_filename = f"{file_id}_pitch.wav"
         output_path = os.path.join(UPLOAD_DIR, output_filename)
         # ฟังก์ชัน pitch_shift_audio จะคืน path ของไฟล์ผลลัพธ์กลับมา
+        # ใช้ to_thread เช่นเดียวกับ endpoint อื่นที่ทำงานประมวลผลเสียงหนัก ๆ
         result_path = await asyncio.to_thread(pitch_shift_audio, input_path, steps, output_path)
         return FileResponse(
             result_path,
@@ -277,6 +313,7 @@ async def pitch_shift(file: UploadFile = File(...), steps: float = 0):
     except Exception as e:
         return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
     finally:
+        # ลบไฟล์ต้นฉบับหลังใช้งานเสร็จเสมอ
         if "input_path" in locals() and os.path.exists(input_path):
             os.remove(input_path)
 
@@ -287,6 +324,7 @@ async def analyze(file: UploadFile = File(...)):
     try:
         # endpoint นี้คืนข้อมูลวิเคราะห์เป็น JSON ไม่ได้สร้างไฟล์เสียงใหม่
         _, input_path = await save_upload(file)
+        # วิเคราะห์เสียงใน thread แยก แล้วนำผลลัพธ์ JSON กลับมาโดยตรง
         result = await asyncio.to_thread(analyze_audio, input_path)
         return JSONResponse(content=result)
     except HTTPException as http_exc:
@@ -294,5 +332,6 @@ async def analyze(file: UploadFile = File(...)):
     except Exception as e:
         return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
     finally:
+        # งาน analyze ใช้ไฟล์ชั่วคราวระยะสั้น จึงลบทิ้งทันทีหลังได้ผล
         if "input_path" in locals() and os.path.exists(input_path):
             os.remove(input_path)
