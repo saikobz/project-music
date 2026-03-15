@@ -46,6 +46,7 @@ def _compute_gain_reduction_db(
     # แปลง threshold / ratio / knee ให้เป็นเส้นโค้งการลด gain ในหน่วย dB
     slope = 1.0 - (1.0 / ratio)
     if knee_db <= 0.0:
+        # hard knee จะเริ่มบีบอัดทันทีเมื่อระดับเสียงเกิน threshold
         over = np.maximum(levels_db - threshold_db, 0.0)
         return -(over * slope)
 
@@ -98,10 +99,13 @@ def _compress_waveform(
     # แปลง Tensor เป็น numpy เพื่อคำนวณระดับสัญญาณแบบ sample-by-sample ได้ง่าย
     mix = _normalize_mix_value(dry_wet)
 
+    # ย้ายข้อมูลมาอยู่บน CPU และแปลงเป็น float32 เพื่อให้คำนวณด้วย numpy ได้ง่าย
     wave = waveform.detach().cpu().numpy().astype(np.float32)
     if wave.ndim == 1:
+        # ถ้าเป็น mono ให้เพิ่มแกน channel เพื่อให้โค้ดด้านล่างใช้รูปแบบเดียวกันเสมอ
         wave = wave[np.newaxis, :]
     if wave.shape[1] == 0:
+        # ถ้าไฟล์ว่างก็คืนค่าเดิมทันที
         return waveform
 
     dry = wave.copy()
@@ -109,12 +113,14 @@ def _compress_waveform(
     sidechain = np.max(np.abs(wave), axis=0)
 
     hop = max(int(control_hop), 1)
+    # pad สัญญาณให้หารด้วย hop ลงตัวก่อน reshape เป็นเฟรมควบคุม
     pad_len = (-sidechain.shape[0]) % hop
     if pad_len > 0:
         sidechain_padded = np.pad(sidechain, (0, pad_len), mode="constant", constant_values=0.0)
     else:
         sidechain_padded = sidechain
 
+    # ยุบสัญญาณเป็น peak ต่อเฟรม เพื่อใช้เป็นตัวควบคุม envelope ของ compressor
     peaks = sidechain_padded.reshape(-1, hop).max(axis=1).astype(np.float32)
     envelope = np.zeros_like(peaks, dtype=np.float32)
 
@@ -132,6 +138,7 @@ def _compress_waveform(
         env_prev = coeff * env_prev + (1.0 - coeff) * peak
         envelope[idx] = env_prev
 
+    # แปลง envelope ไปอยู่ในสเกล dB ก่อนคำนวณ gain reduction
     levels_db = 20.0 * np.log10(np.maximum(envelope, 1e-8))
     reduction_db = _compute_gain_reduction_db(
         levels_db,
@@ -140,11 +147,13 @@ def _compress_waveform(
         knee_db=float(knee),
     )
 
+    # รวม gain reduction กับ makeup gain ที่ใช้ชดเชยความดังกลับเข้าไป
     total_gain_db = reduction_db + float(makeup_gain)
     gain_frames = np.power(10.0, total_gain_db / 20.0).astype(np.float32)
     # ขยาย gain จากระดับ frame control ให้กลับมาเป็น sample-by-sample ก่อนคูณกับคลื่นเสียง
     gain_samples = np.repeat(gain_frames, hop)[: sidechain.shape[0]]
 
+    # wet คือสัญญาณที่ผ่านการบีบอัดแล้ว
     wet = wave * gain_samples[np.newaxis, :]
     # dry/wet ช่วยผสมสัญญาณเดิมกลับเข้าไปได้แบบ parallel compression
     mixed = dry * (1.0 - mix) + wet * mix
@@ -156,6 +165,7 @@ def _compress_waveform(
         if peak > ceiling_lin and peak > 1e-8:
             mixed *= ceiling_lin / peak
 
+    # กันค่าเกินช่วงเสียงมาตรฐานก่อนแปลงกลับเป็น Tensor
     mixed = np.clip(mixed, -1.0, 1.0).astype(np.float32)
     return torch.from_numpy(mixed)
 
@@ -179,18 +189,22 @@ def apply_compression(
     # โหลดไฟล์, รวม preset + override, บีบอัดเสียง, แล้วบันทึกไฟล์ผลลัพธ์
     os.makedirs(output_dir, exist_ok=True)
 
+    # สร้างชื่อไฟล์ปลายทางจากชื่อเดิมและ genre ที่ใช้ปรับ
     filename = os.path.basename(input_path)
     output_path = os.path.join(output_dir, f"{os.path.splitext(filename)[0]}_{genre}_compressed.wav")
 
+    # โหลด waveform และ sample rate จากไฟล์ต้นฉบับ
     waveform, sample_rate = torchaudio.load(input_path)
 
     # เริ่มจาก preset ตาม genre แล้วค่อยขยับตาม strength และค่าที่ผู้ใช้ส่ง override มา
     genre_kwargs = COMP_GENRE_PRESETS.get(genre, COMP_GENRE_PRESETS["general"]).copy()
 
     if strength == "soft":
+        # soft จะบีบอัดน้อยลงโดยยก threshold ขึ้นและลด ratio ลง
         genre_kwargs["threshold"] += 4.0
         genre_kwargs["ratio"] = max(2.0, genre_kwargs["ratio"] - 1.0)
     elif strength == "hard":
+        # hard จะบีบอัดแรงขึ้นโดยกด threshold ลงและเพิ่ม ratio
         genre_kwargs["threshold"] -= 4.0
         genre_kwargs["ratio"] = genre_kwargs["ratio"] + 1.5
     elif strength != "medium":
@@ -204,6 +218,7 @@ def apply_compression(
         genre_kwargs["attack"] = float(attack)
     if release is not None:
         genre_kwargs["release"] = float(release)
+    # ถ้าผู้ใช้ไม่ส่ง knee มา ให้ใช้ค่า soft knee กลาง ๆ เป็น default
     knee_value = 6.0 if knee is None else float(knee)
 
     # ส่งค่าทั้งหมดเข้าแกน compressor แล้วเซฟผลเป็นไฟล์ WAV
@@ -220,6 +235,7 @@ def apply_compression(
         output_ceiling=output_ceiling,
     )
 
+    # บันทึกไฟล์ผลลัพธ์กลับเป็น WAV เพื่อให้ส่วนอื่นของระบบนำไปใช้ต่อ
     torchaudio.save(output_path, compressed.cpu(), sample_rate=sample_rate)
     print(f"Compression ({strength}, genre={genre}) done: {output_path}")
     return output_path
