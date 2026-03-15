@@ -39,7 +39,7 @@ allow_origins_env = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000")
 # แยกค่า origin ที่คั่นด้วย comma ให้เป็น list สำหรับ CORS middleware
 allow_origins = [origin.strip() for origin in allow_origins_env.split(",") if origin.strip()]
 # เวลาหลังประมวลผลเสร็จที่ไฟล์ชั่วคราวจะถูกลบทิ้งอัตโนมัติ
-cleanup_ttl = int(os.getenv("SEPARATE_TTL_SECONDS", "600"))  # 10 นาทีลบ
+cleanup_ttl = int(os.getenv("SEPARATE_TTL_SECONDS", "1200"))  # 20 นาทีลบ
 # จำกัดขนาดไฟล์อัปโหลดสูงสุดเพื่อกันใช้หน่วยความจำมากเกินไป
 MAX_UPLOAD_BYTES = 100 * 1024 * 1024  # 100MB
 
@@ -318,7 +318,7 @@ async def pitch_shift(file: UploadFile = File(...), steps: float = 0):
             os.remove(input_path)
 
 
-# เส้นทางวิเคราะห์เสียง
+# เส้น วิเคราะห์เสียง
 @app.post("/analyze")
 async def analyze(file: UploadFile = File(...)):
     try:
