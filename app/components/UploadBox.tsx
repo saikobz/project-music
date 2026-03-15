@@ -183,7 +183,7 @@ function UploadBox() {
 
       if (action === "pitch") {
         response = await axios.post(`${API_BASE}/pitch-shift?steps=${pitchSteps}`, formData, {
-          responseType: "blob",
+          responseType: "blob", //"blob" หมายถึง บอก axios ว่า response ที่ backend ส่งกลับมาเป็น “ข้อมูลไฟล์ดิบ” ไม่ใช่ JSON หรือ text
         });
         const url = window.URL.createObjectURL(new Blob([response.data]));
         setDownloadUrl(url);
@@ -246,11 +246,6 @@ function UploadBox() {
 
   return (
     <div className="grid gap-6 md:grid-cols-2 p-6 text-[#EDE9FE]">
-      {/* ===== คอลัมน์ซ้าย: อัปโหลดไฟล์ ตั้งค่าการประมวลผล และดูสถานะ ===== */}
-      {/* คอลัมน์ซ้าย: รับไฟล์, ตั้งค่าการประมวลผล, และแสดง progress / feedback */}
-      {/* ส่วนอัปโหลดไฟล์และตัวเลือกการทำงาน */}
-      {/* ===== คอลัมน์ขวา: แสดงผลวิเคราะห์ เครื่องเล่น และปุ่มดาวน์โหลด ===== */}
-      {/* ===== คอลัมน์ขวา: แสดงผลวิเคราะห์ เครื่องเล่น และปุ่มดาวน์โหลด ===== */}
       <div className="space-y-4">
         {/* ===== การ์ดเลือกไฟล์เสียง ===== */}
         {/* ขั้นตอนที่ 1: รับไฟล์ WAV ผ่านปุ่มเลือกไฟล์หรือ drag-and-drop */}

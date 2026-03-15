@@ -38,14 +38,14 @@ def separate_audio(input_path: str, output_dir: str = "separated") -> str:
         input_frames = int(audio_tensor.shape[-1])
         # โหลดโมเดล Open-Unmix ที่ฝึกมาแล้วสำหรับแยก 4 stem หลัก
         separator = openunmix_utils.load_separator(
-            model_str_or_path="umxl",
-            targets=["vocals", "drums", "bass", "other"],
-            niter=1,
-            residual=False,
-            wiener_win_len=300,
-            device=str(DEVICE),
-            pretrained=True,
-            filterbank="torch",
+            model_str_or_path="umxl",  # ชื่อโมเดลที่ใช้; umxl คือรุ่น pretrained ของ Open-Unmix
+            targets=["vocals", "drums", "bass", "other"],  # stem ที่ต้องการแยกออกมา
+            niter=1,  # จำนวนรอบ refinement; ค่าน้อยช่วยให้รันเร็วขึ้น
+            residual=False,  # ไม่สร้าง stem ส่วนเกินนอกเหนือจาก target ที่กำหนด
+            wiener_win_len=300,  # ขนาดหน้าต่างที่ใช้ในขั้นตอน Wiener filtering
+            device=str(DEVICE),  # อุปกรณ์ที่ใช้ประมวลผล เช่น cpu หรือ cuda
+            pretrained=True,  # ใช้น้ำหนักโมเดลที่ฝึกมาแล้ว
+            filterbank="torch",  # ใช้ filterbank ฝั่ง torch สำหรับคำนวณสเปกโตรแกรม
         )
         # ใช้โมเดลแบบ inference อย่างเดียว และย้ายไปยัง CPU/GPU ที่เลือกไว้
         separator.freeze()
