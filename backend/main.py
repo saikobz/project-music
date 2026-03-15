@@ -40,7 +40,7 @@ allow_origins_env = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000")
 # แยกค่า origin ที่คั่นด้วย comma ให้เป็น list สำหรับ CORS middleware
 allow_origins = [origin.strip() for origin in allow_origins_env.split(",") if origin.strip()]
 # เวลาหลังประมวลผลเสร็จที่ไฟล์ชั่วคราวจะถูกลบทิ้งอัตโนมัติ
-cleanup_ttl = int(os.getenv("SEPARATE_TTL_SECONDS", "21600"))  # 6 hours by default
+cleanup_ttl = int(os.getenv("SEPARATE_TTL_SECONDS", "600"))  # 10 นาทีลบ
 # จำกัดขนาดไฟล์อัปโหลดสูงสุดเพื่อกันใช้หน่วยความจำมากเกินไป
 MAX_UPLOAD_BYTES = 100 * 1024 * 1024  # 100MB
 
@@ -121,7 +121,7 @@ def schedule_cleanup(path: str, delay: int = 0):
     timer.start()
 
 
-# api stem
+#เส้น api แยกเสียง
 @app.post("/separate")
 async def separate(file: UploadFile = File(...)):
     try:

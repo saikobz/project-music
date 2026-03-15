@@ -161,7 +161,7 @@ class AutoEQFiLM(nn.Module):
 
 
 def waveform_to_mel_db(y: np.ndarray) -> np.ndarray:
-    # แปลง waveform เป็น mel spectrogram แบบ dB ให้ตรงกับ representation ที่โมเดลเรียนมา
+    # แปลง waveform เป็น mel spectrogram แบบ dB ให้ตรงกับ representation ที่โมเดลเทรนมา
     # ขั้นตอนนี้คือ preprocessing หลักก่อนส่งข้อมูลเข้าโมเดล
     mel = librosa.feature.melspectrogram(
         y=y,
@@ -178,7 +178,7 @@ def waveform_to_mel_db(y: np.ndarray) -> np.ndarray:
 
 
 def mel_db_to_norm(mel_db: np.ndarray) -> np.ndarray:
-    # แปลงช่วง dB ไปอยู่ใน 0..1 สำหรับ checkpoint แบบ FiLM
+    # แปลงช่วง dB ไปอยู่ใน 0-  1 สำหรับ checkpoint แบบ FiLM
     # FiLM checkpoint ถูกฝึกด้วย input ที่ normalize แล้ว จึงต้องแปลงก่อน inference
     mel_db = np.clip(mel_db, MEL_DB_MIN, MEL_DB_MAX)
     mel_norm = (mel_db + TOP_DB) / TOP_DB
