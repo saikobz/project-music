@@ -13,7 +13,7 @@ import numpy as np
 import librosa
 import soundfile as sf
 
-# เลือกใช้ GPU อัตโนมัติถ้ามี เพราะงานแยก stem ใช้ทรัพยากรสูงที่สุด
+# เลือกใช้ GPU อัตโนมัติถ้ามี 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 

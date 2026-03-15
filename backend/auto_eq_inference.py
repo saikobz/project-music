@@ -16,7 +16,7 @@ import torch
 import torch.nn as nn
 
 # ค่าคงที่ทั้งหมดในส่วนนี้ใช้ร่วมกันระหว่าง preprocessing, inference และ reconstruction
-# sample rate มาตรฐานที่ใช้ตลอด pipeline
+# sample rate 
 SR = 44100
 # ขนาด FFT สำหรับสร้างและแปลง spectrogram
 N_FFT = 2048

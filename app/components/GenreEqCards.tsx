@@ -30,7 +30,7 @@ const GENRE_PRESETS: GenreEqPreset[] = [
     subtitle: "โฟกัส vocal ให้เด่น และเติม high ให้ airy.",
     accent: "#22D3EE",
     profileLabel: "Vocal Presence",
-    graphImage: "/eq-graphs/pop.svg",
+    graphImage: "/eq-graphs/pop.png",
     bands: [
       { label: "Boost Mid", freq: 1500, gain: 4.0, q: 1.0 },
       { label: "Air", freq: 8000, gain: 2.5, q: 0.8 },
@@ -42,7 +42,7 @@ const GENRE_PRESETS: GenreEqPreset[] = [
     subtitle: "ดัน punch และ attack ในย่าน low และ upper-mid.",
     accent: "#F97316",
     profileLabel: "Punch + Attack",
-    graphImage: "/eq-graphs/rock.svg",
+    graphImage: "/eq-graphs/rock.png",
     bands: [
       { label: "Low Punch", freq: 120, gain: 3.5, q: 0.9 },
       { label: "Presence", freq: 3000, gain: 3.0, q: 1.0 },
@@ -54,7 +54,7 @@ const GENRE_PRESETS: GenreEqPreset[] = [
     subtitle: "เน้น sub ให้หนัก พร้อม top-end ที่สว่างและมี snap.",
     accent: "#EF4444",
     profileLabel: "Sub + Snap",
-    graphImage: "/eq-graphs/trap.svg",
+    graphImage: "/eq-graphs/trap.png",
     bands: [
       { label: "Sub", freq: 60, gain: 5.0, q: 1.2 },
       { label: "Snap", freq: 8000, gain: 3.5, q: 0.9 },
@@ -66,7 +66,7 @@ const GENRE_PRESETS: GenreEqPreset[] = [
     subtitle: "เติม low-mid ให้มี body และเพิ่ม upper clarity ที่สะอาด.",
     accent: "#FACC15",
     profileLabel: "Body + Clarity",
-    graphImage: "/eq-graphs/country.svg",
+    graphImage: "/eq-graphs/country.png",
     bands: [
       { label: "Body", freq: 250, gain: 2.5, q: 0.9 },
       { label: "Clarity", freq: 4000, gain: 3.0, q: 0.9 },
@@ -78,7 +78,7 @@ const GENRE_PRESETS: GenreEqPreset[] = [
     subtitle: "คง low ให้อุ่น และให้ high texture ที่ silky.",
     accent: "#34D399",
     profileLabel: "Warm + Silk",
-    graphImage: "/eq-graphs/soul.svg",
+    graphImage: "/eq-graphs/soul.png",
     bands: [
       { label: "Warm", freq: 180, gain: 3.0, q: 1.0 },
       { label: "Silk", freq: 6000, gain: 2.5, q: 0.8 },
@@ -191,13 +191,14 @@ export default function GenreEqCards() {
 
         <div className="mb-3 rounded-xl border border-[#5B21B6]/28 bg-[#0B1021]/70 p-3 text-sm text-[#C4B5FD]">{selected.subtitle}</div>
 
-        <div className="overflow-hidden rounded-xl border border-[#5B21B6]/28 bg-[#070B18]">
+        <div className="mx-auto max-w-4xl overflow-hidden rounded-xl border border-[#5B21B6]/28 bg-[#070B18]">
           <Image
             src={selected.graphImage}
             alt={`${selected.title} EQ กราฟ`}
             width={1200}
             height={420}
-            className="h-auto w-full object-cover"
+            sizes="(max-width: 768px) 100vw, 896px"
+            className="h-[220px] w-full object-contain md:h-[280px] lg:h-[320px]"
             priority={selected.id === "pop"}
           />
         </div>
