@@ -79,27 +79,37 @@ class AutoEQModelLoadError(RuntimeError):
     """ใช้เมื่อไม่สามารถโหลด checkpoint ของ Auto-EQ ได้"""
 
 
-class AutoEQCNN(nn.Module):
-    # โมเดลรุ่นเก่าที่ใช้ conv ล้วน ๆ และยังรองรับไว้เพื่ออ่าน checkpoint เดิม
-    def __init__(self, ch1: int = 32, ch2: int = 64, ch3: int = 128):
-        super().__init__()
-        # body เป็น convolution stack ตรง ๆ สำหรับพยากรณ์ mel ที่ถูกปรับ EQ แล้ว
-        self.body = nn.Sequential(
-            nn.Conv2d(1, ch1, kernel_size=3, padding=1),
-            nn.BatchNorm2d(ch1),
-            nn.ReLU(),
-            nn.Conv2d(ch1, ch2, kernel_size=3, padding=1),
-            nn.BatchNorm2d(ch2),
-            nn.ReLU(),
-            nn.Conv2d(ch2, ch3, kernel_size=3, padding=1),
-            nn.BatchNorm2d(ch3),
-            nn.ReLU(),
-            nn.Conv2d(ch3, 1, kernel_size=1),
-        )
+# class AutoEQCNN(nn.Module):
+#     # โมเดลรุ่นเก่าที่ใช้ conv ล้วน ๆ และยังรองรับไว้เพื่ออ่าน checkpoint เดิม
+#     def __init__(self, ch1: int = 32, ch2: int = 64, ch3: int = 128):
+#         super().__init__()
+#         # body เป็น convolution stack ตรง ๆ สำหรับพยากรณ์ mel ที่ถูกปรับ EQ แล้ว
+#         self.body = nn.Sequential(
+#             # ชั้นแรก รับ mel 1 channel แล้วแปลงเป็น feature map จำนวน ch1
+#             nn.Conv2d(1, ch1, kernel_size=3, padding=1),
+#             # ปรับ distribution ของ feature จากชั้นแรกให้เสถียรขึ้น
+#             nn.BatchNorm2d(ch1),
+#             # เพิ่ม non-linearity เพื่อให้โมเดลเรียนรู้ pattern ที่ซับซ้อนได้
+#             nn.ReLU(),
+#             # ชั้นที่สอง สกัด feature ต่อจากชั้นแรกและขยายเป็น ch2 channels
+#             nn.Conv2d(ch1, ch2, kernel_size=3, padding=1),
+#             # normalize feature ของชั้นที่สอง
+#             nn.BatchNorm2d(ch2),
+#             # เพิ่ม non-linearity อีกรอบหลัง convolution
+#             nn.ReLU(),
+#             # ชั้นที่สาม สกัด feature ที่ลึกขึ้นอีกและขยายเป็น ch3 channels
+#             nn.Conv2d(ch2, ch3, kernel_size=3, padding=1),
+#             # normalize feature ของชั้นที่สาม
+#             nn.BatchNorm2d(ch3),
+#             # เพิ่ม non-linearity ก่อนส่งเข้า layer สุดท้าย
+#             nn.ReLU(),
+#             # ชั้นสุดท้ายยุบ feature ทั้งหมดกลับให้เหลือ output 1 channel เท่ากับ mel เดิม
+#             nn.Conv2d(ch3, 1, kernel_size=1),
+#         )
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        # ใช้ residual connection เพื่อให้โมเดลเรียนรู้ "ส่วนต่าง" ของ EQ ได้ง่ายขึ้น
-        return x + self.body(x)
+#     def forward(self, x: torch.Tensor) -> torch.Tensor:
+#         # ใช้ residual connection เพื่อให้โมเดลเรียนรู้ "ส่วนต่าง" ของ EQ ได้ง่ายขึ้น
+#         return x + self.body(x)
 
 
 class AutoEQFiLM(nn.Module):
@@ -473,20 +483,20 @@ def load_auto_eq_model(device: str = "cpu") -> nn.Module:
             model = AutoEQFiLM(n_genres=n_genres, ch=ch)
             model.requires_gid = True
             model.input_representation = "mel_norm"
-        else:
-            # ถ้าไม่มี embedding ให้ถือว่าเป็น checkpoint CNN รุ่นเก่า
-            ch1, ch2, ch3 = infer_legacy_arch_from_state_dict(state)
-            logger.info(
-                "Loading legacy Auto-EQ model path=%s device=%s channels=(%d,%d,%d)",
-                MODEL_PATH,
-                device,
-                ch1,
-                ch2,
-                ch3,
-            )
-            model = AutoEQCNN(ch1=ch1, ch2=ch2, ch3=ch3)
-            model.requires_gid = False
-            model.input_representation = "mel_db"
+        # else:
+        #     # ถ้าไม่มี embedding ให้ถือว่าเป็น checkpoint CNN รุ่นเก่า
+        #     ch1, ch2, ch3 = infer_legacy_arch_from_state_dict(state)
+        #     logger.info(
+        #         "Loading legacy Auto-EQ model path=%s device=%s channels=(%d,%d,%d)",
+        #         MODEL_PATH,
+        #         device,
+        #         ch1,
+        #         ch2,
+        #         ch3,
+        #     )
+        #     model = AutoEQCNN(ch1=ch1, ch2=ch2, ch3=ch3)
+        #     model.requires_gid = False
+        #     model.input_representation = "mel_db"
 
         # โหลดน้ำหนักจริงเข้าโมเดล ย้ายไปยัง device และสลับเป็นโหมด inference
         model.load_state_dict(state, strict=True)
