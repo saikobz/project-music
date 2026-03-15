@@ -1,4 +1,3 @@
-# หน้าที่ของไฟล์นี้:
 # - เป็นศูนย์กลางของ FastAPI backend และประกาศ API routes ทั้งหมดของระบบ
 # - รับไฟล์อัปโหลด ตรวจสอบชนิด/ขนาดไฟล์ แล้วส่งงานไปยังโมดูลประมวลผลเสียงแต่ละตัว
 # - จัดการเรื่อง response, error handling และ cleanup ไฟล์ชั่วคราวหลังประมวลผล
@@ -179,6 +178,7 @@ async def download_zip(file_id: str):
         # ถ้าเจอไฟล์ zip ก็สตรีมกลับไปเป็นไฟล์ดาวน์โหลด
         return FileResponse(
             zip_path,
+            # ระบุ type ว่าไฟล์ที่ส่งกลับเป็น zip เพื่อให้ browser/frontend จัดการดาวน์โหลดได้ถูกชนิด
             media_type="application/zip",
             filename="separated.zip",
         )

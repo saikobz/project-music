@@ -1,5 +1,4 @@
 """
-หน้าที่ของไฟล์นี้:
 - เก็บ logic การบีบอัดเสียง (compressor) ที่ใช้ทั้ง preset ตาม genre และค่าที่ผู้ใช้ override เอง
 - คำนวณ envelope, gain reduction, dry/wet mix และ output ceiling ในระดับสัญญาณเสียงจริง
 - ส่งออกไฟล์ WAV ที่ผ่านการ compression แล้วกลับไปให้ API layer ใช้งานต่อ
