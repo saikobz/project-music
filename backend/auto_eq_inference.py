@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Auto-EQ inference helpers compatible with the current training checkpoint.
+ชุดฟังก์ชันช่วยสำหรับรัน Auto-EQ inference ให้เข้ากับ checkpoint ที่มีอยู่ในโปรเจกต์
 
-Supports:
-- Current FiLM checkpoint from train.py (genre-conditioned, normalized mel input)
-- Legacy CNN checkpoint format used by older inference code
+รองรับทั้ง:
+- checkpoint แบบ FiLM รุ่นปัจจุบันที่รับ genre เป็นเงื่อนไข
+- checkpoint แบบ CNN รุ่นเก่าที่เคยใช้ใน inference code เดิม
 """
 
 import logging
@@ -18,6 +18,7 @@ import soundfile as sf
 import torch
 import torch.nn as nn
 
+# ค่าคงที่ทั้งหมดในส่วนนี้ใช้ร่วมกันระหว่าง preprocessing, inference และ reconstruction
 SR = 44100
 N_FFT = 2048
 HOP = 512
@@ -49,10 +50,11 @@ logger = logging.getLogger(__name__)
 
 
 class AutoEQModelLoadError(RuntimeError):
-    """Raised when an Auto-EQ checkpoint cannot be loaded."""
+    """ใช้เมื่อไม่สามารถโหลด checkpoint ของ Auto-EQ ได้"""
 
 
 class AutoEQCNN(nn.Module):
+    # โมเดลรุ่นเก่าที่ใช้ conv ล้วน ๆ และยังรองรับไว้เพื่ออ่าน checkpoint เดิม
     def __init__(self, ch1: int = 32, ch2: int = 64, ch3: int = 128):
         super().__init__()
         self.body = nn.Sequential(
@@ -73,6 +75,7 @@ class AutoEQCNN(nn.Module):
 
 
 class AutoEQFiLM(nn.Module):
+    # โมเดลรุ่นปัจจุบันที่ใช้ genre embedding มาปรับ feature map ผ่าน FiLM
     def __init__(self, n_genres: int, ch: int = 256):
         super().__init__()
         self.emb = nn.Embedding(n_genres, 32)
@@ -111,6 +114,7 @@ class AutoEQFiLM(nn.Module):
 
 
 def waveform_to_mel_db(y: np.ndarray) -> np.ndarray:
+    # แปลง waveform เป็น mel spectrogram แบบ dB ให้ตรงกับ representation ที่โมเดลเรียนมา
     mel = librosa.feature.melspectrogram(
         y=y,
         sr=SR,
@@ -125,6 +129,7 @@ def waveform_to_mel_db(y: np.ndarray) -> np.ndarray:
 
 
 def mel_db_to_norm(mel_db: np.ndarray) -> np.ndarray:
+    # แปลงช่วง dB ไปอยู่ใน 0..1 สำหรับ checkpoint แบบ FiLM
     mel_db = np.clip(mel_db, MEL_DB_MIN, MEL_DB_MAX)
     mel_norm = (mel_db + TOP_DB) / TOP_DB
     return np.clip(mel_norm, 0.0, 1.0).astype(np.float32)
@@ -136,6 +141,7 @@ def mel_norm_to_db(mel_norm: np.ndarray) -> np.ndarray:
 
 
 def mel_db_to_waveform_with_input_phase(mel_db: np.ndarray, y_ref: np.ndarray) -> np.ndarray:
+    # สร้าง waveform กลับจาก mel ที่ทำนายได้ โดยยืม phase จากเสียงต้นฉบับ
     mel = librosa.db_to_power(np.clip(mel_db, MEL_DB_MIN, MEL_DB_MAX)).astype(np.float32)
     mag_pred = librosa.feature.inverse.mel_to_stft(mel, sr=SR, n_fft=N_FFT)
     stft_ref = librosa.stft(y_ref, n_fft=N_FFT, hop_length=HOP)
@@ -171,6 +177,7 @@ def limit_peak(y: np.ndarray, peak_limit: float = PEAK_LIMIT) -> np.ndarray:
 
 
 def compute_adaptive_strength(chunk: np.ndarray, mel_db: np.ndarray) -> tuple[float, float]:
+    # ลดความแรงของการประมวลผลในช่วงที่เงียบมากหรือแหลมมาก เพื่อลด artifact
     chunk_rms = float(np.sqrt(np.mean(chunk**2))) if chunk.size > 0 else 0.0
     mel_power = librosa.db_to_power(mel_db)
     if mel_power.ndim != 2 or mel_power.shape[0] < 4:
@@ -185,7 +192,7 @@ def compute_adaptive_strength(chunk: np.ndarray, mel_db: np.ndarray) -> tuple[fl
     delta_scale = 1.0
 
     if chunk_rms < LOW_RMS_THRESHOLD:
-        # Quiet passages expose artifacts more easily, so back off processing.
+        # ช่วงที่เบามากมักทำให้ artifact ฟังออกง่าย จึงลดความแรงของการประมวลผลลง
         quiet_scale = max(MIN_BLEND_SCALE, chunk_rms / max(LOW_RMS_THRESHOLD, 1e-8))
         blend_scale *= quiet_scale
         delta_scale *= max(MIN_DELTA_SCALE, quiet_scale)
@@ -201,6 +208,7 @@ def compute_adaptive_strength(chunk: np.ndarray, mel_db: np.ndarray) -> tuple[fl
 
 
 def _smooth_axis(arr: np.ndarray, axis: int, taps: int) -> np.ndarray:
+    # smoothing ด้วย Hann window ตามแกนที่กำหนด เพื่อไม่ให้ EQ เปลี่ยนแบบหักมุมเกินไป
     if taps <= 1:
         return arr
 
@@ -227,12 +235,14 @@ def _smooth_axis(arr: np.ndarray, axis: int, taps: int) -> np.ndarray:
 
 
 def smooth_delta_mel(delta_db: np.ndarray) -> np.ndarray:
+    # ทำให้ delta EQ ที่โมเดลทำนายมานุ่มขึ้นทั้งตามความถี่และตามเวลา
     delta_db = _smooth_axis(delta_db, axis=0, taps=DELTA_SMOOTH_FREQ_BINS)
     delta_db = _smooth_axis(delta_db, axis=1, taps=DELTA_SMOOTH_TIME_FRAMES)
     return delta_db.astype(np.float32)
 
 
 def taper_high_freq_delta(delta_db: np.ndarray) -> np.ndarray:
+    # ค่อย ๆ ลดแรงของการปรับในย่านความถี่สูงเพราะเป็นย่านที่ artifact ฟังออกง่าย
     if delta_db.ndim != 2 or delta_db.shape[0] <= 1:
         return delta_db.astype(np.float32)
 
@@ -244,6 +254,7 @@ def taper_high_freq_delta(delta_db: np.ndarray) -> np.ndarray:
 
 
 def build_chunk_window(chunk_len: int, fade_len: int) -> np.ndarray:
+    # สร้างหน้าต่างสำหรับ crossfade ตอน overlap-add ระหว่าง chunk
     if chunk_len <= 1:
         return np.ones((max(chunk_len, 1),), dtype=np.float32)
 
@@ -261,6 +272,7 @@ def build_chunk_window(chunk_len: int, fade_len: int) -> np.ndarray:
 
 
 def extract_model_state_dict(checkpoint: Any) -> Mapping[str, torch.Tensor]:
+    # รองรับทั้ง checkpoint ที่เก็บ state_dict ภายใน และไฟล์ที่เป็น state dict ตรง ๆ
     if isinstance(checkpoint, Mapping) and "state_dict" in checkpoint:
         state = checkpoint["state_dict"]
     elif isinstance(checkpoint, Mapping):
@@ -274,6 +286,7 @@ def extract_model_state_dict(checkpoint: Any) -> Mapping[str, torch.Tensor]:
 
 
 def normalize_state_dict_keys(state: Mapping[str, torch.Tensor]) -> dict[str, torch.Tensor]:
+    # ล้าง prefix ที่มาจาก DataParallel หรือ torch.compile เพื่อให้ชื่อ key ตรงกับโมเดลปัจจุบัน
     normalized: dict[str, torch.Tensor] = {}
     for key, value in state.items():
         if not isinstance(key, str) or not torch.is_tensor(value):
@@ -295,6 +308,7 @@ def normalize_state_dict_keys(state: Mapping[str, torch.Tensor]) -> dict[str, to
 
 
 def infer_legacy_arch_from_state_dict(state: Mapping[str, torch.Tensor]) -> tuple[int, int, int]:
+    # เดาจำนวน channel ของโมเดลเก่าจาก shape ของน้ำหนักใน checkpoint
     required = ("body.0.weight", "body.3.weight", "body.6.weight", "body.9.weight")
     missing = [key for key in required if key not in state]
     if missing:
@@ -323,6 +337,7 @@ def infer_legacy_arch_from_state_dict(state: Mapping[str, torch.Tensor]) -> tupl
 
 
 def infer_film_arch_from_state_dict(state: Mapping[str, torch.Tensor]) -> tuple[int, int]:
+    # เดาโครงสร้างของโมเดล FiLM จาก shape ของ layer ต่าง ๆ ใน checkpoint
     required = (
         "emb.weight",
         "stem.0.weight",
@@ -375,6 +390,7 @@ def infer_film_arch_from_state_dict(state: Mapping[str, torch.Tensor]) -> tuple[
 
 @lru_cache(maxsize=1)
 def load_auto_eq_model(device: str = "cpu") -> nn.Module:
+    # โหลดโมเดลแล้ว cache ไว้ เพราะการอ่าน checkpoint ซ้ำ ๆ มีต้นทุนสูง
     try:
         checkpoint = torch.load(MODEL_PATH, map_location=device)
         raw_state = extract_model_state_dict(checkpoint)
@@ -417,6 +433,7 @@ def load_auto_eq_model(device: str = "cpu") -> nn.Module:
 
 
 def resolve_genre_id(model: nn.Module, genre: str | int | None) -> int | None:
+    # checkpoint แบบ FiLM ต้องใช้ genre id ส่วน checkpoint เก่าไม่ต้องใช้
     if not getattr(model, "requires_gid", False):
         return None
 
@@ -441,6 +458,7 @@ def predict_mel_db(
     device: str,
     genre_id: int | None,
 ) -> np.ndarray:
+    # เรียก inference ให้ถูกทางตามชนิดของ checkpoint ที่ถูกโหลดมา
     if getattr(model, "input_representation", "mel_db") == "mel_norm":
         model_input = mel_db_to_norm(mel_db)
         mel_tensor = torch.from_numpy(model_input).unsqueeze(0).unsqueeze(0).to(device)
@@ -456,8 +474,9 @@ def predict_mel_db(
 
 
 def load_audio_preserve_channels(input_path: str) -> np.ndarray:
+    # เก็บจำนวน channel เดิมไว้ เพราะ Auto-EQ จะถูกประมวลผลทีละ channel
     audio, sr = sf.read(input_path, dtype="float32", always_2d=True)
-    audio = audio.T  # (channels, samples)
+    audio = audio.T  # จัดแกนให้อยู่ในรูป (channels, samples)
     if sr != SR:
         audio = np.stack(
             [librosa.resample(ch, orig_sr=sr, target_sr=SR).astype(np.float32) for ch in audio],
@@ -472,6 +491,8 @@ def apply_auto_eq_waveform(
     device: str,
     genre_id: int | None,
 ) -> np.ndarray:
+    # โฟลว์หลักของ Auto-EQ สำหรับ waveform แบบ mono:
+    # แบ่ง chunk -> ทำนาย delta EQ -> สร้างเสียงกลับ -> overlap-add รวมผล
     y = np.asarray(y, dtype=np.float32)
     if y.ndim != 1:
         raise ValueError("apply_auto_eq_waveform expects a mono waveform.")
@@ -493,6 +514,7 @@ def apply_auto_eq_waveform(
         pred_mel_db = predict_mel_db(model, mel_db, device, genre_id)
         blend_scale, delta_scale = compute_adaptive_strength(chunk, mel_db)
 
+        # เปลี่ยนผลทำนายให้เป็น delta EQ ที่นุ่มและไม่รุนแรงเกินขอบเขตที่ตั้งไว้
         delta = pred_mel_db - mel_db
         delta = smooth_delta_mel(delta)
         delta = taper_high_freq_delta(delta)
@@ -502,6 +524,7 @@ def apply_auto_eq_waveform(
 
         enhanced_chunk = mel_db_to_waveform_with_input_phase(mel_out, chunk)
         if enhanced_chunk.shape[0] != chunk.shape[0]:
+            # ปรับความยาวให้กลับมาตรงกับ chunk เดิมก่อนนำไปผสม
             if enhanced_chunk.shape[0] > chunk.shape[0]:
                 enhanced_chunk = enhanced_chunk[: chunk.shape[0]]
             else:
@@ -514,6 +537,7 @@ def apply_auto_eq_waveform(
         enhanced_chunk = limit_peak(enhanced_chunk)
         enhanced_chunk = np.clip(enhanced_chunk, -1.0, 1.0).astype(np.float32)
 
+        # overlap-add พร้อมหน้าต่าง fade เพื่อไม่ให้รอยต่อของ chunk ได้ยินชัด
         fade = min(overlap_samples, chunk.shape[0] // 2)
         chunk_weight = build_chunk_window(chunk.shape[0], fade)
         if start == 0:
@@ -528,6 +552,7 @@ def apply_auto_eq_waveform(
 
 
 def apply_auto_eq_file(input_path: str, output_path: str, genre: str | int | None = None) -> str:
+    # ตัวห่อระดับไฟล์สำหรับ API: โหลดเสียง, รัน Auto-EQ ทีละ channel, แล้วเขียนไฟล์ผลลัพธ์
     audio = load_audio_preserve_channels(input_path)
 
     output_dir = os.path.dirname(output_path)

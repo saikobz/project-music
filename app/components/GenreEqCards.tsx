@@ -22,6 +22,7 @@ type GenreEqPreset = {
   bands: EqBand[];
 };
 
+// ข้อมูล preset แบบคงที่ ใช้สำหรับอธิบายแนวคิดการปรับ EQ ตาม genre
 const GENRE_PRESETS: GenreEqPreset[] = [
   {
     id: "pop",
@@ -89,12 +90,14 @@ function formatFreq(freq: number): string {
   return freq >= 1000 ? `${(freq / 1000).toFixed(freq % 1000 === 0 ? 0 : 1)}kHz` : `${freq}Hz`;
 }
 
+// การ์ดอ้างอิงแบบโต้ตอบได้สำหรับเลือกดู preset ของแต่ละ genre
 export default function GenreEqCards() {
   const [selectedId, setSelectedId] = useState<GenreId>("pop");
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    // ปิด dropdown เมื่อผู้ใช้คลิกนอกพื้นที่ของเมนู
     function onClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);

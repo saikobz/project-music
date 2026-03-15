@@ -2,6 +2,7 @@ import UploadBox from "./components/UploadBox";
 import EqKnowledgePanel from "./components/EqKnowledgePanel";
 import GenreEqCards from "./components/GenreEqCards";
 
+// หน้าแรกของระบบ ประกอบจากคู่มือ EQ แบบลอย, กล่องอัปโหลด, และการ์ด preset อ้างอิง
 export default function Home() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-[#0B1021] via-[#111827] to-[#312E81] text-[#EDE9FE]">

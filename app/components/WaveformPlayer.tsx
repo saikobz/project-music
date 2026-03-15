@@ -6,6 +6,7 @@ interface WaveformPlayerProps {
   audioUrl: string;
 }
 
+// ตัวเล่น waveform สำหรับไฟล์ WAV เดี่ยวที่ผ่านการประมวลผลแล้ว
 const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const waveSurferRef = useRef<WaveSurfer | null>(null);
@@ -16,6 +17,7 @@ const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl }) => {
   useEffect(() => {
     if (!containerRef.current) return;
 
+    // สร้าง WaveSurfer ใหม่ทุกครั้งเมื่อมีไฟล์ผลลัพธ์ตัวใหม่ถูกโหลดเข้ามา
     waveSurferRef.current?.destroy();
 
     waveSurferRef.current = WaveSurfer.create({
@@ -46,6 +48,7 @@ const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl }) => {
     waveSurferRef.current?.setVolume(volume / 100);
   }, [volume]);
 
+  // แปลงตำแหน่ง pointer บน waveform ให้เป็นตำแหน่ง seek ของเสียง
   const seekToPointer = (clientX: number) => {
     if (!waveSurferRef.current || !containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();

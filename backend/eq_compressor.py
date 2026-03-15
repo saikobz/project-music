@@ -12,7 +12,7 @@ import numpy as np
 import torchaudio
 import torch
 
-# Compressor presets by genre.
+# preset แต่ละ genre ใช้เป็นค่าเริ่มต้นก่อนจะถูกปรับเพิ่มด้วย strength หรือ override จากผู้ใช้
 COMP_GENRE_PRESETS = {
     "general": {"threshold": -24.0, "ratio": 4.0, "attack": 5, "release": 80},
     "pop": {"threshold": -22.0, "ratio": 3.5, "attack": 5, "release": 100},
@@ -24,6 +24,7 @@ COMP_GENRE_PRESETS = {
 
 
 def _normalize_mix_value(dry_wet: float) -> float:
+    # รองรับทั้งรูปแบบ 0..1 และ 0..100 เพื่อให้เรียกใช้จาก API ได้สะดวก
     mix = float(dry_wet)
     if mix < 0.0:
         raise ValueError("dry_wet must be >= 0.")
@@ -42,6 +43,7 @@ def _compute_gain_reduction_db(
     ratio: float,
     knee_db: float,
 ) -> np.ndarray:
+    # แปลง threshold / ratio / knee ให้เป็นเส้นโค้งการลด gain ในหน่วย dB
     slope = 1.0 - (1.0 / ratio)
     if knee_db <= 0.0:
         over = np.maximum(levels_db - threshold_db, 0.0)
@@ -78,6 +80,8 @@ def _compress_waveform(
     output_ceiling: float | None,
     control_hop: int = 64,
 ) -> torch.Tensor:
+    # แกนหลักของ compressor:
+    # สร้าง envelope, คำนวณ gain reduction, แล้วผสม dry/wet ก่อนคืนผลลัพธ์
     if sample_rate <= 0:
         raise ValueError("sample_rate must be > 0.")
     if ratio < 1.0:
@@ -91,6 +95,7 @@ def _compress_waveform(
     if output_ceiling is not None and output_ceiling > 0.0:
         raise ValueError("output_ceiling must be <= 0 dBFS.")
 
+    # แปลง Tensor เป็น numpy เพื่อคำนวณระดับสัญญาณแบบ sample-by-sample ได้ง่าย
     mix = _normalize_mix_value(dry_wet)
 
     wave = waveform.detach().cpu().numpy().astype(np.float32)
@@ -113,6 +118,7 @@ def _compress_waveform(
     peaks = sidechain_padded.reshape(-1, hop).max(axis=1).astype(np.float32)
     envelope = np.zeros_like(peaks, dtype=np.float32)
 
+    # attack/release กำหนดความเร็วในการตอบสนองของ envelope เมื่อระดับสัญญาณเปลี่ยน
     attack_s = max(float(attack), 0.1) / 1000.0
     release_s = max(float(release), 0.1) / 1000.0
     frame_time_s = hop / float(sample_rate)
@@ -144,6 +150,7 @@ def _compress_waveform(
     mixed = dry * (1.0 - mix) + wet * mix
 
     if output_ceiling is not None:
+        # จำกัด peak ขั้นสุดท้ายเพื่อไม่ให้ดังเกิน ceiling ที่ผู้ใช้ตั้งไว้
         ceiling_lin = 10.0 ** (float(output_ceiling) / 20.0)
         peak = float(np.max(np.abs(mixed)))
         if peak > ceiling_lin and peak > 1e-8:
@@ -168,6 +175,8 @@ def apply_compression(
     dry_wet: float = 100.0,
     output_ceiling: float | None = None,
 ) -> str:
+    # ฟังก์ชันนี้เป็นตัวเชื่อมระหว่าง API layer กับ DSP จริง:
+    # โหลดไฟล์, รวม preset + override, บีบอัดเสียง, แล้วบันทึกไฟล์ผลลัพธ์
     os.makedirs(output_dir, exist_ok=True)
 
     filename = os.path.basename(input_path)
@@ -197,6 +206,7 @@ def apply_compression(
         genre_kwargs["release"] = float(release)
     knee_value = 6.0 if knee is None else float(knee)
 
+    # ส่งค่าทั้งหมดเข้าแกน compressor แล้วเซฟผลเป็นไฟล์ WAV
     compressed = _compress_waveform(
         waveform=waveform,
         sample_rate=sample_rate,

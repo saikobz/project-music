@@ -2,6 +2,7 @@
 
 import React, { useId, useState } from "react";
 
+// แผงความรู้แบบลอยที่รวมลิงก์ภายนอกสำหรับศึกษาเรื่อง EQ
 type EqGuideLink = {
   title: string;
   source: string;
@@ -54,7 +55,7 @@ const TAG_STYLE: Record<EqGuideLink["tag"], string> = {
   โทนเสียง: "border-[#4ADE80]/40 bg-[#14532D]/30 text-[#BBF7D0]",
 };
 
-//icon link สีฟ้า
+// ไอคอนตกแต่งเพื่อบอกว่าลิงก์นี้จะเปิดออกไปภายนอก
 function ExternalIcon() {
   return (
     <svg className="h-4 w-4 text-[#22D3EE]" viewBox="0 0 20   20" fill="none" aria-hidden="true">
@@ -70,6 +71,7 @@ function ExternalIcon() {
   );
 }
 
+// แผงด้านข้างแบบยุบ/ขยายได้ เพื่อให้คู่มือยังเข้าถึงง่ายแต่ไม่กินพื้นที่หน้าจอมากเกินไป
 export default function EqKnowledgePanel() {
   const [isOpen, setIsOpen] = useState(false);
   const panelId = useId();
@@ -139,4 +141,3 @@ export default function EqKnowledgePanel() {
     </aside>
   );
 }
-

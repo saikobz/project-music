@@ -2,9 +2,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import WaveSurfer from "wavesurfer.js";
 
+// backend แยกเพลงออกมาเป็น 4 stem ชื่อคงที่เสมอ
 const stems = ["vocals", "drums", "bass", "other"] as const;
 type StemType = (typeof stems)[number];
 
+// ระดับเสียงตั้งต้นของแต่ละแทร็ก เพื่อให้เริ่มฟังได้ทันทีโดยไม่ดังสุด
 const DEFAULT_TRACK_VOLUMES: Record<StemType, number> = {
   vocals: 85,
   drums: 85,
@@ -16,6 +18,7 @@ type Props = {
   baseUrl: string;
 };
 
+// ตัวเล่นหลายแทร็กที่คุม WaveSurfer 4 ตัวให้เล่นและ seek ไปพร้อมกัน
 export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {
   const waveSurferRefs = useRef<Record<StemType, WaveSurfer | null>>({
     vocals: null,
@@ -47,6 +50,7 @@ export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {
   });
 
   useEffect(() => {
+    // สร้าง waveform player แยกสำหรับแต่ละ stem ทุกครั้งที่ base URL เปลี่ยน
     stems.forEach((stem) => {
       const container = document.getElementById(`waveform-${stem}`);
       if (!container) return;
@@ -96,6 +100,7 @@ export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {
   }, [baseUrl]);
 
   useEffect(() => {
+    // ทำให้สถานะ mute และ volume slider สะท้อนลงไปยัง WaveSurfer ของแต่ละแทร็กจริง
     stems.forEach((stem) => {
       const ws = waveSurferRefs.current[stem];
       if (!ws) return;
@@ -103,6 +108,7 @@ export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {
     });
   }, [mutedTracks, trackVolumes]);
 
+  // ตัวคำนวณกลางสำหรับแปลงการลากบน waveform ให้เป็นตำแหน่ง seek
   const seekToPointer = (stem: StemType, clientX: number) => {
     const ws = waveSurferRefs.current[stem];
     const container = document.getElementById(`waveform-${stem}`);
@@ -164,6 +170,7 @@ export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {
 
   const handleDownload = async (stem: StemType) => {
     try {
+      // ดาวน์โหลด stem จาก backend แล้วสั่ง browser ให้โหลดไฟล์ตามปกติ
       const response = await fetch(`${baseUrl}/${stem}.wav`);
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
@@ -283,6 +290,7 @@ export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {
   );
 }
 
+// แปลงวินาทีให้อยู่ในรูป m:ss สำหรับแสดงเวลาใต้แต่ละ stem
 const formatTime = (seconds: number) => {
   if (!seconds || Number.isNaN(seconds)) return "0:00";
   const m = Math.floor(seconds / 60);

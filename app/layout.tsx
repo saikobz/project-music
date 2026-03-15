@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
+// ลงทะเบียนฟอนต์หลักไว้ที่ root layout เพื่อให้ทั้งแอปใช้ตัวแปรฟอนต์ชุดเดียวกันได้
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -17,6 +18,7 @@ export const metadata: Metadata = {
   description: "Web Application for Music Source Separation Using AI with Automatic EQ and Compressor",
 };
 
+// layout หลักของแอป ทำหน้าที่ห่อทุกหน้าและใส่สไตล์ระดับทั้งระบบ
 export default function RootLayout({
   children,
 }: Readonly<{

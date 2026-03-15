@@ -13,10 +13,12 @@ import numpy as np
 import librosa
 import soundfile as sf
 
+# เลือกใช้ GPU อัตโนมัติถ้ามี เพราะงานแยก stem ใช้ทรัพยากรสูงที่สุด
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def separate_audio(input_path: str, output_dir: str = "separated") -> str:
+    # import แบบ lazy เพื่อให้ backend ยังรันส่วนอื่นได้ แม้เครื่องยังไม่ได้ลง openunmix
     try:
         from openunmix.predict import separate
         from openunmix import utils as openunmix_utils
@@ -30,6 +32,7 @@ def separate_audio(input_path: str, output_dir: str = "separated") -> str:
         raise ValueError("รองรับเฉพาะไฟล์ WAV (.wav)")
 
     try:
+        # โหลดไฟล์เสียงและเตรียม separator ที่ pretrained มาแล้ว
         audio_tensor, rate = torchaudio.load(input_path)
         input_frames = int(audio_tensor.shape[-1])
         # โหลด separator ของ Open-Unmix แค่ target ที่ต้องใช้ในระบบนี้
@@ -61,6 +64,7 @@ def separate_audio(input_path: str, output_dir: str = "separated") -> str:
             device=str(DEVICE),
         )
 
+        # บันทึกผลลัพธ์แต่ละ target เป็นไฟล์ WAV แยกกันเพื่อใช้ดาวน์โหลดและเล่นบนหน้าเว็บ
         for target, waveform in estimates.items():
             if waveform.ndim == 3:
                 waveform = waveform.squeeze(0)
@@ -96,8 +100,9 @@ def separate_audio(input_path: str, output_dir: str = "separated") -> str:
 
 
 def analyze_audio(input_path: str) -> dict:
-    """Analyze audio file and return tempo, pitch, and key information."""
+    """วิเคราะห์ไฟล์เสียงแล้วคืนค่า tempo, pitch และ key"""
     try:
+        # แปลงเป็น mono ก่อน เพื่อให้การวิเคราะห์ภาพรวมของเพลงง่ายและสม่ำเสมอ
         y, sr = librosa.load(input_path, sr=None, mono=True)
 
         # ใช้ beat.tempo (ใน librosa 0.11 ยังมี alias) และละเว้น FutureWarning
@@ -113,6 +118,7 @@ def analyze_audio(input_path: str) -> dict:
             pitch_hz = float(np.median(f0))
             pitch_note = librosa.hz_to_note(pitch_hz)
 
+        # เปรียบเทียบ chroma ของเพลงกับ profile major/minor เพื่อเดาว่าเพลงอยู่คีย์ไหน
         chroma = librosa.feature.chroma_cqt(y=y, sr=sr)
         chroma_mean = chroma.mean(axis=1)
 
@@ -143,8 +149,9 @@ def analyze_audio(input_path: str) -> dict:
 
 
 def pitch_shift_audio(input_path: str, steps: float, output_path: str) -> str:
-    """Shift the pitch of an audio file by a number of half-steps."""
+    """เลื่อน pitch ของไฟล์เสียงตามจำนวน half-steps ที่ระบุ"""
     try:
+        # ใช้ librosa ทำ pitch shifting แล้วเขียนผลลัพธ์กลับเป็นไฟล์ใหม่
         y, sr = librosa.load(input_path, sr=None)
         shifted = librosa.effects.pitch_shift(y, sr=sr, n_steps=steps)
         sf.write(output_path, shifted, sr)

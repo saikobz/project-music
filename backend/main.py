@@ -20,6 +20,8 @@ from backend.process_audio import separate_audio, analyze_audio, pitch_shift_aud
 from backend.eq_compressor import apply_compression
 from backend.auto_eq_inference import apply_auto_eq_file, AutoEQModelLoadError
 
+# ไฟล์นี้เป็นจุดรวมการตั้งค่า FastAPI และประกาศ endpoint หลักของระบบทั้งหมด
+
 
 # การตั้งค่าแอปพลิเคชัน
 app = FastAPI()
@@ -52,26 +54,43 @@ async def health():
 
 # ตั้งค่าอัปโหลดไฟล์
 async def save_upload(file: UploadFile, upload_dir: str = UPLOAD_DIR) -> Tuple[str, str]:
-    
+    # ดึงชื่อไฟล์เดิมจาก request; ถ้าไม่มีชื่อไฟล์ให้ใช้สตริงว่างแทน
     filename = file.filename or ""
+
+    # แยกนามสกุลไฟล์ออกมาเพื่อตรวจชนิดไฟล์
     _, ext = os.path.splitext(filename)
+
+    # backend นี้รับเฉพาะไฟล์ .wav เท่านั้น ถ้าไม่ใช่ให้ตอบกลับ 400 ทันที
     if ext.lower() != ".wav":
         raise HTTPException(status_code=400, detail="รองรับเฉพาะไฟล์ WAV (.wav)")
 
+    # อ่านข้อมูลไฟล์ทั้งหมดจาก UploadFile มาเป็น bytes
     data = await file.read()
+
+    # ป้องกันการอัปโหลดไฟล์ใหญ่เกินที่ระบบกำหนด
     if len(data) > MAX_UPLOAD_BYTES:
         raise HTTPException(status_code=400, detail="ไฟล์ต้องมีขนาดไม่เกิน 100MB")
 
+    # สร้าง id ไม่ซ้ำเพื่อกันชื่อไฟล์ชนกันและใช้อ้างอิงไฟล์นี้ในขั้นตอนถัดไป
     file_id = str(uuid4())
+
+    # รวม file_id กับชื่อไฟล์เดิมเพื่อให้ได้ชื่อไฟล์ที่เก็บจริงบนดิสก์
     stored_name = f"{file_id}_{filename}"
+
+    # สร้าง path เต็มของไฟล์ที่จะถูกบันทึกลงในโฟลเดอร์ uploads
     input_path = os.path.join(upload_dir, stored_name)
+
+    # เขียนข้อมูลแบบ binary ลงดิสก์
     with open(input_path, "wb") as f:
         f.write(data)
+
+    # คืนทั้ง file_id และ path ของไฟล์ที่บันทึกแล้วให้ endpoint ที่เรียกใช้เอาไปทำงานต่อ
     return file_id, input_path
 
 
 def schedule_cleanup(path: str, delay: int = 0):
-    
+    # ลบไฟล์หรือโฟลเดอร์แบบหน่วงเวลาใน background เพื่อไม่ให้ request หลักต้องรอ
+
 
     def _cleanup():
         try:
@@ -91,12 +110,14 @@ def schedule_cleanup(path: str, delay: int = 0):
 @app.post("/separate")
 async def separate(file: UploadFile = File(...)):
     try:
+        # บันทึกไฟล์ที่อัปโหลดก่อน แล้วค่อยส่ง path ให้โมดูลแยก stem ทำงานต่อ
         file_id, input_path = await save_upload(file)
 
         output_dir = os.path.join("separated", file_id)
         os.makedirs(output_dir, exist_ok=True)
         await asyncio.to_thread(separate_audio, input_path, output_dir)
 
+        # รวม stem ทั้งหมดเป็น ZIP เพื่อให้ frontend ดาวน์โหลดทีเดียวได้
         zip_filename = f"{file_id}_separated.zip"
         zip_path = os.path.join(UPLOAD_DIR, zip_filename)
         with zipfile.ZipFile(zip_path, "w") as zipf:
@@ -127,6 +148,7 @@ async def separate(file: UploadFile = File(...)):
 
 @app.get("/download/{file_id}")
 async def download_zip(file_id: str):
+    # ใช้ file_id ที่ frontend ส่งมาเพื่อหา ZIP ที่ถูกสร้างจากงานแยก stem
     zip_filename = f"{file_id}_separated.zip"
     zip_path = os.path.join(UPLOAD_DIR, zip_filename)
 
@@ -141,6 +163,7 @@ async def download_zip(file_id: str):
 
 @app.get("/separated/{file_id}/{stem}.wav")
 async def get_stem(file_id: str, stem: str):
+    # ส่งคืน stem เดี่ยวให้ตัวเล่นหลายแทร็กเรียกไปเปิดทีละไฟล์
     filename = f"{stem}.wav"
     folder = os.path.join("separated", file_id)
     path = os.path.join(folder, filename)
@@ -157,6 +180,7 @@ async def apply_eq_ai(
     genre: str = Query("pop", description="แนวเพลง เช่น pop, rock, trap, country, soul"),
 ):
     try:
+        # บันทึกไฟล์ก่อน แล้วส่ง path ไปให้โมเดล Auto-EQ ประมวลผล
         file_id, input_path = await save_upload(file)
         output_filename = f"{file_id}_eq_ai_{genre}.wav"
         output_path = os.path.join("eq_applied", output_filename)
@@ -201,6 +225,7 @@ async def apply_compressor(
     output_ceiling: float | None = Query(None, ge=-20.0, le=0.0, description="dBFS"),
 ):
     try:
+        # งาน compressor ใช้ทั้ง preset และค่าที่ผู้ใช้ override ผ่าน query string
         _, input_path = await save_upload(file)
         output_path = await asyncio.to_thread(
             apply_compression,
@@ -236,10 +261,11 @@ async def apply_compressor(
 @app.post("/pitch-shift")
 async def pitch_shift(file: UploadFile = File(...), steps: float = 0):
     try:
+        # บันทึกไฟล์ก่อน จากนั้นสร้างไฟล์ผลลัพธ์ที่ถูก shift pitch แล้วส่งกลับ
         file_id, input_path = await save_upload(file)
         output_filename = f"{file_id}_pitch.wav"
         output_path = os.path.join(UPLOAD_DIR, output_filename)
-        # pitch_shift_audio will return the output path
+        # ฟังก์ชัน pitch_shift_audio จะคืน path ของไฟล์ผลลัพธ์กลับมา
         result_path = await asyncio.to_thread(pitch_shift_audio, input_path, steps, output_path)
         return FileResponse(
             result_path,
@@ -259,6 +285,7 @@ async def pitch_shift(file: UploadFile = File(...), steps: float = 0):
 @app.post("/analyze")
 async def analyze(file: UploadFile = File(...)):
     try:
+        # endpoint นี้คืนข้อมูลวิเคราะห์เป็น JSON ไม่ได้สร้างไฟล์เสียงใหม่
         _, input_path = await save_upload(file)
         result = await asyncio.to_thread(analyze_audio, input_path)
         return JSONResponse(content=result)

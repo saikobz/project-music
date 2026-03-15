@@ -9,6 +9,7 @@ interface AnalysisProps {
   };
 }
 
+// การ์ดแสดงผลวิเคราะห์เสียงที่ backend ส่งกลับมา เช่น tempo, key และ pitch
 const AudioAnalysis: React.FC<AnalysisProps> = ({ data }) => {
   return (
     <div className="rounded-2xl border border-[#5B21B6]/40 bg-gradient-to-br from-[#111827] via-[#1F1B34] to-[#312E81] p-5 shadow-[0_20px_40px_rgba(17,24,39,0.45)]">

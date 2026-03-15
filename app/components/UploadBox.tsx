@@ -8,12 +8,14 @@ import axios from "axios";
 import WaveformPlayer from "./WaveformPlayer";
 import MultiStemLivePlayer from "./MultiStemLivePlayer";
 import AudioAnalysis from "./AudioAnalysis";
+// ที่อยู่ของ backend และข้อจำกัดขนาดไฟล์ฝั่งหน้าเว็บ
 
 // ค่าตั้งต้นของ API และข้อจำกัดการอัปโหลด
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
 const MAX_SIZE_BYTES = 100 * 1024 * 1024; // 100MB
 
 function UploadBox() {
+  // สถานะกลุ่มนี้กำหนดว่าจะเรียก backend action ไหนและใช้พารามิเตอร์อะไร
   // สถานะของไฟล์และตัวเลือกการประมวลผล
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -30,6 +32,7 @@ function UploadBox() {
   const [compOutputCeiling, setCompOutputCeiling] = useState("");
   const [pitchSteps, setPitchSteps] = useState(0);
 
+  // สถานะผลลัพธ์จาก backend ใช้กับการดาวน์โหลด การเล่นไฟล์ และเวลาที่ใช้ประมวลผล
   // สถานะผลลัพธ์สำหรับดาวน์โหลดและผลวิเคราะห์
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [downloadFileName, setDownloadFileName] = useState<string | null>(null);
@@ -37,6 +40,7 @@ function UploadBox() {
   const [fileId, setFileId] = useState<string | null>(null);
   const [zipUrl, setZipUrl] = useState<string | null>(null);
 
+  // สถานะของ UI ล้วน ๆ เช่น banner ข้อความ, ผลวิเคราะห์, และ progress จำลอง
   // สถานะข้อความและการตอบสนองของ UI
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -46,6 +50,7 @@ function UploadBox() {
   const [progress, setProgress] = useState(0);
   const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // ตัวตรวจสอบกลาง ใช้ร่วมกันทั้ง input file และ drag-and-drop
   // ตัวช่วยสำหรับเลือกไฟล์และลากวาง
   const handleFileSelect = (selected: File | null) => {
     setErrorMessage(null);
@@ -81,6 +86,11 @@ function UploadBox() {
     setIsDragging(false);
   };
 
+  // โฟลว์หลักของการส่งงาน:
+  // 1. ล้างผลลัพธ์เก่า
+  // 2. เรียก endpoint ตาม action ที่เลือก
+  // 3. เก็บ URL หรือ id ที่ได้กลับมาเพื่อใช้แสดงผลด้านขวา
+  // 4. วิเคราะห์ไฟล์ต้นฉบับเพื่อหา tempo, key และ pitch
   // โฟลว์หลักสำหรับประมวลผลทุก action
   const handleUpload = async () => {
     if (!file) {
@@ -105,7 +115,7 @@ function UploadBox() {
     // ทำ progress แบบจำลองไว้ก่อน เพราะ backend ไม่ได้ส่งสถานะระหว่างประมวลผลกลับมา
     progressTimerRef.current = setInterval(() => {
       setProgress((prev) => {
-        if (prev >= 90) return prev; // stop at 90% until completion
+        if (prev >= 90) return prev; // หยุดไว้ที่ 90% แล้วรอผลจริงจาก backend
         return prev + 2;
       });
     }, 200);
@@ -119,6 +129,7 @@ function UploadBox() {
       let response;
       let suffix = "";
 
+      // งานแยก stem จะได้ทั้ง file id และ URL สำหรับดาวน์โหลด ZIP
       // แตก flow ตาม action เพื่อให้ UI ตัวเดียวรองรับหลาย endpoint
       if (action === "separate") {
         response = await axios.post(`${API_BASE}/separate`, formData);
@@ -129,6 +140,7 @@ function UploadBox() {
         setStatusText("กำลังเตรียมไฟล์สเตม...");
       }
 
+      // action อื่น ๆ จะคืนไฟล์ WAV เดี่ยวกลับมาในรูป blob สำหรับสร้างลิงก์ดาวน์โหลด
       if (action === "eq-ai") {
         response = await axios.post(`${API_BASE}/apply-eq-ai?genre=${genre}`, formData, {
           responseType: "blob",
@@ -180,6 +192,8 @@ function UploadBox() {
         setDownloadFileName(`${baseName}${suffix}.wav`);
       }
 
+      // การวิเคราะห์ถูกแยกรันอีกครั้ง เพื่อให้การ์ดสรุปแสดงข้อมูลของไฟล์ต้นฉบับได้
+      // ไม่ว่าผู้ใช้จะเลือก action ไหนก็ตาม
       // วิเคราะห์ tempo / key / pitch หลังงานหลักเสร็จ โดยใช้ไฟล์ต้นฉบับก้อนเดียวกัน
       const analyzeData = new FormData();
       analyzeData.append("file", file);
@@ -227,8 +241,10 @@ function UploadBox() {
 
   return (
     <div className="grid gap-6 md:grid-cols-2 p-6 text-[#EDE9FE]">
+      {/* คอลัมน์ซ้าย: รับไฟล์, ตั้งค่าการประมวลผล, และแสดง progress / feedback */}
       {/* ส่วนอัปโหลดไฟล์และตัวเลือกการทำงาน */}
       <div className="space-y-4">
+        {/* ขั้นตอนที่ 1: รับไฟล์ WAV ผ่านปุ่มเลือกไฟล์หรือ drag-and-drop */}
         {/* การ์ดเลือกไฟล์ WAV และพื้นที่ drag-and-drop */}
         <div className="rounded-2xl border border-[#5B21B6]/30 bg-[#0F172A] p-4 backdrop-blur shadow-inner shadow-purple-900/30">
           <p className="text-sm text-[#A78BFA]">ขั้นตอนที่ 1</p>
@@ -257,6 +273,7 @@ function UploadBox() {
           </label>
         </div>
 
+        {/* ขั้นตอนที่ 2: แสดงเฉพาะ control ที่จำเป็นสำหรับ action ที่เลือก */}
         {/* การ์ดเลือก action และตั้งค่าพารามิเตอร์ของงานที่เลือก */}
         <div className="rounded-2xl border border-[#5B21B6]/30 bg-[#0F172A] p-4 backdrop-blur space-y-3 shadow-inner shadow-purple-900/30">
           <p className="text-sm text-[#A78BFA] font-semibold">ขั้นตอนที่ 2</p>
@@ -476,6 +493,7 @@ function UploadBox() {
         </div>
       </div>
 
+      {/* คอลัมน์ขวา: ผลวิเคราะห์, ตัวเล่น stem, และลิงก์ดาวน์โหลดที่สร้างขึ้น */}
       {/* ส่วนแสดงผลวิเคราะห์ ตัวเล่น และลิงก์ดาวน์โหลด */}
       <div className="space-y-4">
         {/* การ์ดสรุป tempo / key / pitch ของไฟล์ต้นฉบับ */}
