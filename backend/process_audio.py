@@ -18,7 +18,8 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def separate_audio(input_path: str, output_dir: str = "separated") -> str:
-    # import แบบ lazy เพื่อให้ backend ยังรันส่วนอื่นได้ แม้เครื่องยังไม่ได้ลง openunmix
+    # import openunmix เฉพาะตอนเรียกใช้ฟังก์ชันนี้
+    # ถ้ายังไม่ได้ติดตั้ง แค่ฟีเจอร์แยกเสียงจะใช้ไม่ได้ แต่ส่วนอื่นของ backend ยังรันได้
     try:
         from openunmix.predict import separate
         from openunmix import utils as openunmix_utils
@@ -32,10 +33,10 @@ def separate_audio(input_path: str, output_dir: str = "separated") -> str:
         raise ValueError("รองรับเฉพาะไฟล์ WAV (.wav)")
 
     try:
-        # โหลดไฟล์เสียงและเตรียม separator ที่ pretrained มาแล้ว
+        # โหลดไฟล์เสียงต้นฉบับ และเก็บจำนวน sample ไว้ใช้เทียบกับผลลัพธ์
         audio_tensor, rate = torchaudio.load(input_path)
         input_frames = int(audio_tensor.shape[-1])
-        # โหลด separator ของ Open-Unmix แค่ target ที่ต้องใช้ในระบบนี้
+        # โหลดโมเดล Open-Unmix ที่ฝึกมาแล้วสำหรับแยก 4 stem หลัก
         separator = openunmix_utils.load_separator(
             model_str_or_path="umxl",
             targets=["vocals", "drums", "bass", "other"],
@@ -46,16 +47,19 @@ def separate_audio(input_path: str, output_dir: str = "separated") -> str:
             pretrained=True,
             filterbank="torch",
         )
+        # ใช้โมเดลแบบ inference อย่างเดียว และย้ายไปยัง CPU/GPU ที่เลือกไว้
         separator.freeze()
         separator = separator.to(DEVICE)
-        # บาง checkpoint เก็บ sample_rate เป็น tensor จึง normalize ให้เป็น int ก่อนใช้เทียบขนาด
+        # บาง checkpoint เก็บ sample_rate เป็น Tensor จึงแปลงให้เป็น int ก่อน
         separator_rate = int(
             separator.sample_rate.item()
             if isinstance(separator.sample_rate, torch.Tensor)
             else separator.sample_rate
         )
+        # คำนวณความยาวที่คาดว่าผลลัพธ์จะมี ถ้าโมเดลทำงานที่ sample rate ต่างจากไฟล์ต้นฉบับ
         expected_model_frames = int(round(input_frames * (separator_rate / float(rate))))
 
+        # รันโมเดลเพื่อแยกเสียงออกเป็น vocals, drums, bass และ other
         estimates = separate(
             audio=audio_tensor.to(DEVICE),
             rate=rate,
@@ -64,13 +68,15 @@ def separate_audio(input_path: str, output_dir: str = "separated") -> str:
             device=str(DEVICE),
         )
 
-        # บันทึกผลลัพธ์แต่ละ target เป็นไฟล์ WAV แยกกันเพื่อใช้ดาวน์โหลดและเล่นบนหน้าเว็บ
+        # วนบันทึกผลลัพธ์ทีละ stem เป็นไฟล์ WAV แยกกัน
         for target, waveform in estimates.items():
+            # บางกรณีโมเดลคืนค่าเป็น 3 มิติ ให้ตัด batch dimension ออกก่อน
             if waveform.ndim == 3:
                 waveform = waveform.squeeze(0)
 
             estimate_frames = int(waveform.shape[-1])
-            # เดาว่า output ของโมเดลอยู่ใน sample rate ไหน เพื่อ resample กลับให้ตรงกับไฟล์ต้นฉบับ
+            # เดาว่า waveform ที่ได้อยู่ใน sample rate ไหนจากความยาวของข้อมูล
+            # เพื่อจะได้ resample กลับให้ตรงกับไฟล์ต้นฉบับก่อนเซฟ
             if abs(estimate_frames - expected_model_frames) <= 8:
                 estimate_rate = separator_rate
             elif abs(estimate_frames - input_frames) <= 8:
@@ -78,6 +84,7 @@ def separate_audio(input_path: str, output_dir: str = "separated") -> str:
             else:
                 estimate_rate = separator_rate
 
+            # ถ้า sample rate ไม่ตรงกับต้นฉบับ ให้แปลงก่อนบันทึก
             if estimate_rate != rate:
                 waveform = torchaudio.functional.resample(
                     waveform,
@@ -85,6 +92,7 @@ def separate_audio(input_path: str, output_dir: str = "separated") -> str:
                     new_freq=rate,
                 )
 
+            # เซฟ stem แต่ละตัวเป็น vocals.wav, drums.wav, bass.wav, other.wav
             torchaudio.save(
                 os.path.join(output_dir, f"{target}.wav"),
                 waveform.cpu(),
@@ -122,17 +130,22 @@ def analyze_audio(input_path: str) -> dict:
         chroma = librosa.feature.chroma_cqt(y=y, sr=sr)
         chroma_mean = chroma.mean(axis=1)
 
+        # โปรไฟล์มาตรฐานของคีย์ major ใช้เป็นแม่แบบสำหรับเทียบกับ chroma ของเพลง
         maj_profile = np.array(
             [6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88]
         )
+        # โปรไฟล์มาตรฐานของคีย์ minor ใช้เป็นแม่แบบสำหรับเทียบกับ chroma ของเพลง
         min_profile = np.array(
             [6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17]
         )
+        # รายชื่อโน้ต 12 ตัวในหนึ่ง octave
         keys = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 
+        # เลื่อน profile ไปทีละตำแหน่งเพื่อจำลองทุกคีย์ แล้ววัดความคล้ายกับ chroma ของเพลง
         maj_scores = [np.correlate(chroma_mean, np.roll(maj_profile, i))[0] for i in range(12)]
         min_scores = [np.correlate(chroma_mean, np.roll(min_profile, i))[0] for i in range(12)]
 
+        # เลือกคีย์ major และ minor ที่ได้คะแนนสูงสุด
         maj_idx = int(np.argmax(maj_scores))
         min_idx = int(np.argmax(min_scores))
 

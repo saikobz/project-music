@@ -121,7 +121,8 @@ class AutoEQFiLM(nn.Module):
         h = self.body(h)
         return x + self.head(h)
 
-
+# ใช้แปลง waveform เป็น mel spectrogram หน่วย dB
+# มีไว้เตรียมข้อมูลเสียงให้อยู่ในรูปแบบเดียวกับที่โมเดลใช้ตอน train
 def waveform_to_mel_db(y: np.ndarray) -> np.ndarray:
     # แปลง waveform เป็น mel spectrogram แบบ dB ให้ตรงกับ representation ที่โมเดลเทรนมา
     # ขั้นตอนนี้คือ preprocessing หลักก่อนส่งข้อมูลเข้าโมเดล
@@ -138,7 +139,8 @@ def waveform_to_mel_db(y: np.ndarray) -> np.ndarray:
     mel_db = np.clip(mel_db, MEL_DB_MIN, MEL_DB_MAX)
     return mel_db.astype(np.float32)
 
-
+# ใช้แปลง mel dB ไปเป็นช่วง 0..1
+# มีไว้ป้อนเข้า checkpoint รุ่น FiLM ที่ต้องการ input แบบ normalize แล้ว
 def mel_db_to_norm(mel_db: np.ndarray) -> np.ndarray:
     # แปลงช่วง dB ไปอยู่ใน 0-  1 สำหรับ checkpoint แบบ FiLM
     # FiLM checkpoint ถูกฝึกด้วย input ที่ normalize แล้ว จึงต้องแปลงก่อน inference
@@ -146,13 +148,15 @@ def mel_db_to_norm(mel_db: np.ndarray) -> np.ndarray:
     mel_norm = (mel_db + TOP_DB) / TOP_DB
     return np.clip(mel_norm, 0.0, 1.0).astype(np.float32)
 
-
+# ใช้แปลง mel ที่ถูก normalize แล้วกลับไปเป็นหน่วย dB
+# มีไว้แปลง output ของโมเดล FiLM กลับมาใช้ในขั้นตอนสร้างเสียง
 def mel_norm_to_db(mel_norm: np.ndarray) -> np.ndarray:
     # แปลงค่าที่อยู่ในช่วง 0..1 กลับไปเป็น dB สำหรับขั้นตอน reconstruct เสียง
     mel_norm = np.clip(mel_norm, 0.0, 1.0)
     return (mel_norm * TOP_DB - TOP_DB).astype(np.float32)
 
-
+# ใช้สร้าง waveform กลับจาก mel spectrogram โดยยืม phase จากเสียงต้นฉบับ
+# มีไว้ลด artifact จากการ reconstruct เสียงหลังโมเดลทำนาย EQ
 def mel_db_to_waveform_with_input_phase(mel_db: np.ndarray, y_ref: np.ndarray) -> np.ndarray:
     # สร้าง waveform กลับจาก mel ที่ทำนายได้ โดยยืม phase จากเสียงต้นฉบับ
     # วิธีนี้ใช้ phase ของต้นฉบับช่วย reconstruct เสียงเพื่อลด artifact จากการกู้คลื่นกลับ
@@ -175,7 +179,8 @@ def mel_db_to_waveform_with_input_phase(mel_db: np.ndarray, y_ref: np.ndarray) -
     y = librosa.istft(stft_new, hop_length=HOP, length=len(y_ref))
     return y.astype(np.float32)
 
-
+# ใช้ปรับความดังเฉลี่ยของเสียงที่ผ่าน Auto-EQ ให้ใกล้กับต้นฉบับ
+# มีไว้กันไม่ให้ผลลัพธ์ดังหรือเบาเกินไปเพราะการประมวลผล
 def match_loudness_rms(y_ref: np.ndarray, y_out: np.ndarray, eps: float = 1e-8) -> np.ndarray:
     # ปรับความดังรวมของเสียงที่ประมวลผลแล้วให้ใกล้กับต้นฉบับ
     ref_rms = np.sqrt(np.mean(y_ref**2)) + eps
@@ -185,7 +190,8 @@ def match_loudness_rms(y_ref: np.ndarray, y_out: np.ndarray, eps: float = 1e-8) 
     gain = float(np.clip(gain, 1.0 / max_gain, max_gain))
     return y_out * gain
 
-
+# ใช้จำกัด peak สูงสุดของสัญญาณเสียง
+# มีไว้ลดความเสี่ยง clipping หลังผ่าน Auto-EQ
 def limit_peak(y: np.ndarray, peak_limit: float = PEAK_LIMIT) -> np.ndarray:
     # กัน peak ไม่ให้เกินเพดานที่กำหนดเพื่อลดความเสี่ยง clipping
     peak = float(np.max(np.abs(y))) if y.size > 0 else 0.0
@@ -193,7 +199,8 @@ def limit_peak(y: np.ndarray, peak_limit: float = PEAK_LIMIT) -> np.ndarray:
         return y.astype(np.float32)
     return (y * (peak_limit / peak)).astype(np.float32)
 
-
+# ใช้ประเมินว่า chunk นี้ควรปรับ Auto-EQ แรงแค่ไหน
+# มีไว้ลด artifact ในช่วงที่เสียงเบามากหรือย่านแหลมจัดเกินไป
 def compute_adaptive_strength(chunk: np.ndarray, mel_db: np.ndarray) -> tuple[float, float]:
     # ลดความแรงของการประมวลผลในช่วงที่เงียบมากหรือแหลมมาก เพื่อลด artifact
     # คืนค่า 2 ตัว:
@@ -229,7 +236,8 @@ def compute_adaptive_strength(chunk: np.ndarray, mel_db: np.ndarray) -> tuple[fl
     delta_scale = float(np.clip(delta_scale, MIN_DELTA_SCALE, 1.0))
     return blend_scale, delta_scale
 
-
+# ใช้ smooth ค่าบนแกนที่กำหนดด้วย Hann window
+# มีไว้ทำให้เส้น EQ ที่โมเดลทำนายไม่หักหรือแกว่งแรงเกินไป
 def _smooth_axis(arr: np.ndarray, axis: int, taps: int) -> np.ndarray:
     # smoothing ด้วย Hann window ตามแกนที่กำหนด เพื่อไม่ให้ EQ เปลี่ยนแบบหักมุมเกินไป
     if taps <= 1:
@@ -258,14 +266,16 @@ def _smooth_axis(arr: np.ndarray, axis: int, taps: int) -> np.ndarray:
         arr=padded,
     ).astype(np.float32)
 
-
+# ใช้ smooth delta EQ ทั้งตามแกนความถี่และแกนเวลา
+# มีไว้ทำให้การปรับ EQ ฟังนุ่มและต่อเนื่องขึ้น
 def smooth_delta_mel(delta_db: np.ndarray) -> np.ndarray:
     # ทำให้ delta EQ ที่โมเดลทำนายมานุ่มขึ้นทั้งตามความถี่และตามเวลา
     delta_db = _smooth_axis(delta_db, axis=0, taps=DELTA_SMOOTH_FREQ_BINS)
     delta_db = _smooth_axis(delta_db, axis=1, taps=DELTA_SMOOTH_TIME_FRAMES)
     return delta_db.astype(np.float32)
 
-
+# ใช้ลดแรงการปรับในย่านความถี่สูงแบบค่อยเป็นค่อยไป
+# มีไว้กันอาการแหลมบาดหูหรือ artifact ในช่วง high frequency
 def taper_high_freq_delta(delta_db: np.ndarray) -> np.ndarray:
     # ค่อย ๆ ลดแรงของการปรับในย่านความถี่สูงเพราะเป็นย่านที่ artifact ฟังออกง่าย
     if delta_db.ndim != 2 or delta_db.shape[0] <= 1:
@@ -277,7 +287,8 @@ def taper_high_freq_delta(delta_db: np.ndarray) -> np.ndarray:
         taper[start_idx:] = np.linspace(1.0, HF_TAPER_END, delta_db.shape[0] - start_idx, dtype=np.float32)
     return (delta_db * taper[:, None]).astype(np.float32)
 
-
+# ใช้สร้างหน้าต่างน้ำหนักสำหรับ crossfade ตอนรวมหลาย chunk
+# มีไว้ให้รอยต่อระหว่าง chunk เนียนขึ้นเวลาประกอบเสียงกลับ
 def build_chunk_window(chunk_len: int, fade_len: int) -> np.ndarray:
     # สร้างหน้าต่างสำหรับ crossfade ตอน overlap-add ระหว่าง chunk
     if chunk_len <= 1:
@@ -296,7 +307,8 @@ def build_chunk_window(chunk_len: int, fade_len: int) -> np.ndarray:
     window[-fade_len:] = np.maximum(window[-fade_len:] * fade_out, 1e-4)
     return window
 
-
+# ใช้ดึง state_dict ออกจาก checkpoint ไม่ว่าจะเก็บตรงๆ หรือซ้อนอยู่ใน key state_dict
+# มีไว้รองรับรูปแบบไฟล์โมเดลหลายแบบโดยไม่ต้องเขียนโค้ดเฉพาะแต่ละกรณี
 def extract_model_state_dict(checkpoint: Any) -> Mapping[str, torch.Tensor]:
     # รองรับทั้ง checkpoint ที่เก็บ state_dict ภายใน และไฟล์ที่เป็น state dict ตรง ๆ
     if isinstance(checkpoint, Mapping) and "state_dict" in checkpoint:
@@ -312,7 +324,8 @@ def extract_model_state_dict(checkpoint: Any) -> Mapping[str, torch.Tensor]:
         raise AutoEQModelLoadError("Checkpoint 'state_dict' is not a mapping.")
     return state
 
-
+# ใช้ปรับชื่อ key ของ state_dict ให้ตรงกับชื่อ layer ในโค้ดปัจจุบัน
+# มีไว้รองรับ checkpoint ที่มาจาก DataParallel, torch.compile หรือโมเดลรุ่นเก่า
 def normalize_state_dict_keys(state: Mapping[str, torch.Tensor]) -> dict[str, torch.Tensor]:
     # ล้าง prefix ที่มาจาก DataParallel หรือ torch.compile เพื่อให้ชื่อ key ตรงกับโมเดลปัจจุบัน
     normalized: dict[str, torch.Tensor] = {}
@@ -337,7 +350,8 @@ def normalize_state_dict_keys(state: Mapping[str, torch.Tensor]) -> dict[str, to
         raise AutoEQModelLoadError("No tensor parameters found in checkpoint state dict.")
     return normalized
 
-
+# ใช้เดา architecture ของโมเดล legacy จาก shape ของ weight ใน checkpoint
+# มีไว้โหลดโมเดลรุ่นเก่าได้โดยไม่ต้อง hardcode จำนวน channel
 def infer_legacy_arch_from_state_dict(state: Mapping[str, torch.Tensor]) -> tuple[int, int, int]:
     # เดาจำนวน channel ของโมเดลเก่าจาก shape ของน้ำหนักใน checkpoint
     # ฟังก์ชันนี้ทำให้เราไม่ต้อง hardcode architecture ของรุ่นเก่าในโค้ด
@@ -368,7 +382,8 @@ def infer_legacy_arch_from_state_dict(state: Mapping[str, torch.Tensor]) -> tupl
 
     return ch1, ch2, ch3
 
-
+# ใช้เดา architecture ของโมเดล FiLM จาก shape ของ weight ใน checkpoint
+# มีไว้สร้างโมเดลให้ตรงกับ checkpoint โดยอัตโนมัติ
 def infer_film_arch_from_state_dict(state: Mapping[str, torch.Tensor]) -> tuple[int, int]:
     # เดาโครงสร้างของโมเดล FiLM จาก shape ของ layer ต่าง ๆ ใน checkpoint
     # ใช้ shape ของน้ำหนักเพื่อหาว่า checkpoint นี้รองรับกี่ genre และ latent channels เท่าไร
@@ -424,6 +439,8 @@ def infer_film_arch_from_state_dict(state: Mapping[str, torch.Tensor]) -> tuple[
 
 
 @lru_cache(maxsize=1)
+# ใช้โหลดโมเดล Auto-EQ จากไฟล์ checkpoint แล้ว cache ไว้
+# มีไว้ลดเวลาการโหลดโมเดลซ้ำทุกครั้งที่มี request ใหม่
 def load_auto_eq_model(device: str = "cpu") -> nn.Module:
     # โหลดโมเดลแล้ว cache ไว้ เพราะการอ่าน checkpoint ซ้ำ ๆ มีต้นทุนสูง
     try:
@@ -456,7 +473,8 @@ def load_auto_eq_model(device: str = "cpu") -> nn.Module:
     except Exception as exc:
         raise AutoEQModelLoadError(f"Failed to load Auto-EQ model from {MODEL_PATH}: {exc}") from exc
 
-
+# ใช้แปลง genre ที่รับเข้ามาให้เป็น genre id สำหรับโมเดล FiLM
+# มีไว้ให้ API รับได้ทั้งชื่อ genre และตัวเลข และตรวจความถูกต้องก่อน inference
 def resolve_genre_id(model: nn.Module, genre: str | int | None) -> int | None:
     # checkpoint แบบ FiLM ต้องใช้ genre id ส่วน checkpoint เก่าไม่ต้องใช้
     if not getattr(model, "requires_gid", False):
@@ -477,7 +495,8 @@ def resolve_genre_id(model: nn.Module, genre: str | int | None) -> int | None:
         raise ValueError(f"Unknown genre '{genre}'. Valid genres: {', '.join(GENRES)}")
     return GENRE2ID[genre_key]
 
-
+# ใช้เรียกโมเดลให้ทำนาย mel spectrogram หลัง Auto-EQ
+# มีไว้ซ่อนรายละเอียดว่าควรเรียกโมเดลแบบ FiLM หรือ legacy
 def predict_mel_db(
     model: nn.Module,
     mel_db: np.ndarray,
@@ -500,7 +519,8 @@ def predict_mel_db(
         pred_mel_db = model(mel_tensor).squeeze(0).squeeze(0).cpu().numpy()
     return pred_mel_db.astype(np.float32)
 
-
+# ใช้อ่านไฟล์เสียงโดยคงจำนวน channel เดิมไว้
+# มีไว้ให้ Auto-EQ ประมวลผลทีละ channel ได้ถูกต้องทั้ง mono และ stereo
 def load_audio_preserve_channels(input_path: str) -> np.ndarray:
     # เก็บจำนวน channel เดิมไว้ เพราะ Auto-EQ จะถูกประมวลผลทีละ channel
     # อ่านไฟล์ให้ได้รูป (samples, channels) ก่อน แล้วค่อย transpose เป็น (channels, samples)
@@ -514,7 +534,8 @@ def load_audio_preserve_channels(input_path: str) -> np.ndarray:
         )
     return audio.astype(np.float32)
 
-
+# ใช้ทำ Auto-EQ กับ waveform แบบ mono ทีละช่วง
+# มีไว้เป็นแกนหลักของ pipeline: chunk -> infer -> reconstruct -> overlap-add
 def apply_auto_eq_waveform(
     y: np.ndarray,
     model: nn.Module,
@@ -586,7 +607,8 @@ def apply_auto_eq_waveform(
     # หารด้วยน้ำหนักรวมของแต่ละตำแหน่งเพื่อให้ช่วง overlap ถูกเฉลี่ยอย่างถูกต้อง
     return np.divide(mixed, np.maximum(weight, 1e-8), out=np.zeros_like(mixed), where=weight > 0)
 
-
+# ใช้ทำ Auto-EQ ระดับไฟล์แบบครบขั้นตอน
+# มีไว้เป็นจุดเชื่อมกับ API: อ่านไฟล์, โหลดโมเดล, ประมวลผลทุก channel, แล้วเขียน output
 def apply_auto_eq_file(input_path: str, output_path: str, genre: str | int | None = None) -> str:
     # ตัวห่อระดับไฟล์สำหรับ API: โหลดเสียง, รัน Auto-EQ ทีละ channel, แล้วเขียนไฟล์ผลลัพธ์
     audio = load_audio_preserve_channels(input_path)
