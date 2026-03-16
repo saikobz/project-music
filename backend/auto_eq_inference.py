@@ -74,7 +74,7 @@ logger = logging.getLogger(__name__)
 
 class AutoEQModelLoadError(RuntimeError):
     """ใช้เมื่อไม่สามารถโหลด checkpoint ของ Auto-EQ ได้"""
-class AutoEQFiLM(nn.Module):
+class AutoEQ(nn.Module):
     # โมเดลรุ่นปัจจุบันที่ใช้ genre embedding มาปรับ feature map ผ่าน FiLM
     def __init__(self, n_genres: int, ch: int = 256):
         super().__init__()
@@ -459,7 +459,7 @@ def load_auto_eq_model(device: str = "cpu") -> nn.Module:
                 n_genres,
                 ch,
             )
-            model = AutoEQFiLM(n_genres=n_genres, ch=ch)
+            model = AutoEQ(n_genres=n_genres, ch=ch)
             model.requires_gid = True
             model.input_representation = "mel_norm"
 
