@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-ชุดฟังก์ชันช่วยสำหรับรัน Auto-EQ inference ให้เข้ากับ checkpoint ที่มีอยู่ในโปรเจกต์
+ชุดฟังก์ชันช่วยสำหรับรัน Auto-EQ inference 
 
 """
 
@@ -15,7 +15,6 @@ import soundfile as sf
 import torch
 import torch.nn as nn
 
-# ค่าคงที่ทั้งหมดในส่วนนี้ใช้ร่วมกันระหว่าง preprocessing, inference และ reconstruction
 # sample rate 
 SR = 44100
 # ขนาด FFT สำหรับสร้างและแปลง spectrogram

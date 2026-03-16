@@ -44,7 +44,7 @@ def separate_audio(input_path: str, output_dir: str = "separated") -> str:
             residual=False,  # ไม่สร้าง stem ส่วนเกินนอกเหนือจาก target ที่กำหนด
             wiener_win_len=300,  # ขนาดหน้าต่างที่ใช้ในขั้นตอน Wiener filtering
             device=str(DEVICE),  # อุปกรณ์ที่ใช้ประมวลผล เช่น cpu หรือ cuda
-            pretrained=True,  # ใช้น้ำหนักโมเดลที่ฝึกมาแล้ว
+            pretrained=True,  # ใช้โมเดลที่ฝึกมาแล้ว
             filterbank="torch",  # ใช้ filterbank ฝั่ง torch สำหรับคำนวณสเปกโตรแกรม
         )
         # ใช้โมเดลแบบ inference อย่างเดียว และย้ายไปยัง CPU/GPU ที่เลือกไว้
