@@ -111,7 +111,7 @@ const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl }) => {
           onClick={stopPlayback}
           className="rounded-lg bg-[#F472B6] px-4 py-2 font-semibold text-white hover:bg-[#A78BFA] cursor-pointer"
         >
-          หยุด
+          รีเซ็ต
         </button>
       </div>
       <div className="rounded-xl border border-[#7C3AED]/25 bg-[#120E22] px-3 py-2">
