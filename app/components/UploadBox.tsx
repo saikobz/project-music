@@ -13,6 +13,9 @@ import AudioAnalysis from "./AudioAnalysis";
 // ค่าตั้งต้นของ API และข้อจำกัดการอัปโหลด
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
 const MAX_SIZE_BYTES = 100 * 1024 * 1024; // 100MB
+const DEFAULT_EQ_DELTA_CLAMP_DB = "2.0";
+const MIN_EQ_DELTA_CLAMP_DB = 0.5;
+const MAX_EQ_DELTA_CLAMP_DB = 6.0;
 
 function UploadBox() {
   // ===== กลุ่ม state สำหรับค่าที่ผู้ใช้เลือกในฟอร์ม =====
@@ -23,6 +26,7 @@ function UploadBox() {
   const [action, setAction] = useState("separate");
   const [strength, setStrength] = useState("medium");
   const [genre, setGenre] = useState("pop");
+  const [eqDeltaClampDb, setEqDeltaClampDb] = useState(DEFAULT_EQ_DELTA_CLAMP_DB);
   const [compThreshold, setCompThreshold] = useState("");
   const [compRatio, setCompRatio] = useState("");
   const [compAttack, setCompAttack] = useState("");
@@ -79,6 +83,19 @@ function UploadBox() {
     const droppedFile = e.dataTransfer.files?.[0];
     handleFileSelect(droppedFile || null);
   };
+
+  const eqDeltaClampValue = Number.parseFloat(eqDeltaClampDb);
+  const isEqDeltaClampValid =
+    Number.isFinite(eqDeltaClampValue) &&
+    eqDeltaClampValue >= MIN_EQ_DELTA_CLAMP_DB &&
+    eqDeltaClampValue <= MAX_EQ_DELTA_CLAMP_DB;
+  const eqDeltaClampWarning = !isEqDeltaClampValid
+    ? `กรอกค่า Delta Clamp ระหว่าง ${MIN_EQ_DELTA_CLAMP_DB.toFixed(1)} ถึง ${MAX_EQ_DELTA_CLAMP_DB.toFixed(1)} dB`
+    : eqDeltaClampValue > 3.5
+      ? "คำเตือน: ค่าสูงจะทำให้ Auto-EQ ปรับแรงขึ้น เสี่ยงเกิดโทนแข็งหรือ artifact ได้"
+      : eqDeltaClampValue < 1.0
+        ? "คำเตือน: ค่าต่ำจะทำให้การปรับ EQ เบาลง ผลลัพธ์อาจต่างจากต้นฉบับน้อย"
+        : "ค่าช่วงนี้ค่อนข้างปลอดภัยสำหรับการลองฟังเบื้องต้น";
 
   const handleDragOver = (e: React.DragEvent<HTMLLabelElement>) => {
     e.preventDefault();
@@ -147,7 +164,11 @@ function UploadBox() {
 
       // action อื่น ๆ จะคืนไฟล์ WAV เดี่ยวกลับมาในรูป blob สำหรับสร้างลิงก์ดาวน์โหลด
       if (action === "eq-ai") {
-        response = await axios.post(`${API_BASE}/apply-eq-ai?genre=${genre}`, formData, {
+        const params = new URLSearchParams({
+          genre,
+          delta_clamp_db: eqDeltaClampDb || DEFAULT_EQ_DELTA_CLAMP_DB,
+        });
+        response = await axios.post(`${API_BASE}/apply-eq-ai?${params.toString()}`, formData, {
           responseType: "blob",
         });
         const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -325,6 +346,36 @@ function UploadBox() {
             </div>
           )}
 
+          {action === "eq-ai" && (
+            <div className="space-y-2 rounded-xl border border-[#5B21B6]/30 bg-[#0F172A] p-3">
+              <div>
+                <label className="block text-sm mb-1">Delta Clamp (dB)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min={MIN_EQ_DELTA_CLAMP_DB}
+                  max={MAX_EQ_DELTA_CLAMP_DB}
+                  value={eqDeltaClampDb}
+                  onChange={(e) => setEqDeltaClampDb(e.target.value)}
+                  className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
+                  disabled={loading}
+                />
+                <p className="mt-1 text-xs text-[#C4B5FD]">
+                  ค่าเริ่มต้น {DEFAULT_EQ_DELTA_CLAMP_DB} dB, ปรับได้ช่วง {MIN_EQ_DELTA_CLAMP_DB.toFixed(1)}-{MAX_EQ_DELTA_CLAMP_DB.toFixed(1)} dB
+                </p>
+              </div>
+              <div
+                className={`rounded-lg border p-2 text-xs ${
+                  isEqDeltaClampValid
+                    ? "border-amber-300/30 bg-black/20 text-amber-100"
+                    : "border-red-400/60 bg-red-900/30 text-red-100"
+                }`}
+              >
+                {eqDeltaClampWarning}
+              </div>
+            </div>
+          )}
+
           {/* ฟอร์มตั้งค่า compressor แบบละเอียด จะแสดงเฉพาะเมื่อเลือก action นี้ */}
           {/* ===== ฟอร์มตั้งค่า Compressor แบบละเอียด ===== */}
           {action === "compressor" && (
@@ -462,9 +513,11 @@ function UploadBox() {
           {/* ===== ปุ่มเริ่มประมวลผล ===== */}
           <button
             onClick={handleUpload}
-            disabled={loading}
+            disabled={loading || (action === "eq-ai" && !isEqDeltaClampValid)}
             className={`w-full rounded-xl py-3 text-lg font-bold transition ${
-              loading ? "bg-[#A78BFA]/60 cursor-not-allowed" : "bg-[#5B21B6] hover:bg-[#22D3EE] text-white cursor-pointer"
+              loading || (action === "eq-ai" && !isEqDeltaClampValid)
+                ? "bg-[#A78BFA]/60 cursor-not-allowed"
+                : "bg-[#5B21B6] hover:bg-[#22D3EE] text-white cursor-pointer"
             }`}
           >
             {loading ? "กำลังประมวลผล..." : "เริ่มประมวลผล"}

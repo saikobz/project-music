@@ -37,6 +37,8 @@ MEL_DB_MIN = -80.0
 MEL_DB_MAX = 0.0
 # เพดานการปรับ EQ ต่อจุดเพื่อกันการเปลี่ยนแรงเกินไป
 DELTA_CLAMP_DB = 2.0
+MIN_DELTA_CLAMP_DB = 0.5
+MAX_DELTA_CLAMP_DB = 6.0
 # จำนวน tap สำหรับ smooth ตามแกนความถี่
 DELTA_SMOOTH_FREQ_BINS = 7
 # จำนวน tap สำหรับ smooth ตามแกนเวลา
@@ -494,10 +496,15 @@ def apply_auto_eq_waveform(  # ฟังก์ชันทำ Auto-EQ กับ 
     model: nn.Module,  # โมเดล Auto-EQ ที่ใช้ทำ inference
     device: str,  # อุปกรณ์ที่ใช้รันโมเดล
     genre_id: int | None,  # genre id สำหรับโมเดล FiLM หรือ None
+    delta_clamp_db: float = DELTA_CLAMP_DB,
 ) -> np.ndarray:  # คืน waveform ที่ผ่านการทำ Auto-EQ แล้ว
     y = np.asarray(y, dtype=np.float32)  # แปลงอินพุตเป็น numpy array ชนิด float32
     if y.ndim != 1:  # ตรวจว่าอินพุตเป็น mono waveform หรือไม่
         raise ValueError("apply_auto_eq_waveform expects a mono waveform.")  # แจ้งข้อผิดพลาดถ้าอินพุตไม่ใช่ mono
+    if not (MIN_DELTA_CLAMP_DB <= float(delta_clamp_db) <= MAX_DELTA_CLAMP_DB):
+        raise ValueError(
+            f"delta_clamp_db must be between {MIN_DELTA_CLAMP_DB:.1f} and {MAX_DELTA_CLAMP_DB:.1f} dB."
+        )
 
     segment_samples = int(SEGMENT_SECONDS * SR)  # คำนวณจำนวน sample ต่อ chunk
     overlap_samples = min(int(OVERLAP_SECONDS * SR), max(segment_samples // 2, 1))  # คำนวณจำนวน sample ที่ใช้ overlap ระหว่าง chunk
@@ -520,7 +527,7 @@ def apply_auto_eq_waveform(  # ฟังก์ชันทำ Auto-EQ กับ 
         delta = smooth_delta_mel(delta)  # ทำให้เส้น delta เรียบขึ้น
         delta = taper_high_freq_delta(delta)  # ลดแรงการปรับในย่านความถี่สูง
         delta *= delta_scale  # คูณสเกลเพื่อลดหรือเพิ่มความแรงของ delta
-        delta = np.clip(delta, -DELTA_CLAMP_DB, DELTA_CLAMP_DB)  # จำกัด delta ไม่ให้เกินขอบเขตที่กำหนด
+        delta = np.clip(delta, -delta_clamp_db, delta_clamp_db)  # จำกัด delta ไม่ให้เกินขอบเขตที่กำหนด
         mel_out = np.clip(mel_db + delta, MEL_DB_MIN, MEL_DB_MAX)  # รวม delta เข้ากับ mel เดิมและ clip ช่วง dB ให้อยู่ในขอบเขต
 
         enhanced_chunk = mel_db_to_waveform_with_input_phase(mel_out, chunk)  # สร้าง waveform กลับจาก mel ที่ปรับแล้วโดยอ้างอิง phase เดิม
@@ -550,7 +557,12 @@ def apply_auto_eq_waveform(  # ฟังก์ชันทำ Auto-EQ กับ 
     return np.divide(mixed, np.maximum(weight, 1e-8), out=np.zeros_like(mixed), where=weight > 0)  # เฉลี่ยผลลัพธ์ตามน้ำหนักในช่วง overlap แล้วคืน waveform สุดท้าย
 
 
-def apply_auto_eq_file(input_path: str, output_path: str, genre: str | int | None = None) -> str:  # ฟังก์ชันทำ Auto-EQ ระดับไฟล์ครบทั้งอ่าน ประมวลผล และเขียนผลลัพธ์
+def apply_auto_eq_file(
+    input_path: str,
+    output_path: str,
+    genre: str | int | None = None,
+    delta_clamp_db: float = DELTA_CLAMP_DB,
+) -> str:  # ฟังก์ชันทำ Auto-EQ ระดับไฟล์ครบทั้งอ่าน ประมวลผล และเขียนผลลัพธ์
     audio = load_audio_preserve_channels(input_path)  # อ่านไฟล์เสียงพร้อมคงจำนวน channel เดิมไว้
 
     output_dir = os.path.dirname(output_path)  # หา path ของโฟลเดอร์ปลายทาง
@@ -562,7 +574,7 @@ def apply_auto_eq_file(input_path: str, output_path: str, genre: str | int | Non
     genre_id = resolve_genre_id(model, genre)  # แปลง genre ที่รับเข้ามาให้เป็น genre id
 
     enhanced_channels = [  # ประมวลผล Auto-EQ ทีละ channel แล้วเก็บผลลัพธ์ไว้
-        apply_auto_eq_waveform(channel, model, device, genre_id)
+        apply_auto_eq_waveform(channel, model, device, genre_id, delta_clamp_db=delta_clamp_db)
         for channel in audio
     ]
     enhanced = np.stack(enhanced_channels, axis=0)  # รวม channel ที่ประมวลผลแล้วกลับเป็นอาเรย์เดียว

@@ -19,7 +19,13 @@ from fastapi.responses import FileResponse, JSONResponse
 # import ฟังก์ชันประมวลผลจากโมดูลย่อยของ backend
 from backend.process_audio import separate_audio, analyze_audio, pitch_shift_audio
 from backend.eq_compressor import apply_compression
-from backend.auto_eq_inference import apply_auto_eq_file, AutoEQModelLoadError
+from backend.auto_eq_inference import (
+    apply_auto_eq_file,
+    AutoEQModelLoadError,
+    DELTA_CLAMP_DB,
+    MIN_DELTA_CLAMP_DB,
+    MAX_DELTA_CLAMP_DB,
+)
 
 # ไฟล์นี้เป็นจุดรวมการตั้งค่า FastAPI และประกาศ endpoint หลักของระบบทั้งหมด
 
@@ -203,6 +209,12 @@ async def get_stem(file_id: str, stem: str):
 async def apply_eq_ai(
     file: UploadFile = File(...),
     genre: str = Query("pop", description="แนวเพลง เช่น pop, rock, trap, country, soul"),
+    delta_clamp_db: float = Query(
+        DELTA_CLAMP_DB,
+        ge=MIN_DELTA_CLAMP_DB,
+        le=MAX_DELTA_CLAMP_DB,
+        description="เพดานการปรับ EQ ต่อจุดในหน่วย dB",
+    ),
 ):
     try:
         # บันทึกไฟล์ก่อน แล้วส่ง path ไปให้โมเดล Auto-EQ ประมวลผล
@@ -211,7 +223,13 @@ async def apply_eq_ai(
         output_filename = f"{file_id}_eq_ai_{genre}.wav"
         output_path = os.path.join("eq_applied", output_filename)
         # inference รันใน worker thread เพื่อไม่ block FastAPI main loop
-        result_path = await asyncio.to_thread(apply_auto_eq_file, input_path, output_path, genre)
+        result_path = await asyncio.to_thread(
+            apply_auto_eq_file,
+            input_path,
+            output_path,
+            genre,
+            delta_clamp_db,
+        )
         return FileResponse(
             result_path,
             media_type="audio/wav",
@@ -230,6 +248,8 @@ async def apply_eq_ai(
                 "message": str(model_exc),
             },
         )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
     except Exception as e:
         return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
     finally:
