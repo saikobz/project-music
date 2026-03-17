@@ -14,8 +14,8 @@ import AudioAnalysis from "./AudioAnalysis";
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
 const MAX_SIZE_BYTES = 100 * 1024 * 1024; // 100MB
 const DEFAULT_EQ_DELTA_CLAMP_DB = "2.0";
-const MIN_EQ_DELTA_CLAMP_DB = 0.5;
-const MAX_EQ_DELTA_CLAMP_DB = 6.0;
+const MIN_EQ_DELTA_CLAMP_DB = 0.0;
+const MAX_EQ_DELTA_CLAMP_DB = 12.0;
 
 function UploadBox() {
   // ===== กลุ่ม state สำหรับค่าที่ผู้ใช้เลือกในฟอร์ม =====
@@ -94,8 +94,8 @@ function UploadBox() {
     : eqDeltaClampValue > 3.5
       ? "คำเตือน: ค่าสูงจะทำให้ Auto-EQ ปรับแรงขึ้น เสี่ยงเกิดโทนแข็งหรือ artifact ได้"
       : eqDeltaClampValue < 1.0
-        ? "คำเตือน: ค่าต่ำจะทำให้การปรับ EQ เบาลง ผลลัพธ์อาจต่างจากต้นฉบับน้อย"
-        : "ค่าช่วงนี้ค่อนข้างปลอดภัยสำหรับการลองฟังเบื้องต้น";
+        ? "คำเตือน: ถ้าค่ายิ่งสูงเสียงจะเกิดอาการ Clipping หรือ เสียงแตกได้"
+        : "คำเตือน: ถ้าค่ายิ่งสูงเสียงจะเกิดอาการ Clipping หรือ เสียงแตกได้";
 
   const handleDragOver = (e: React.DragEvent<HTMLLabelElement>) => {
     e.preventDefault();
