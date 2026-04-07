@@ -38,7 +38,7 @@ class TestApplyEqAiEndpoint(unittest.TestCase):
             main, "apply_auto_eq_file", side_effect=fake_apply_auto_eq_file
         ):
             response = self.client.post(
-                "/apply-eq-ai?genre=trap",
+                "/apply-eq-ai?genre=trap&delta_clamp_db=3.5",
                 files={"file": ("song.wav", b"abc", "audio/wav")},
             )
 

@@ -84,6 +84,19 @@ function UploadBox() {
     handleFileSelect(droppedFile || null);
   };
 
+  const eqDeltaClampValue = Number.parseFloat(deltaClampDb);
+  const isEqDeltaClampValid =
+    Number.isFinite(eqDeltaClampValue) &&
+    eqDeltaClampValue >= AUTO_EQ_DELTA_CLAMP_MIN &&
+    eqDeltaClampValue <= AUTO_EQ_DELTA_CLAMP_MAX;
+  const eqDeltaClampWarning = !isEqDeltaClampValid
+    ? `กรอกค่า Delta Clamp ระหว่าง ${AUTO_EQ_DELTA_CLAMP_MIN.toFixed(1)} ถึง ${AUTO_EQ_DELTA_CLAMP_MAX.toFixed(1)} dB`
+    : eqDeltaClampValue > 3.5
+      ? "คำเตือน: ค่าสูงจะทำให้ Auto-EQ ปรับแรงขึ้น เสี่ยงเกิดโทนแข็งหรือ artifact ได้"
+      : eqDeltaClampValue < 1.0
+        ? "คำเตือน: ค่าต่ำจะทำให้ Auto-EQ ปรับเบา ผลลัพธ์อาจเปลี่ยนไม่มาก"
+        : "คำเตือน: หากดันค่าสูงเกินไปอาจทำให้เสียงแข็งหรือเริ่มแตกได้";
+
   const handleDragOver = (e: React.DragEvent<HTMLLabelElement>) => {
     e.preventDefault();
     if (!isDragging) setIsDragging(true);
@@ -503,9 +516,11 @@ function UploadBox() {
           {/* ===== ปุ่มเริ่มประมวลผล ===== */}
           <button
             onClick={handleUpload}
-            disabled={loading}
+            disabled={loading || (action === "eq-ai" && !isEqDeltaClampValid)}
             className={`w-full rounded-xl py-3 text-lg font-bold transition ${
-              loading ? "bg-[#A78BFA]/60 cursor-not-allowed" : "bg-[#5B21B6] hover:bg-[#22D3EE] text-white cursor-pointer"
+              loading || (action === "eq-ai" && !isEqDeltaClampValid)
+                ? "bg-[#A78BFA]/60 cursor-not-allowed"
+                : "bg-[#5B21B6] hover:bg-[#22D3EE] text-white cursor-pointer"
             }`}
           >
             {loading ? "กำลังประมวลผล..." : "เริ่มประมวลผล"}

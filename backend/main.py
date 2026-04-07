@@ -215,6 +215,12 @@ async def apply_eq_ai(
         description="Auto-EQ delta clamp in dB",
     ),
     genre: str = Query("pop", description="แนวเพลง เช่น pop, rock, trap, country, soul"),
+    delta_clamp_db: float = Query(
+        DELTA_CLAMP_DB,
+        ge=MIN_DELTA_CLAMP_DB,
+        le=MAX_DELTA_CLAMP_DB,
+        description="เพดานการปรับ EQ ต่อจุดในหน่วย dB",
+    ),
 ):
     try:
         # บันทึกไฟล์ก่อน แล้วส่ง path ไปให้โมเดล Auto-EQ ประมวลผล
@@ -250,6 +256,8 @@ async def apply_eq_ai(
                 "message": str(model_exc),
             },
         )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
     except Exception as e:
         return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
     finally:
