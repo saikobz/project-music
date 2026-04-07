@@ -25,6 +25,8 @@ from backend.auto_eq_inference import (
     DELTA_CLAMP_DB,
     MIN_DELTA_CLAMP_DB,
     MAX_DELTA_CLAMP_DB,
+    DEFAULT_AUTO_EQ_MODEL_ID,
+    SUPPORTED_AUTO_EQ_MODELS,
 )
 
 # ไฟล์นี้เป็นจุดรวมการตั้งค่า FastAPI และประกาศ endpoint หลักของระบบทั้งหมด
@@ -208,13 +210,11 @@ async def get_stem(file_id: str, stem: str):
 @app.post("/apply-eq-ai")
 async def apply_eq_ai(
     file: UploadFile = File(...),
-    delta_clamp_db: float = Query(
-        DELTA_CLAMP_DB,
-        ge=MIN_DELTA_CLAMP_DB,
-        le=MAX_DELTA_CLAMP_DB,
-        description="Auto-EQ delta clamp in dB",
-    ),
     genre: str = Query("pop", description="แนวเพลง เช่น pop, rock, trap, country, soul"),
+    model_id: str = Query(
+        DEFAULT_AUTO_EQ_MODEL_ID,
+        description=f"Auto-EQ model id: {', '.join(SUPPORTED_AUTO_EQ_MODELS)}",
+    ),
     delta_clamp_db: float = Query(
         DELTA_CLAMP_DB,
         ge=MIN_DELTA_CLAMP_DB,
@@ -226,7 +226,7 @@ async def apply_eq_ai(
         # บันทึกไฟล์ก่อน แล้วส่ง path ไปให้โมเดล Auto-EQ ประมวลผล
         file_id, input_path = await save_upload(file)
         # ตั้งชื่อไฟล์ผลลัพธ์ให้สะท้อนว่าเป็นงาน EQ AI และใช้ genre อะไร
-        output_filename = f"{file_id}_eq_ai_{genre}.wav"
+        output_filename = f"{file_id}_eq_ai_{model_id}_{genre}.wav"
         output_path = os.path.join("eq_applied", output_filename)
         # inference รันใน worker thread เพื่อไม่ block FastAPI main loop
         result_path = await asyncio.to_thread(
@@ -235,6 +235,7 @@ async def apply_eq_ai(
             output_path,
             genre,
             delta_clamp_db,
+            model_id,
         )
         return FileResponse(
             result_path,

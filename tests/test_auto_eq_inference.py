@@ -3,6 +3,7 @@ import tempfile
 import unittest
 
 import numpy as np
+import soundfile as sf
 import torch
 
 import backend.auto_eq_inference as auto_eq_inference
@@ -18,6 +19,17 @@ class TestAutoEqInference(unittest.TestCase):
         self.assertEqual(model.body[0].out_channels, 32)
         self.assertEqual(model.body[3].out_channels, 64)
         self.assertEqual(model.body[6].out_channels, 128)
+
+    def test_load_lstm_checkpoint(self) -> None:
+        auto_eq_inference.load_auto_eq_model.cache_clear()
+        model = auto_eq_inference.load_auto_eq_model(
+            "cpu",
+            model_id=auto_eq_inference.AUTO_EQ_MODEL_LSTM_LAST,
+        )
+        self.assertTrue(hasattr(model, "lstm"))
+        self.assertEqual(model.auto_eq_kind, "lstm")
+        self.assertEqual(model.auto_eq_model_id, auto_eq_inference.AUTO_EQ_MODEL_LSTM_LAST)
+        self.assertIn("pop", model.auto_eq_genre2id)
 
     def test_legacy_net_prefix_checkpoint_loads(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -54,6 +66,35 @@ class TestAutoEqInference(unittest.TestCase):
         reconstructed = auto_eq_inference.mel_db_to_waveform_with_input_phase(mel, y)
         self.assertEqual(len(reconstructed), len(y))
         self.assertTrue(np.isfinite(reconstructed).all())
+
+    def test_apply_lstm_auto_eq_file_preserves_shape_and_finite_values(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            input_path = os.path.join(temp_dir, "input.wav")
+            output_path = os.path.join(temp_dir, "output.wav")
+
+            seconds = 1
+            t = np.arange(auto_eq_inference.SR * seconds, dtype=np.float32) / auto_eq_inference.SR
+            stereo = np.stack(
+                (
+                    0.2 * np.sin(2 * np.pi * 220.0 * t),
+                    0.2 * np.sin(2 * np.pi * 330.0 * t),
+                ),
+                axis=1,
+            ).astype(np.float32)
+            sf.write(input_path, stereo, auto_eq_inference.SR)
+
+            result_path = auto_eq_inference.apply_auto_eq_file(
+                input_path,
+                output_path,
+                genre="pop",
+                delta_clamp_db=2.0,
+                model_id=auto_eq_inference.AUTO_EQ_MODEL_LSTM_LAST,
+            )
+
+            processed, sr = sf.read(result_path, always_2d=True, dtype="float32")
+            self.assertEqual(sr, auto_eq_inference.SR)
+            self.assertEqual(processed.shape, stereo.shape)
+            self.assertTrue(np.isfinite(processed).all())
 
 
 if __name__ == "__main__":

@@ -28,17 +28,18 @@ class TestApplyEqAiEndpoint(unittest.TestCase):
         captured: dict[str, float | str] = {}
 
         def fake_apply_auto_eq_file(
-            input_file: str, output_file: str, genre: str, delta_clamp_db: float
+            input_file: str, output_file: str, genre: str, delta_clamp_db: float, model_id: str
         ) -> str:
             captured["genre"] = genre
             captured["delta_clamp_db"] = delta_clamp_db
+            captured["model_id"] = model_id
             raise AutoEQModelLoadError("model mismatch")
 
         with patch.object(main, "save_upload", new=fake_save_upload), patch.object(
             main, "apply_auto_eq_file", side_effect=fake_apply_auto_eq_file
         ):
             response = self.client.post(
-                "/apply-eq-ai?genre=trap&delta_clamp_db=3.5",
+                "/apply-eq-ai?genre=trap&model_id=lstm-last&delta_clamp_db=3.5",
                 files={"file": ("song.wav", b"abc", "audio/wav")},
             )
 
@@ -48,7 +49,8 @@ class TestApplyEqAiEndpoint(unittest.TestCase):
         self.assertEqual(body["error_code"], "AUTO_EQ_MODEL_UNAVAILABLE")
         self.assertIn("model mismatch", body["message"])
         self.assertEqual(captured["genre"], "trap")
-        self.assertEqual(captured["delta_clamp_db"], 2.0)
+        self.assertEqual(captured["delta_clamp_db"], 3.5)
+        self.assertEqual(captured["model_id"], "lstm-last")
         self.assertFalse(os.path.exists(input_path))
 
     def test_apply_eq_ai_returns_audio_on_success(self) -> None:
@@ -63,10 +65,15 @@ class TestApplyEqAiEndpoint(unittest.TestCase):
         captured: dict[str, float | str] = {}
 
         def fake_apply_auto_eq_file(
-            input_file: str, requested_output_path: str, genre: str, delta_clamp_db: float
+            input_file: str,
+            requested_output_path: str,
+            genre: str,
+            delta_clamp_db: float,
+            model_id: str,
         ) -> str:
             captured["genre"] = genre
             captured["delta_clamp_db"] = delta_clamp_db
+            captured["model_id"] = model_id
             with open(output_path, "wb") as file:
                 file.write(b"RIFF0000WAVEfmt ")
             return output_path
@@ -75,7 +82,7 @@ class TestApplyEqAiEndpoint(unittest.TestCase):
             main, "apply_auto_eq_file", side_effect=fake_apply_auto_eq_file
         ):
             response = self.client.post(
-                "/apply-eq-ai?genre=trap&delta_clamp_db=4.5",
+                "/apply-eq-ai?genre=trap&model_id=cnn-v1&delta_clamp_db=4.5",
                 files={"file": ("song.wav", b"abc", "audio/wav")},
             )
 
@@ -84,6 +91,7 @@ class TestApplyEqAiEndpoint(unittest.TestCase):
         self.assertEqual(response.content, b"RIFF0000WAVEfmt ")
         self.assertEqual(captured["genre"], "trap")
         self.assertEqual(captured["delta_clamp_db"], 4.5)
+        self.assertEqual(captured["model_id"], "cnn-v1")
         self.assertFalse(os.path.exists(input_path))
 
     def test_apply_eq_ai_rejects_out_of_range_delta_clamp(self) -> None:
