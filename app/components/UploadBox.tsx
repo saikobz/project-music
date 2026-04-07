@@ -13,6 +13,9 @@ import AudioAnalysis from "./AudioAnalysis";
 // ค่าตั้งต้นของ API และข้อจำกัดการอัปโหลด
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
 const MAX_SIZE_BYTES = 100 * 1024 * 1024; // 100MB
+const AUTO_EQ_DELTA_CLAMP_MIN = 0;
+const AUTO_EQ_DELTA_CLAMP_MAX = 6;
+const AUTO_EQ_DELTA_CLAMP_DEFAULT = 2;
 
 function UploadBox() {
   // ===== กลุ่ม state สำหรับค่าที่ผู้ใช้เลือกในฟอร์ม =====
@@ -23,6 +26,7 @@ function UploadBox() {
   const [action, setAction] = useState("separate");
   const [strength, setStrength] = useState("medium");
   const [genre, setGenre] = useState("pop");
+  const [deltaClampDb, setDeltaClampDb] = useState(String(AUTO_EQ_DELTA_CLAMP_DEFAULT));
   const [compThreshold, setCompThreshold] = useState("");
   const [compRatio, setCompRatio] = useState("");
   const [compAttack, setCompAttack] = useState("");
@@ -147,12 +151,16 @@ function UploadBox() {
 
       // action อื่น ๆ จะคืนไฟล์ WAV เดี่ยวกลับมาในรูป blob สำหรับสร้างลิงก์ดาวน์โหลด
       if (action === "eq-ai") {
-        response = await axios.post(`${API_BASE}/apply-eq-ai?genre=${genre}`, formData, {
+        const params = new URLSearchParams({
+          genre,
+          delta_clamp_db: deltaClampDb || String(AUTO_EQ_DELTA_CLAMP_DEFAULT),
+        });
+        response = await axios.post(`${API_BASE}/apply-eq-ai?${params.toString()}`, formData, {
           responseType: "blob",
         });
         const url = window.URL.createObjectURL(new Blob([response.data]));
         setDownloadUrl(url);
-        suffix = `_eq_ai_${genre}`;
+        suffix = `_eq_ai_${genre}_${deltaClampDb}db`;
         setSuccessMessage("ประมวลผล Auto-EQ เสร็จแล้ว ดาวน์โหลดไฟล์เพื่อฟังผลลัพธ์ได้");
         setStatusText("กำลังสร้างไฟล์ Auto-EQ...");
       }
@@ -322,6 +330,39 @@ function UploadBox() {
                 <option value="country">Country</option>
                 <option value="soul">Soul</option>
               </select>
+            </div>
+          )}
+
+          {action === "eq-ai" && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-3">
+                <label className="block text-sm mb-1">Delta Clamp (dB)</label>
+                <input
+                  type="number"
+                  min={AUTO_EQ_DELTA_CLAMP_MIN}
+                  max={AUTO_EQ_DELTA_CLAMP_MAX}
+                  step="0.1"
+                  value={deltaClampDb}
+                  onChange={(e) => setDeltaClampDb(e.target.value)}
+                  className="w-24 rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-right text-[#EDE9FE]"
+                  disabled={loading}
+                />
+              </div>
+              <input
+                type="range"
+                min={AUTO_EQ_DELTA_CLAMP_MIN}
+                max={AUTO_EQ_DELTA_CLAMP_MAX}
+                step="0.1"
+                value={deltaClampDb}
+                onChange={(e) => setDeltaClampDb(e.target.value)}
+                className="w-full accent-[#22D3EE]"
+                disabled={loading}
+              />
+              <div className="flex justify-between text-xs text-[#A78BFA]">
+                <span>{AUTO_EQ_DELTA_CLAMP_MIN} dB</span>
+                <span>ค่าเริ่มต้น {AUTO_EQ_DELTA_CLAMP_DEFAULT} dB</span>
+                <span>{AUTO_EQ_DELTA_CLAMP_MAX} dB</span>
+              </div>
             </div>
           )}
 
