@@ -98,10 +98,10 @@ function UploadBox() {
   const eqDeltaClampWarning = !isEqDeltaClampValid
     ? `กรอกค่า Delta Clamp ระหว่าง ${AUTO_EQ_DELTA_CLAMP_MIN.toFixed(1)} ถึง ${AUTO_EQ_DELTA_CLAMP_MAX.toFixed(1)} dB`
     : eqDeltaClampValue > 3.5
-      ? "คำเตือน: ค่าสูงจะทำให้ Auto-EQ ปรับแรงขึ้น เสี่ยงเกิดโทนแข็งหรือ artifact ได้"
+      ? "Delta Clamp คือเพดานการบูสต์/คัต EQ สูงสุดต่อย่านความถี่ ยิ่งปรับสูง Auto-EQ จะยิ่งแก้หนักขึ้น เสี่ยงโทนแข็ง บวม หรือเสียงแตกได้ง่ายขึ้น"
       : eqDeltaClampValue < 1.0
-        ? "คำเตือน: ค่าต่ำจะทำให้ Auto-EQ ปรับเบา ผลลัพธ์อาจเปลี่ยนไม่มาก"
-        : "คำเตือน: หากดันค่าสูงเกินไปอาจทำให้เสียงแข็งหรือเริ่มแตกได้";
+        ? "Delta Clamp คือเพดานการบูสต์/คัต EQ สูงสุดต่อย่านความถี่ ค่าต่ำจะคุมการปรับไว้เบาและปลอดภัยกว่า แต่ความเปลี่ยนแปลงของเสียงอาจไม่ชัดมาก"
+        : "Delta Clamp คือเพดานการบูสต์/คัต EQ สูงสุดต่อย่านความถี่ ค่าช่วงกลางมักบาลานซ์ระหว่างความชัดของผลลัพธ์กับความเป็นธรรมชาติของเสียง";
 
   const selectedAutoEqModel =
     AUTO_EQ_MODEL_OPTIONS.find((option) => option.value === autoEqModel) ?? AUTO_EQ_MODEL_OPTIONS[0];
@@ -401,6 +401,15 @@ function UploadBox() {
                 <span>{AUTO_EQ_DELTA_CLAMP_MIN} dB</span>
                 <span>ค่าเริ่มต้น {AUTO_EQ_DELTA_CLAMP_DEFAULT} dB</span>
                 <span>{AUTO_EQ_DELTA_CLAMP_MAX} dB</span>
+              </div>
+              <div
+                className={`rounded-lg border px-3 py-2 text-xs leading-5 ${
+                  isEqDeltaClampValid
+                    ? "border-amber-400/40 bg-amber-500/10 text-amber-100"
+                    : "border-red-400/50 bg-red-500/10 text-red-100"
+                }`}
+              >
+                {eqDeltaClampWarning}
               </div>
             </div>
           )}
