@@ -14,6 +14,33 @@ const DEFAULT_TRACK_VOLUMES: Record<StemType, number> = {
   other: 85,
 };
 
+const STEM_THEME: Record<StemType, { wave: string; progress: string; accent: string; panel: string }> = {
+  vocals: {
+    wave: "#FBCFE8",
+    progress: "#F472B6",
+    accent: "#F9A8D4",
+    panel: "from-[#2A1321] to-[#140C19]",
+  },
+  drums: {
+    wave: "#FDE68A",
+    progress: "#F59E0B",
+    accent: "#FBBF24",
+    panel: "from-[#2B1E0D] to-[#161008]",
+  },
+  bass: {
+    wave: "#A7F3D0",
+    progress: "#10B981",
+    accent: "#34D399",
+    panel: "from-[#11261F] to-[#0A1512]",
+  },
+  other: {
+    wave: "#BFDBFE",
+    progress: "#38BDF8",
+    accent: "#7DD3FC",
+    panel: "from-[#122234] to-[#0A111C]",
+  },
+};
+
 type Props = {
   baseUrl: string;
 };
@@ -72,12 +99,14 @@ export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {
       // สร้าง WaveSurfer ตัวใหม่ของ stem นี้ พร้อมกำหนดหน้าตา waveform
       const ws = WaveSurfer.create({
         container,
-        waveColor: "#C7D2FE",
-        progressColor: "#22D3EE",
-        cursorColor: "#5B21B6",
-        height: 70,
-        barGap: 2,
+        waveColor: STEM_THEME[stem].wave,
+        progressColor: STEM_THEME[stem].progress,
+        cursorColor: STEM_THEME[stem].accent,
+        height: 72,
+        barGap: 1.75,
         barWidth: 2,
+        barRadius: 999,
+        normalize: true,
       });
 
       // โหลดไฟล์เสียงของ stem นี้จาก baseUrl ที่ส่งเข้ามา
@@ -257,12 +286,16 @@ export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {
       <div className="space-y-3">
         {/* วนสร้าง UI แยกให้แต่ละ stem */}
         {stems.map((stem) => (
-          <div key={stem} className="space-y-2 rounded-xl border border-[#5B21B6]/30 bg-[#111827] p-3">
+          <div
+            key={stem}
+            className={`space-y-2 rounded-xl border p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] bg-gradient-to-br ${STEM_THEME[stem].panel}`}
+            style={{ borderColor: `${STEM_THEME[stem].accent}44` }}
+          >
             <div className="flex items-center justify-between">
               <div className="flex flex-col">
                 {/* แสดงชื่อ stem และเวลาเล่นปัจจุบันเทียบกับเวลารวม */}
-                <span className="capitalize font-semibold text-[#EDE9FE]">{stem}</span>
-                <span className="text-xs text-[#A78BFA]">
+                <span className="capitalize font-semibold text-[#F8FAFC]">{stem}</span>
+                <span className="text-xs" style={{ color: STEM_THEME[stem].accent }}>
                   เวลา: {formatTime(currentTimes[stem])} / {durations[stem] ? formatTime(durations[stem]) : "-"}
                 </span>
               </div>
@@ -288,16 +321,25 @@ export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {
               </div>
             </div>
 
-            <div className="rounded-lg border border-[#5B21B6]/25 bg-[#0B1021]/80 px-3 py-2">
+            <div
+              className="rounded-lg border bg-[#08101C]/85 px-3 py-2"
+              style={{ borderColor: `${STEM_THEME[stem].accent}33` }}
+            >
               {/* ส่วนควบคุมระดับเสียงของ stem นี้ */}
-              <div className="mb-2 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide text-[#A78BFA]">
+              <div className="mb-2 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide">
                 <span>Volume</span>
-                <span className="rounded-full border border-[#22D3EE]/30 bg-[#111827] px-2 py-0.5 text-[#EDE9FE]">
+                <span
+                  className="rounded-full border bg-[#0B1220] px-2 py-0.5 text-[#EDE9FE]"
+                  style={{ borderColor: `${STEM_THEME[stem].accent}33`, color: STEM_THEME[stem].accent }}
+                >
                   {mutedTracks[stem] ? "Mute" : `${trackVolumes[stem]}%`}
                 </span>
               </div>
               <div className="flex items-center gap-3">
-                <span className="rounded-md border border-[#22D3EE]/30 bg-[#111827] px-2 py-1 text-[10px] font-semibold text-[#22D3EE]">
+                <span
+                  className="rounded-md border bg-[#0B1220] px-2 py-1 text-[10px] font-semibold"
+                  style={{ borderColor: `${STEM_THEME[stem].accent}33`, color: STEM_THEME[stem].accent }}
+                >
                   VOL
                 </span>
                 {/* slider จะเรียก handleVolumeChange ทุกครั้งที่ผู้ใช้ลากปรับค่า */}
@@ -309,7 +351,7 @@ export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {
                   value={trackVolumes[stem]}
                   onChange={(event) => handleVolumeChange(stem, Number(event.target.value))}
                   className="h-2 w-full cursor-pointer rounded-full bg-[#312E81]"
-                  style={{ accentColor: "#22D3EE" }}
+                  style={{ accentColor: STEM_THEME[stem].progress }}
                   aria-label={`ปรับระดับเสียงของ ${stem}`}
                 />
               </div>
@@ -318,7 +360,8 @@ export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {
             {/* div นี้เป็นพื้นที่ให้ WaveSurfer วาด waveform ลงไป */}
             <div
               id={`waveform-${stem}`}
-              className="rounded-lg bg-[#0B1021] cursor-pointer"
+              className="rounded-xl border bg-[#06101A] px-2 py-2 cursor-pointer shadow-[inset_0_1px_12px_rgba(255,255,255,0.03)]"
+              style={{ borderColor: `${STEM_THEME[stem].accent}40` }}
               onPointerDown={(e) => {
                 // เริ่ม drag seek และ seek ไปยังจุดที่กดทันที
                 draggingStemRef.current = stem;

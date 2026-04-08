@@ -22,12 +22,14 @@ const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl }) => {
 
     waveSurferRef.current = WaveSurfer.create({
       container: containerRef.current,
-      waveColor: "#C7D2FE",
-      progressColor: "#5B21B6",
+      waveColor: "#BFDBFE",
+      progressColor: "#22D3EE",
       cursorColor: "#22D3EE",
-      height: 140,
-      barGap: 2,
+      height: 124,
+      barGap: 1.75,
       barWidth: 2,
+      barRadius: 999,
+      normalize: true,
     });
 
     waveSurferRef.current.load(audioUrl);
@@ -94,7 +96,7 @@ const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl }) => {
       </div>
       <div
         ref={containerRef}
-        className="rounded-xl bg-[#0F0B1D] cursor-pointer"
+        className="rounded-xl border border-[#67E8F9]/25 bg-[#08111D] px-2 py-2 cursor-pointer shadow-[inset_0_1px_14px_rgba(255,255,255,0.03)]"
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}

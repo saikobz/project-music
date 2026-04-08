@@ -18,8 +18,8 @@ const AUTO_EQ_DELTA_CLAMP_MAX = 6;
 const AUTO_EQ_DELTA_CLAMP_DEFAULT = 2;
 const AUTO_EQ_MODEL_DEFAULT = "lstm-last";
 const AUTO_EQ_MODEL_OPTIONS = [
-  { value: "cnn-v1", label: "CNN v1", hint: "โหมดเดิมของโปรเจกต์" },
-  { value: "lstm-last", label: "LSTM Last", hint: "โมเดลใหม่แบบ sequence-aware" },
+  { value: "cnn-v1", label: "CNN", hint: "โหมดเดิมของโปรเจกต์" },
+  { value: "lstm-last", label: "LSTM", hint: "โมเดลใหม่แบบ sequence-aware" },
 ];
 
 function UploadBox() {
