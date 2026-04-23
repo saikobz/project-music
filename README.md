@@ -38,7 +38,7 @@ uvicorn backend.main:app --port 8000
 ```bash
 cd C:\Users\nopma\Desktop\project-music
 npm install
-npm run dev          # โหมดพัฒนา (พอร์ต 3000)
+npm run dev          
 npm run build        # สร้าง production
 npm start            # รัน production หลัง build แล้ว
 ```
