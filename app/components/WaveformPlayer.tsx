@@ -32,7 +32,12 @@ const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl }) => {
       normalize: true,
     });
 
-    waveSurferRef.current.load(audioUrl);
+    // .load() คืน Promise ที่จะ reject เป็น AbortError เมื่อ effect cleanup
+    // (เช่น audioUrl เปลี่ยน หรือ React Strict Mode remount) — กลบทิ้งไว้
+    waveSurferRef.current.load(audioUrl).catch((e: unknown) => {
+      if ((e as { name?: string })?.name === "AbortError") return;
+      console.error("WaveSurfer load error", e);
+    });
     waveSurferRef.current.setVolume(volume / 100);
     waveSurferRef.current.on("finish", () => setIsPlaying(false));
     waveSurferRef.current.on("error", (e) => {
