@@ -89,7 +89,7 @@ export default function EqKnowledgePanel() {
           aria-expanded={isOpen}
           aria-controls={panelId}
           onClick={() => setIsOpen((prev) => !prev)}
-          className="flex h-14 w-full items-center gap-2 px-3 text-[#EDE9FE] transition hover:bg-[#111827]"
+          className="cursor-pointer flex h-14 w-full items-center gap-2 px-3 text-[#EDE9FE] transition hover:bg-[#111827]"
         >
           <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#22D3EE]/45 bg-[#111827]">
             <svg className="h-4 w-4 text-[#22D3EE]" viewBox="0 0 20 20" fill="none" aria-hidden="true">
@@ -102,8 +102,8 @@ export default function EqKnowledgePanel() {
               isOpen ? "translate-x-0 opacity-100" : "pointer-events-none -translate-x-1 opacity-0"
             }`}
           >
-            <span className="block text-xs font-semibold tracking-wide text-[#A78BFA]">EQ GUIDE</span>
-            <span className="block text-sm font-bold">เมนูความรู้</span>
+            <span className="block text-xs font-semibold tracking-wide text-[#A78BFA] cursor-pointer">EQ GUIDE</span>
+            <span className="block text-sm font-bold cursor-pointer">เมนูความรู้</span>
           </span>
         </button>
 
