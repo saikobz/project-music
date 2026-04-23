@@ -6,6 +6,8 @@
 """
 
 import os
+import glob
+import time
 import torch
 import warnings
 import torchaudio
@@ -13,8 +15,22 @@ import numpy as np
 import librosa
 import soundfile as sf
 
-# เลือกใช้ GPU อัตโนมัติถ้ามี 
+# เลือกใช้ GPU อัตโนมัติถ้ามี
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
+def _cleanup_partial_checkpoints() -> None:
+    # torch.hub ดาวน์โหลดเป็นไฟล์ temp แล้วค่อย rename; ถ้าโดนขัดจังหวะ
+    # อาจมีไฟล์ค้างใน cache ทำให้ครั้งต่อไปโหลดเจอไฟล์เสีย ต้องล้างทิ้งก่อน retry
+    cache_dir = os.path.join(torch.hub.get_dir(), "checkpoints")
+    if not os.path.isdir(cache_dir):
+        return
+    for pattern in ("*.partial", "*.tmp", "tmp*"):
+        for path in glob.glob(os.path.join(cache_dir, pattern)):
+            try:
+                os.remove(path)
+            except OSError:
+                pass
 
 
 def separate_audio(input_path: str, output_dir: str = "separated") -> str:
@@ -37,16 +53,40 @@ def separate_audio(input_path: str, output_dir: str = "separated") -> str:
         audio_tensor, rate = torchaudio.load(input_path)
         input_frames = int(audio_tensor.shape[-1])
         # โหลดโมเดล Open-Unmix ที่ฝึกมาแล้วสำหรับแยก 4 stem หลัก
-        separator = openunmix_utils.load_separator(
-            model_str_or_path="umxl",  # ชื่อโมเดลที่ใช้; umxl คือรุ่น pretrained ของ Open-Unmix
-            targets=["vocals", "drums", "bass", "other"],  # stem ที่ต้องการแยกออกมา
-            niter=1,  # จำนวนรอบ refinement; ค่าน้อยช่วยให้รันเร็วขึ้น
-            residual=False,  # ไม่สร้าง stem ส่วนเกินนอกเหนือจาก target ที่กำหนด
-            wiener_win_len=300,  # ขนาดหน้าต่างที่ใช้ในขั้นตอน Wiener filtering
-            device=str(DEVICE),  # อุปกรณ์ที่ใช้ประมวลผล เช่น cpu หรือ cuda
-            pretrained=True,  # ใช้โมเดลที่ฝึกมาแล้ว
-            filterbank="torch",  # ใช้ filterbank ฝั่ง torch สำหรับคำนวณสเปกโตรแกรม
-        )
+        # zenodo ซึ่งโฮสต์ checkpoint มักคืน 503 ชั่วคราว ให้ retry พร้อมรอแบบ backoff
+        max_attempts = 4
+        last_error: Exception | None = None
+        separator = None
+        for attempt in range(1, max_attempts + 1):
+            try:
+                separator = openunmix_utils.load_separator(
+                    model_str_or_path="umxl",
+                    targets=["vocals", "drums", "bass", "other"],
+                    niter=1,
+                    residual=False,
+                    wiener_win_len=300,
+                    device=str(DEVICE),
+                    pretrained=True,
+                    filterbank="torch",
+                )
+                break
+            except Exception as load_err:
+                last_error = load_err
+                msg = str(load_err)
+                transient = any(
+                    token in msg
+                    for token in ("503", "502", "504", "timed out", "timeout", "Temporarily")
+                )
+                print(f"[WARN] load_separator ครั้งที่ {attempt}/{max_attempts} ล้มเหลว: {load_err}")
+                _cleanup_partial_checkpoints()
+                if attempt == max_attempts or not transient:
+                    break
+                time.sleep(2 ** attempt)
+        if separator is None:
+            raise RuntimeError(
+                "ดาวน์โหลดโมเดล Open-Unmix จาก zenodo ไม่สำเร็จ "
+                "(เซิร์ฟเวอร์อาจขัดข้องชั่วคราว) โปรดลองใหม่อีกครั้งภายหลัง"
+            ) from last_error
         # ใช้โมเดลแบบ inference อย่างเดียว และย้ายไปยัง CPU/GPU ที่เลือกไว้
         separator.freeze()
         separator = separator.to(DEVICE)
