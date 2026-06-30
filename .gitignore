@@ -50,6 +50,10 @@ yarn-error.log*
 # vercel
 .vercel/
 
+# cursor / agent skills (local tooling)
+.agents/
+.cursor/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
