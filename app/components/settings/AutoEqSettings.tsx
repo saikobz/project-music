@@ -36,7 +36,7 @@ export const AutoEqSettings: React.FC<AutoEqSettingsProps> = ({
         <select
           value={autoEqModel}
           onChange={(e) => setAutoEqModel(e.target.value)}
-          className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
+          className="w-full rounded-lg bg-[#0A0A0A] border border-[#2A2A2A] p-2.5 text-[#F3F3F3] focus:border-[#E5A93D] focus:outline-none transition"
           disabled={loading}
         >
           {modelOptions.map((option) => (
@@ -56,7 +56,7 @@ export const AutoEqSettings: React.FC<AutoEqSettingsProps> = ({
           step="0.1"
           value={deltaClampDb}
           onChange={(e) => setDeltaClampDb(e.target.value)}
-          className="w-24 rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-right text-[#EDE9FE]"
+          className="w-24 rounded-lg bg-[#0A0A0A] border border-[#2A2A2A] p-2 text-right text-[#F3F3F3] focus:border-[#E5A93D] focus:outline-none transition"
           disabled={loading}
         />
       </div>
@@ -67,7 +67,7 @@ export const AutoEqSettings: React.FC<AutoEqSettingsProps> = ({
         step="0.1"
         value={deltaClampDb}
         onChange={(e) => setDeltaClampDb(e.target.value)}
-        className="w-full accent-[#22D3EE]"
+        className="w-full accent-[#E5A93D]"
         disabled={loading}
       />
       <div className="flex justify-between text-xs text-[#A78BFA]">

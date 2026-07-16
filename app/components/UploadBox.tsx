@@ -290,19 +290,14 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
   };
 
   return (
-    <div className="grid gap-6 md:grid-cols-2 p-6 text-[#EDE9FE]">
-      <div className="space-y-4">
-        {/* ===== การ์ดเลือกไฟล์เสียง ===== */}
-        {/* ขั้นตอนที่ 1: รับไฟล์ WAV ผ่านปุ่มเลือกไฟล์หรือ drag-and-drop */}
-        {/* การ์ดเลือกไฟล์ WAV และพื้นที่ drag-and-drop */}
-        <div className="rounded-2xl border border-[#5B21B6]/30 bg-[#0F172A] p-4 backdrop-blur shadow-inner shadow-purple-900/30">
-          <p className="text-sm text-[#A78BFA]">ขั้นตอนที่ 1</p>
-          <h2 className="text-2xl font-bold">เลือกไฟล์ WAV</h2>
-          <p className="text-sm text-[#EDE9FE]/80">รองรับไฟล์ .wav ขนาดไม่เกิน 100MB</p>
-
+    <div className={`p-6 text-[#F3F3F3] transition-all duration-500 ${!file ? "flex flex-col items-center justify-center min-h-[50vh]" : "grid gap-6 md:grid-cols-2"}`}>
+      {!file ? (
+        <div className="w-full max-w-3xl text-center space-y-6">
+          <h2 className="text-3xl font-bold tracking-tight text-[#F3F3F3]">Upload Audio</h2>
+          <p className="text-[#8E8E8E] font-medium">Select or drag & drop a WAV file (up to 100MB)</p>
           <label
-            className={`mt-3 flex h-28 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed text-center text-[#EDE9FE] transition
-            ${isDragging ? "border-[#22D3EE] bg-[#5B21B6]/40" : "border-[#8B5CF6] bg-[#5B21B6]/20 hover:border-[#22D3EE] hover:bg-[#5B21B6]/30"}`}
+            className={`mt-6 mx-auto flex h-64 max-w-2xl cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed transition-all
+            ${isDragging ? "border-[#E5A93D] bg-[#E5A93D]/10" : "border-[#2A2A2A] bg-[#121212] hover:border-[#E5A93D]/50 hover:bg-[#1A1A1A]"}`}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             onDragEnter={handleDragOver}
@@ -314,204 +309,206 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
               className="hidden"
               onChange={(e) => handleFileSelect(e.target.files?.[0] || null)}
             />
-            {file ? (
-              <span className="font-semibold">{file.name}</span>
-            ) : (
-              <span>ลากไฟล์มาวางหรือคลิกเพื่อเลือกไฟล์</span>
-            )}
+            <div className="text-lg font-medium text-[#F3F3F3]">Click to browse or drag file here</div>
+            <div className="mt-2 text-sm text-[#555555]">.wav only</div>
           </label>
-        </div>
-
-        {/* ขั้นตอนที่ 2: แสดงเฉพาะ control ที่จำเป็นสำหรับ action ที่เลือก */}
-        {/* การ์ดเลือก action และตั้งค่าพารามิเตอร์ของงานที่เลือก */}
-        <div className="rounded-2xl border border-[#5B21B6]/30 bg-[#0F172A] p-4 backdrop-blur space-y-3 shadow-inner shadow-purple-900/30">
-          {/* ===== การ์ดเลือกประเภทงานและตั้งค่าพารามิเตอร์ ===== */}
-          <p className="text-sm text-[#A78BFA] font-semibold">ขั้นตอนที่ 2</p>
-          <h3 className="text-xl font-semibold">เลือกระบบที่ต้องการ</h3>
-          <div className="grid grid-cols-2 gap-2">
-            {[
-              { value: "separate", label: "แยกเสียง" },
-              { value: "eq-ai", label: "EQ (AI)" },
-              { value: "compressor", label: "Compressor" },
-              { value: "pitch", label: "ปรับ Pitch" },
-            ].map((item) => (
-              <button
-                key={item.value}
-                onClick={() => setAction(item.value)}
-                className={`rounded-lg px-3 py-2 text-sm font-semibold border cursor-pointer transition ${
-                  action === item.value
-                    ? "bg-[#5B21B6] text-white border-[#22D3EE]"
-                    : "bg-[#111827] border-[#5B21B6]/50 text-[#EDE9FE]"
-                }`}
-                disabled={loading}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-
-          {/* ตัวเลือก genre ใช้กับ Auto-EQ และ Compressor */}
-          {/* ===== ส่วนเลือก genre: ใช้กับ EQ AI และ Compressor ===== */}
-          {(action === "eq-ai" || action === "compressor") && (
-            <div>
-              <label className="block text-sm mb-1">แนวเพลง (Genre)</label>
-              <select
-                value={genre}
-                onChange={(e) => setGenre(e.target.value)}
-                className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#fee9e9]"
-                disabled={loading}
-              >
-                <option value="pop">Pop</option>
-                <option value="rock">Rock</option>
-                <option value="trap">Trap</option>
-                <option value="country">Country</option>
-                <option value="soul">Soul</option>
-              </select>
-            </div>
-          )}
-
-          {action === "eq-ai" && (
-            <AutoEqSettings
-              autoEqModel={autoEqModel}
-              setAutoEqModel={setAutoEqModel}
-              deltaClampDb={deltaClampDb}
-              setDeltaClampDb={setDeltaClampDb}
-              loading={loading}
-              modelOptions={AUTO_EQ_MODEL_OPTIONS}
-              minDeltaClamp={AUTO_EQ_DELTA_CLAMP_MIN}
-              maxDeltaClamp={AUTO_EQ_DELTA_CLAMP_MAX}
-              defaultDeltaClamp={AUTO_EQ_DELTA_CLAMP_DEFAULT}
-              isValid={isEqDeltaClampValid}
-              warningText={eqDeltaClampWarning}
-            />
-          )}
-
-          {/* ฟอร์มตั้งค่า compressor แบบละเอียด จะแสดงเฉพาะเมื่อเลือก action นี้ */}
-          {/* ===== ฟอร์มตั้งค่า Compressor แบบละเอียด ===== */}
-          {action === "compressor" && (
-            <CompressorSettings
-              strength={strength}
-              setStrength={setStrength}
-              compThreshold={compThreshold}
-              setCompThreshold={setCompThreshold}
-              compRatio={compRatio}
-              setCompRatio={setCompRatio}
-              compAttack={compAttack}
-              setCompAttack={setCompAttack}
-              compRelease={compRelease}
-              setCompRelease={setCompRelease}
-              compKnee={compKnee}
-              setCompKnee={setCompKnee}
-              compMakeupGain={compMakeupGain}
-              setCompMakeupGain={setCompMakeupGain}
-              compDryWet={compDryWet}
-              setCompDryWet={setCompDryWet}
-              compOutputCeiling={compOutputCeiling}
-              setCompOutputCeiling={setCompOutputCeiling}
-              loading={loading}
-            />
-          )}
-
-          {/* ฟอร์มปรับจำนวน half-steps สำหรับ pitch shift */}
-          {/* ===== ฟอร์มตั้งค่าการเลื่อน pitch ===== */}
-          {action === "pitch" && (
-            <PitchShiftSettings
-              pitchSteps={pitchSteps}
-              setPitchSteps={setPitchSteps}
-              loading={loading}
-            />
-          )}
-
-          {/* ปุ่มเริ่มประมวลผลจะส่งคำขอหลักไปยัง backend */}
-          {/* ===== ปุ่มเริ่มประมวลผล ===== */}
-          <button
-            onClick={handleUpload}
-            disabled={loading || (action === "eq-ai" && !isEqDeltaClampValid)}
-            className={`w-full rounded-xl py-3 text-lg font-bold transition ${
-              loading || (action === "eq-ai" && !isEqDeltaClampValid)
-                ? "bg-[#A78BFA]/60 cursor-not-allowed"
-                : "bg-[#5B21B6] hover:bg-[#22D3EE] text-white cursor-pointer"
-            }`}
-          >
-            {loading ? "กำลังประมวลผล..." : "เริ่มประมวลผล"}
-          </button>
-          {/* แถบ progress และตัวเลขสถานะระหว่างรอผลจาก backend */}
-          {/* ===== แถบ progress และข้อความสถานะ ===== */}
-          <div className="h-2 w-full rounded-full bg-[#0B1021] overflow-hidden border border-[#5B21B6]/40">
-            <div
-              className="h-full bg-gradient-to-r from-[#5B21B6] via-[#22D3EE] to-[#5B21B6] transition-[width] duration-200"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          <div className="flex justify-between text-xs text-[#A78BFA]">
-            <span>สถานะ: {statusText || (loading ? "กำลังประมวลผล..." : "รอเริ่มงาน")}</span>
-            <span>{progress}%</span>
-          </div>
-          {/* กลุ่มข้อความ feedback จากการประมวลผล เช่น status, เวลา, error และ success */}
-          {statusText && (
-            <div className="rounded-lg bg-[#0F0B1D]/70 border border-[#7C3AED]/30 p-2 text-sm text-[#A78BFA]">
-              {statusText}
-            </div>
-          )}
-          {processingTime && (
-            <div className="text-sm text-[#A78BFA]">ใช้เวลา: {processingTime}</div>
-          )}
           {errorMessage && (
-            <div className="rounded-lg bg-red-700/70 border border-red-400 p-2 text-sm text-white">
+            <div className="rounded-lg bg-red-900/30 border border-red-900/50 p-3 text-sm text-red-400 max-w-xl mx-auto">
               {errorMessage}
             </div>
           )}
-          {successMessage && (
-            <div className="rounded-lg bg-[#7C3AED]/30 border border-[#A78BFA] p-2 text-sm text-[#EDE9FE]">
-              {successMessage}
-            </div>
-          )}
         </div>
-      </div>
+      ) : (
+        <>
+          <div className="space-y-4">
+            <div className="rounded-xl border border-[#2A2A2A] bg-[#121212] p-5 shadow-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-[#8E8E8E] uppercase tracking-wider mb-1">Source File</p>
+                  <h2 className="text-lg font-semibold text-[#F3F3F3] truncate max-w-[200px] sm:max-w-[300px]">{file.name}</h2>
+                </div>
+                <button 
+                  onClick={() => handleFileSelect(null)}
+                  className="text-xs px-3 py-1.5 rounded bg-[#1A1A1A] border border-[#2A2A2A] text-[#8E8E8E] hover:text-[#F3F3F3] hover:border-[#8E8E8E] transition cursor-pointer"
+                >
+                  Change File
+                </button>
+              </div>
+            </div>
 
-      {/* คอลัมน์ขวา: ผลวิเคราะห์, ตัวเล่น stem, และลิงก์ดาวน์โหลดที่สร้างขึ้น */}
-      {/* ส่วนแสดงผลวิเคราะห์ ตัวเล่น และลิงก์ดาวน์โหลด */}
-      <div className="space-y-4">
-        {/* การ์ดสรุป tempo / key / pitch ของไฟล์ต้นฉบับ */}
-        {/* ===== การ์ดสรุป tempo / key / pitch ===== */}
-        {analysis && <AudioAnalysis data={analysis} />}
+            <div className="rounded-xl border border-[#2A2A2A] bg-[#121212] p-5 space-y-5 shadow-lg">
+              <div>
+                <p className="text-xs font-medium text-[#8E8E8E] uppercase tracking-wider mb-2">Processing Module</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { value: "separate", label: "Stem Separation" },
+                    { value: "eq-ai", label: "Auto EQ (AI)" },
+                    { value: "compressor", label: "Compressor" },
+                    { value: "pitch", label: "Pitch Shift" },
+                  ].map((item) => (
+                    <button
+                      key={item.value}
+                      onClick={() => setAction(item.value)}
+                      className={`rounded-lg px-3 py-2.5 text-sm font-medium border cursor-pointer transition ${
+                        action === item.value
+                          ? "bg-[#E5A93D] text-[#0A0A0A] border-[#E5A93D]"
+                          : "bg-[#1A1A1A] border-[#2A2A2A] text-[#8E8E8E] hover:text-[#F3F3F3] hover:border-[#555555]"
+                      }`}
+                      disabled={loading}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-        {/* ส่วนเครื่องเล่นหลายสเตม จะแสดงเมื่อ backend แยก stem สำเร็จแล้ว */}
-        {/* ===== เครื่องเล่นแทร็กที่ถูกแยก stem แล้ว ===== */}
-        {fileId && (
-          <div className="rounded-2xl border border-[#5B21B6]/30 bg-[#0F172A] p-4 backdrop-blur">
-            <h3 className="text-xl font-semibold mb-2">Multi-stem Player</h3>
-            <MultiStemLivePlayer fileId={fileId} />
+              {(action === "eq-ai" || action === "compressor") && (
+                <div>
+                  <label className="block text-xs font-medium text-[#8E8E8E] uppercase tracking-wider mb-2">Genre Profile</label>
+                  <select
+                    value={genre}
+                    onChange={(e) => setGenre(e.target.value)}
+                    className="w-full rounded-lg bg-[#0A0A0A] border border-[#2A2A2A] p-2.5 text-[#F3F3F3] focus:border-[#E5A93D] focus:outline-none transition"
+                    disabled={loading}
+                  >
+                    <option value="pop">Pop</option>
+                    <option value="rock">Rock</option>
+                    <option value="trap">Trap</option>
+                    <option value="country">Country</option>
+                    <option value="soul">Soul</option>
+                  </select>
+                </div>
+              )}
+
+              {action === "eq-ai" && (
+                <AutoEqSettings
+                  autoEqModel={autoEqModel}
+                  setAutoEqModel={setAutoEqModel}
+                  deltaClampDb={deltaClampDb}
+                  setDeltaClampDb={setDeltaClampDb}
+                  loading={loading}
+                  modelOptions={AUTO_EQ_MODEL_OPTIONS}
+                  minDeltaClamp={AUTO_EQ_DELTA_CLAMP_MIN}
+                  maxDeltaClamp={AUTO_EQ_DELTA_CLAMP_MAX}
+                  defaultDeltaClamp={AUTO_EQ_DELTA_CLAMP_DEFAULT}
+                  isValid={isEqDeltaClampValid}
+                  warningText={eqDeltaClampWarning}
+                />
+              )}
+
+              {action === "compressor" && (
+                <CompressorSettings
+                  strength={strength}
+                  setStrength={setStrength}
+                  compThreshold={compThreshold}
+                  setCompThreshold={setCompThreshold}
+                  compRatio={compRatio}
+                  setCompRatio={setCompRatio}
+                  compAttack={compAttack}
+                  setCompAttack={setCompAttack}
+                  compRelease={compRelease}
+                  setCompRelease={setCompRelease}
+                  compKnee={compKnee}
+                  setCompKnee={setCompKnee}
+                  compMakeupGain={compMakeupGain}
+                  setCompMakeupGain={setCompMakeupGain}
+                  compDryWet={compDryWet}
+                  setCompDryWet={setCompDryWet}
+                  compOutputCeiling={compOutputCeiling}
+                  setCompOutputCeiling={setCompOutputCeiling}
+                  loading={loading}
+                />
+              )}
+
+              {action === "pitch" && (
+                <PitchShiftSettings
+                  pitchSteps={pitchSteps}
+                  setPitchSteps={setPitchSteps}
+                  loading={loading}
+                />
+              )}
+
+              <button
+                onClick={handleUpload}
+                disabled={loading || (action === "eq-ai" && !isEqDeltaClampValid)}
+                className={`w-full rounded-lg py-3 text-sm font-bold uppercase tracking-wider transition ${
+                  loading || (action === "eq-ai" && !isEqDeltaClampValid)
+                    ? "bg-[#2A2A2A] text-[#555555] cursor-not-allowed border border-[#2A2A2A]"
+                    : "bg-[#E5A93D] hover:bg-[#F3C05D] text-[#0A0A0A] cursor-pointer shadow-[0_0_15px_rgba(229,169,61,0.2)] hover:shadow-[0_0_20px_rgba(229,169,61,0.4)]"
+                }`}
+              >
+                {loading ? "Processing..." : "Execute"}
+              </button>
+
+              <div className="h-1.5 w-full rounded-full bg-[#0A0A0A] overflow-hidden border border-[#2A2A2A]">
+                <div
+                  className="h-full bg-[#E5A93D] transition-[width] duration-200"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <div className="flex justify-between text-xs text-[#8E8E8E]">
+                <span>{statusText || (loading ? "Processing..." : "Ready")}</span>
+                <span>{progress}%</span>
+              </div>
+
+              {statusText && (
+                <div className="rounded-lg bg-[#1A1A1A] border border-[#2A2A2A] p-2.5 text-xs text-[#F3F3F3]">
+                  {statusText}
+                </div>
+              )}
+              {processingTime && (
+                <div className="text-xs text-[#8E8E8E]">Processing Time: {processingTime}</div>
+              )}
+              {errorMessage && (
+                <div className="rounded-lg bg-red-900/30 border border-red-900/50 p-2.5 text-xs text-red-400">
+                  {errorMessage}
+                </div>
+              )}
+              {successMessage && (
+                <div className="rounded-lg bg-[#E5A93D]/10 border border-[#E5A93D]/30 p-2.5 text-xs text-[#E5A93D]">
+                  {successMessage}
+                </div>
+              )}
+            </div>
           </div>
-        )}
 
-        {/* ปุ่มดาวน์โหลด ZIP ของ stem ทั้งหมดจากงานแยกเสียง */}
-        {/* ===== ปุ่มดาวน์โหลด ZIP ของ stem ทั้งหมด ===== */}
-        {zipUrl && (
-          <a
-            href={zipUrl.startsWith("http") ? zipUrl : `${API_BASE}${zipUrl}`}
-            download="separated.zip"
-            className="block w-full text-center rounded-xl bg-[#22D3EE] hover:bg-[#5B21B6] text-black font-semibold py-3"
-          >
-            ดาวน์โหลดสเตมทั้งหมด (ZIP)
-          </a>
-        )}
+          <div className="space-y-4">
+            {analysis && <AudioAnalysis data={analysis} />}
 
-        {/* ส่วนดาวน์โหลดไฟล์เดี่ยวที่ประมวลผลแล้ว พร้อม waveform player สำหรับฟังผลลัพธ์ */}
-        {/* ===== ปุ่มดาวน์โหลดไฟล์ผลลัพธ์และ waveform player ===== */}
-        {downloadUrl && downloadFileName && !downloadFileName.endsWith(".zip") && (
-          <div className="rounded-2xl border border-[#5B21B6]/30 bg-[#0F172A] p-4 backdrop-blur space-y-3">
-            <a
-              href={downloadUrl}
-              download={downloadFileName}
-              className="block w-full text-center rounded-xl bg-[#5B21B6] hover:bg-[#22D3EE] text-white font-semibold py-3"
-            >
-              ดาวน์โหลดไฟล์ (WAV)
-            </a>
-            <WaveformPlayer audioUrl={downloadUrl} />
+            {fileId && (
+              <div className="rounded-xl border border-[#2A2A2A] bg-[#121212] p-5 shadow-lg">
+                <h3 className="text-sm font-medium text-[#8E8E8E] uppercase tracking-wider mb-4">Stem Mixer</h3>
+                <MultiStemLivePlayer fileId={fileId} />
+              </div>
+            )}
+
+            {zipUrl && (
+              <a
+                href={zipUrl.startsWith("http") ? zipUrl : `${API_BASE}${zipUrl}`}
+                download="separated.zip"
+                className="block w-full text-center rounded-lg bg-[#1A1A1A] hover:bg-[#2A2A2A] border border-[#2A2A2A] hover:border-[#555555] text-[#F3F3F3] font-medium py-3 transition"
+              >
+                Download All Stems (ZIP)
+              </a>
+            )}
+
+            {downloadUrl && downloadFileName && !downloadFileName.endsWith(".zip") && (
+              <div className="rounded-xl border border-[#2A2A2A] bg-[#121212] p-5 space-y-4 shadow-lg">
+                <a
+                  href={downloadUrl}
+                  download={downloadFileName}
+                  className="block w-full text-center rounded-lg bg-[#E5A93D] hover:bg-[#F3C05D] text-[#0A0A0A] font-medium py-3 transition shadow-[0_0_15px_rgba(229,169,61,0.2)]"
+                >
+                  Download Output (WAV)
+                </a>
+                <div className="pt-2">
+                  <WaveformPlayer audioUrl={downloadUrl} />
+                </div>
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </>
+      )}
     </div>
   );
 }

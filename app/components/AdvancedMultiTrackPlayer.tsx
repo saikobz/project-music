@@ -259,7 +259,7 @@ export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {
 
   return (
     // กรอบหลักของ multitrack player
-    <div className="space-y-4 rounded-2xl border border-[#5B21B6]/30 bg-[#0F172A] p-4 backdrop-blur shadow-[0_20px_40px_rgba(17,24,39,0.45)]">
+    <div className="space-y-4 rounded-xl border border-[#2A2A2A] bg-[#121212] p-5 shadow-lg">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 font-semibold text-[#EDE9FE]">
           <span className="text-lg">เครื่องเล่นหลายสเตม</span>
@@ -269,14 +269,14 @@ export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {
           {/* ปุ่มควบคุมการเล่น/หยุดของทุก stem พร้อมกัน */}
           <button
             onClick={togglePlay}
-            className="rounded-lg bg-[#22D3EE] px-3 py-2 text-sm font-semibold text-black hover:bg-[#38E2FF] cursor-pointer"
+            className="rounded-lg bg-[#E5A93D] px-3 py-2 text-sm font-semibold text-[#0A0A0A] hover:bg-[#F3C05D] cursor-pointer"
           >
             {isPlaying ? "หยุดชั่วคราว" : "เล่นทั้งหมด"}
           </button>
           {/* ปุ่มรีเซ็ตทุก stem กลับไปตำแหน่งเริ่มต้น */}
           <button
             onClick={resetAll}
-            className="rounded-lg border border-[#5B21B6]/50 bg-[#111827] px-3 py-2 text-sm font-semibold text-[#EDE9FE] hover:bg-[#1F2937] cursor-pointer"
+            className="rounded-lg border border-[#2A2A2A] bg-[#1A1A1A] px-3 py-2 text-sm font-semibold text-[#F3F3F3] hover:bg-[#2A2A2A] cursor-pointer"
           >
             เริ่มต้นใหม่
           </button>
@@ -303,7 +303,7 @@ export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {
                 {/* ปุ่มดาวน์โหลดไฟล์เสียงของ stem นี้ */}
                 <button
                   onClick={() => handleDownload(stem)}
-                  className="cursor-pointer rounded-lg bg-[#22D3EE] px-3 py-1 text-xs font-semibold text-black hover:bg-[#38E2FF]"
+                  className="cursor-pointer rounded-lg bg-[#E5A93D] px-3 py-1 text-xs font-semibold text-[#0A0A0A] hover:bg-[#F3C05D]"
                 >
                   ดาวน์โหลด
                 </button>
@@ -312,8 +312,8 @@ export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {
                   onClick={() => toggleMute(stem)}
                   className={`cursor-pointer rounded-lg border px-3 py-1 text-xs font-semibold ${
                     mutedTracks[stem]
-                      ? "bg-[#246e41] border-[#5B21B6]/60 text-[#EDE9FE]"
-                      : "bg-[#b62121] border-[#22D3EE]/40 text-white"
+                      ? "bg-[#1A1A1A] border-[#2A2A2A] text-[#F3F3F3]"
+                      : "bg-[#331111] border-[#551111] text-[#FF4444]"
                   }`}
                 >
                   {mutedTracks[stem] ? "เปิดเสียง" : "ปิดเสียง"}

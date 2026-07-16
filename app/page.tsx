@@ -11,7 +11,7 @@ export default function Home() {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className={`flex min-h-screen flex-col bg-gradient-to-br from-[#0B1021] via-[#111827] to-[#312E81] text-[#EDE9FE] transition-all duration-300 ${
+    <div className={`flex min-h-screen flex-col bg-[#0A0A0A] text-[#F3F3F3] transition-all duration-300 ${
       isExpanded ? "overflow-y-auto" : "md:h-screen md:overflow-hidden overflow-y-auto"
     }`}>
       <Navbar />
@@ -22,13 +22,13 @@ export default function Home() {
           <h1 className="text-3xl md:text-4xl font-bold leading-tight">
             AI Music Stem &amp; Mastering Toolkit
           </h1>
-          <p className="text-sm md:text-base text-[#EDE9FE]/80 max-w-3xl">
+          <p className="text-sm md:text-base text-[#8E8E8E] max-w-3xl font-light">
             อัปโหลดไฟล์ WAV เพื่อแยกเสียงดนตรีด้วย AI พร้อม EQ, Compressor, Pitch Shift และการวิเคราะห์ 
             Tempo/Key/Pitch ปรับแต่แต่งระดับเสียง Mute/Seek/Solo และดาวน์โหลดผลลัพธ์ผ่านเครื่องเล่นสเตมแบบสด
           </p>
         </header>
 
-        <section className="bg-[#111827]/85 border border-[#5B21B6]/30 rounded-2xl shadow-[0_20px_60px_rgba(12,10,26,0.55)] backdrop-blur-lg">
+        <section className="bg-[#121212] border border-[#2A2A2A] rounded-2xl shadow-2xl overflow-hidden">
           <UploadBox onHeightChange={setIsExpanded} />
         </section>
       </main>

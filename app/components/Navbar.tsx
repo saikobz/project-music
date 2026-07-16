@@ -30,21 +30,21 @@ export const Navbar: React.FC = () => {
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-[#5B21B6]/20 bg-[#0F172A]/80 backdrop-blur-md">
+    <header className="sticky top-0 z-50 w-full border-b border-[#2A2A2A] bg-[#0A0A0A]/80 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         {/* โลโก้ของระบบ */}
         <div className="flex items-center gap-2">
-          <span className="rounded-full bg-gradient-to-r from-[#5B21B6] to-[#22D3EE] px-3.5 py-1 text-sm font-bold uppercase tracking-wider text-white shadow-md shadow-purple-900/30">
+          <span className="text-lg font-bold tracking-tight text-[#F3F3F3]">
             HarmoniQ
           </span>
-          <span className="hidden text-xs font-semibold text-[#A78BFA] sm:inline">
+          <span className="hidden text-xs font-medium text-[#8E8E8E] sm:inline">
             AI Audio Toolkit
           </span>
         </div>
 
         {/* เมนูเชื่อมต่อ API Status Check */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 rounded-full bg-[#1E293B]/60 px-3 py-1 border border-[#334155]/50 text-xs font-semibold">
+          <div className="flex items-center gap-1.5 rounded-full bg-[#121212] px-3 py-1 border border-[#2A2A2A] text-xs font-medium">
             <span
               className={`h-2.5 w-2.5 rounded-full transition-all duration-500 ${
                 apiOnline === null
@@ -54,7 +54,7 @@ export const Navbar: React.FC = () => {
                   : "bg-rose-500 shadow-[0_0_8px_#f43f5e]"
               }`}
             />
-            <span className="text-[#EDE9FE]">
+            <span className="text-[#8E8E8E]">
               API Status:{" "}
               {apiOnline === null
                 ? "Checking..."

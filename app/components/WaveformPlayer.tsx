@@ -22,9 +22,9 @@ const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl }) => {
 
     waveSurferRef.current = WaveSurfer.create({
       container: containerRef.current,
-      waveColor: "#BFDBFE",
-      progressColor: "#22D3EE",
-      cursorColor: "#22D3EE",
+      waveColor: "#555555",
+      progressColor: "#E5A93D",
+      cursorColor: "#E5A93D",
       height: 124,
       barGap: 1.75,
       barWidth: 2,
@@ -121,13 +121,13 @@ const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl }) => {
           รีเซ็ต
         </button>
       </div>
-      <div className="rounded-xl border border-[#7C3AED]/25 bg-[#120E22] px-3 py-2">
-        <div className="mb-2 flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-[#A78BFA]">
+      <div className="rounded-xl border border-[#2A2A2A] bg-[#0A0A0A] px-3 py-2">
+        <div className="mb-2 flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-[#8E8E8E]">
           <span>Volume</span>
-          <span className="rounded-full border border-[#22D3EE]/35 bg-[#0F172A] px-2 py-0.5 text-[#EDE9FE]">{volume}%</span>
+          <span className="rounded-full border border-[#E5A93D]/35 bg-[#121212] px-2 py-0.5 text-[#F3F3F3]">{volume}%</span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="rounded-md border border-[#22D3EE]/35 bg-[#0F172A] px-2 py-1 text-[10px] font-semibold text-[#22D3EE]">
+          <span className="rounded-md border border-[#E5A93D]/35 bg-[#121212] px-2 py-1 text-[10px] font-semibold text-[#E5A93D]">
             VOL
           </span>
           <input
@@ -137,8 +137,8 @@ const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl }) => {
             step="1"
             value={volume}
             onChange={handleVolumeChange}
-            className="h-2 w-full cursor-pointer rounded-full bg-[#312E81]"
-            style={{ accentColor: "#22D3EE" }}
+            className="h-2 w-full cursor-pointer rounded-full bg-[#1A1A1A]"
+            style={{ accentColor: "#E5A93D" }}
             aria-label="ปรับระดับเสียงไฟล์ที่ประมวลผลแล้ว"
           />
         </div>

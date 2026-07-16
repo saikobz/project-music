@@ -18,7 +18,7 @@ export const PitchShiftSettings: React.FC<PitchShiftSettingsProps> = ({
         type="number"
         value={pitchSteps}
         onChange={(e) => setPitchSteps(parseFloat(e.target.value) || 0)}
-        className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
+        className="w-full rounded-lg bg-[#0A0A0A] border border-[#2A2A2A] p-2.5 text-[#F3F3F3] focus:border-[#E5A93D] focus:outline-none transition"
         disabled={loading}
       />
     </div>

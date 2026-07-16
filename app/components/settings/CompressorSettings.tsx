@@ -50,7 +50,7 @@ export const CompressorSettings: React.FC<CompressorSettingsProps> = ({
         <select
           value={strength}
           onChange={(e) => setStrength(e.target.value)}
-          className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
+          className="w-full rounded-lg bg-[#0A0A0A] border border-[#2A2A2A] p-2.5 text-[#F3F3F3] focus:border-[#E5A93D] focus:outline-none transition"
           disabled={loading}
         >
           <option value="soft">Soft</option>
@@ -68,7 +68,7 @@ export const CompressorSettings: React.FC<CompressorSettingsProps> = ({
             placeholder="Preset"
             value={compThreshold}
             onChange={(e) => setCompThreshold(e.target.value)}
-            className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
+            className="w-full rounded-lg bg-[#0A0A0A] border border-[#2A2A2A] p-2.5 text-[#F3F3F3] focus:border-[#E5A93D] focus:outline-none transition"
             disabled={loading}
           />
         </div>
@@ -80,7 +80,7 @@ export const CompressorSettings: React.FC<CompressorSettingsProps> = ({
             placeholder="Preset"
             value={compRatio}
             onChange={(e) => setCompRatio(e.target.value)}
-            className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
+            className="w-full rounded-lg bg-[#0A0A0A] border border-[#2A2A2A] p-2.5 text-[#F3F3F3] focus:border-[#E5A93D] focus:outline-none transition"
             disabled={loading}
           />
         </div>
@@ -92,7 +92,7 @@ export const CompressorSettings: React.FC<CompressorSettingsProps> = ({
             placeholder="Preset"
             value={compAttack}
             onChange={(e) => setCompAttack(e.target.value)}
-            className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
+            className="w-full rounded-lg bg-[#0A0A0A] border border-[#2A2A2A] p-2.5 text-[#F3F3F3] focus:border-[#E5A93D] focus:outline-none transition"
             disabled={loading}
           />
         </div>
@@ -104,7 +104,7 @@ export const CompressorSettings: React.FC<CompressorSettingsProps> = ({
             placeholder="Preset"
             value={compRelease}
             onChange={(e) => setCompRelease(e.target.value)}
-            className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
+            className="w-full rounded-lg bg-[#0A0A0A] border border-[#2A2A2A] p-2.5 text-[#F3F3F3] focus:border-[#E5A93D] focus:outline-none transition"
             disabled={loading}
           />
         </div>
@@ -115,7 +115,7 @@ export const CompressorSettings: React.FC<CompressorSettingsProps> = ({
             step="0.1"
             value={compKnee}
             onChange={(e) => setCompKnee(e.target.value)}
-            className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
+            className="w-full rounded-lg bg-[#0A0A0A] border border-[#2A2A2A] p-2.5 text-[#F3F3F3] focus:border-[#E5A93D] focus:outline-none transition"
             disabled={loading}
           />
         </div>
@@ -126,7 +126,7 @@ export const CompressorSettings: React.FC<CompressorSettingsProps> = ({
             step="0.1"
             value={compMakeupGain}
             onChange={(e) => setCompMakeupGain(e.target.value)}
-            className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
+            className="w-full rounded-lg bg-[#0A0A0A] border border-[#2A2A2A] p-2.5 text-[#F3F3F3] focus:border-[#E5A93D] focus:outline-none transition"
             disabled={loading}
           />
         </div>
@@ -139,7 +139,7 @@ export const CompressorSettings: React.FC<CompressorSettingsProps> = ({
             max="100"
             value={compDryWet}
             onChange={(e) => setCompDryWet(e.target.value)}
-            className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
+            className="w-full rounded-lg bg-[#0A0A0A] border border-[#2A2A2A] p-2.5 text-[#F3F3F3] focus:border-[#E5A93D] focus:outline-none transition"
             disabled={loading}
           />
         </div>
@@ -151,7 +151,7 @@ export const CompressorSettings: React.FC<CompressorSettingsProps> = ({
             placeholder="Off"
             value={compOutputCeiling}
             onChange={(e) => setCompOutputCeiling(e.target.value)}
-            className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
+            className="w-full rounded-lg bg-[#0A0A0A] border border-[#2A2A2A] p-2.5 text-[#F3F3F3] focus:border-[#E5A93D] focus:outline-none transition"
             disabled={loading}
           />
         </div>
