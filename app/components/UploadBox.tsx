@@ -25,7 +25,11 @@ const AUTO_EQ_MODEL_OPTIONS = [
   { value: "lstm-last", label: "LSTM", hint: "โมเดลใหม่แบบ sequence-aware" },
 ];
 
-function UploadBox() {
+interface UploadBoxProps {
+  onHeightChange?: (expanded: boolean) => void;
+}
+
+function UploadBox({ onHeightChange }: UploadBoxProps) {
   // ===== กลุ่ม state สำหรับค่าที่ผู้ใช้เลือกในฟอร์ม =====
   // สถานะกลุ่มนี้กำหนดว่าจะเรียก backend action ไหนและใช้พารามิเตอร์อะไร
   // สถานะของไฟล์และตัวเลือกการประมวลผล
@@ -65,6 +69,13 @@ function UploadBox() {
   const [statusText, setStatusText] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  React.useEffect(() => {
+    if (onHeightChange) {
+      const expanded = action !== "separate" || !!file || loading || !!zipUrl || !!downloadUrl || !!analysis;
+      onHeightChange(expanded);
+    }
+  }, [action, file, loading, zipUrl, downloadUrl, analysis, onHeightChange]);
 
   // ตัวตรวจสอบกลาง ใช้ร่วมกันทั้ง input file และ drag-and-drop
   // ตัวช่วยสำหรับเลือกไฟล์และลากวาง
