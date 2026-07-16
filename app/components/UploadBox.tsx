@@ -8,6 +8,9 @@ import axios from "axios";
 import WaveformPlayer from "./WaveformPlayer";
 import MultiStemLivePlayer from "./MultiStemLivePlayer";
 import AudioAnalysis from "./AudioAnalysis";
+import { AutoEqSettings } from "./settings/AutoEqSettings";
+import { CompressorSettings } from "./settings/CompressorSettings";
+import { PitchShiftSettings } from "./settings/PitchShiftSettings";
 // ที่อยู่ของ backend และข้อจำกัดขนาดไฟล์ฝั่งหน้าเว็บ
 
 // ค่าตั้งต้นของ API และข้อจำกัดการอัปโหลด
@@ -357,194 +360,55 @@ function UploadBox() {
           )}
 
           {action === "eq-ai" && (
-            <div className="space-y-2">
-              <div>
-                <label className="block text-sm mb-1">Auto-EQ Model</label>
-                <select
-                  value={autoEqModel}
-                  onChange={(e) => setAutoEqModel(e.target.value)}
-                  className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
-                  disabled={loading}
-                >
-                  {AUTO_EQ_MODEL_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                <p className="mt-1 text-xs text-[#A78BFA]">{selectedAutoEqModel.hint}</p>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <label className="block text-sm mb-1">Delta Clamp (dB)</label>
-                <input
-                  type="number"
-                  min={AUTO_EQ_DELTA_CLAMP_MIN}
-                  max={AUTO_EQ_DELTA_CLAMP_MAX}
-                  step="0.1"
-                  value={deltaClampDb}
-                  onChange={(e) => setDeltaClampDb(e.target.value)}
-                  className="w-24 rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-right text-[#EDE9FE]"
-                  disabled={loading}
-                />
-              </div>
-              <input
-                type="range"
-                min={AUTO_EQ_DELTA_CLAMP_MIN}
-                max={AUTO_EQ_DELTA_CLAMP_MAX}
-                step="0.1"
-                value={deltaClampDb}
-                onChange={(e) => setDeltaClampDb(e.target.value)}
-                className="w-full accent-[#22D3EE]"
-                disabled={loading}
-              />
-              <div className="flex justify-between text-xs text-[#A78BFA]">
-                <span>{AUTO_EQ_DELTA_CLAMP_MIN} dB</span>
-                <span>ค่าเริ่มต้น {AUTO_EQ_DELTA_CLAMP_DEFAULT} dB</span>
-                <span>{AUTO_EQ_DELTA_CLAMP_MAX} dB</span>
-              </div>
-              <div
-                className={`rounded-lg border px-3 py-2 text-xs leading-5 ${
-                  isEqDeltaClampValid
-                    ? "border-amber-400/40 bg-amber-500/10 text-amber-100"
-                    : "border-red-400/50 bg-red-500/10 text-red-100"
-                }`}
-              >
-                {eqDeltaClampWarning}
-              </div>
-            </div>
+            <AutoEqSettings
+              autoEqModel={autoEqModel}
+              setAutoEqModel={setAutoEqModel}
+              deltaClampDb={deltaClampDb}
+              setDeltaClampDb={setDeltaClampDb}
+              loading={loading}
+              modelOptions={AUTO_EQ_MODEL_OPTIONS}
+              minDeltaClamp={AUTO_EQ_DELTA_CLAMP_MIN}
+              maxDeltaClamp={AUTO_EQ_DELTA_CLAMP_MAX}
+              defaultDeltaClamp={AUTO_EQ_DELTA_CLAMP_DEFAULT}
+              isValid={isEqDeltaClampValid}
+              warningText={eqDeltaClampWarning}
+            />
           )}
 
           {/* ฟอร์มตั้งค่า compressor แบบละเอียด จะแสดงเฉพาะเมื่อเลือก action นี้ */}
           {/* ===== ฟอร์มตั้งค่า Compressor แบบละเอียด ===== */}
           {action === "compressor" && (
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm mb-1">Strength</label>
-                <select
-                  value={strength}
-                  onChange={(e) => setStrength(e.target.value)}
-                  className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
-                  disabled={loading}
-                >
-                  <option value="soft">Soft</option>
-                  <option value="medium">Medium</option>
-                  <option value="hard">Hard</option>
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-xs mb-1">Threshold (dBFS)</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    placeholder="Preset"
-                    value={compThreshold}
-                    onChange={(e) => setCompThreshold(e.target.value)}
-                    className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
-                    disabled={loading}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs mb-1">Ratio</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    placeholder="Preset"
-                    value={compRatio}
-                    onChange={(e) => setCompRatio(e.target.value)}
-                    className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
-                    disabled={loading}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs mb-1">Attack (ms)</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    placeholder="Preset"
-                    value={compAttack}
-                    onChange={(e) => setCompAttack(e.target.value)}
-                    className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
-                    disabled={loading}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs mb-1">Release (ms)</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    placeholder="Preset"
-                    value={compRelease}
-                    onChange={(e) => setCompRelease(e.target.value)}
-                    className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
-                    disabled={loading}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs mb-1">Knee (dB)</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={compKnee}
-                    onChange={(e) => setCompKnee(e.target.value)}
-                    className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
-                    disabled={loading}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs mb-1">Makeup Gain (dB)</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={compMakeupGain}
-                    onChange={(e) => setCompMakeupGain(e.target.value)}
-                    className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
-                    disabled={loading}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs mb-1">Dry/Wet (%)</label>
-                  <input
-                    type="number"
-                    step="1"
-                    min="0"
-                    max="100"
-                    value={compDryWet}
-                    onChange={(e) => setCompDryWet(e.target.value)}
-                    className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
-                    disabled={loading}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs mb-1">Output Ceiling (dBFS)</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    placeholder="Off"
-                    value={compOutputCeiling}
-                    onChange={(e) => setCompOutputCeiling(e.target.value)}
-                    className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-            </div>
+            <CompressorSettings
+              strength={strength}
+              setStrength={setStrength}
+              compThreshold={compThreshold}
+              setCompThreshold={setCompThreshold}
+              compRatio={compRatio}
+              setCompRatio={setCompRatio}
+              compAttack={compAttack}
+              setCompAttack={setCompAttack}
+              compRelease={compRelease}
+              setCompRelease={setCompRelease}
+              compKnee={compKnee}
+              setCompKnee={setCompKnee}
+              compMakeupGain={compMakeupGain}
+              setCompMakeupGain={setCompMakeupGain}
+              compDryWet={compDryWet}
+              setCompDryWet={setCompDryWet}
+              compOutputCeiling={compOutputCeiling}
+              setCompOutputCeiling={setCompOutputCeiling}
+              loading={loading}
+            />
           )}
 
           {/* ฟอร์มปรับจำนวน half-steps สำหรับ pitch shift */}
           {/* ===== ฟอร์มตั้งค่าการเลื่อน pitch ===== */}
           {action === "pitch" && (
-            <div>
-              <label className="block text-sm mb-1">ปรับ pitch (half-steps ±)</label>
-              <input
-                type="number"
-                value={pitchSteps}
-                onChange={(e) => setPitchSteps(parseFloat(e.target.value))}
-                className="w-full rounded-lg bg-[#0B1021] border border-[#5B21B6]/50 p-2 text-[#EDE9FE]"
-                disabled={loading}
-              />
-            </div>
+            <PitchShiftSettings
+              pitchSteps={pitchSteps}
+              setPitchSteps={setPitchSteps}
+              loading={loading}
+            />
           )}
 
           {/* ปุ่มเริ่มประมวลผลจะส่งคำขอหลักไปยัง backend */}
