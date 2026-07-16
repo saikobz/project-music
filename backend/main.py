@@ -179,7 +179,8 @@ async def separate(file: UploadFile = File(...)):
 @app.get("/download/{file_id}")
 async def download_zip(file_id: str):
     # ใช้ file_id ที่ frontend ส่งมาเพื่อหา ZIP ที่ถูกสร้างจากงานแยก stem
-    zip_filename = f"{file_id}_separated.zip"
+    safe_file_id = os.path.basename(file_id)
+    zip_filename = f"{safe_file_id}_separated.zip"
     zip_path = os.path.join(UPLOAD_DIR, zip_filename)
 
     if os.path.exists(zip_path):
@@ -196,8 +197,10 @@ async def download_zip(file_id: str):
 @app.get("/separated/{file_id}/{stem}.wav")
 async def get_stem(file_id: str, stem: str):
     # ส่งคืน stem เดี่ยวให้ตัวเล่นหลายแทร็กเรียกไปเปิดทีละไฟล์
-    filename = f"{stem}.wav"
-    folder = os.path.join("separated", file_id)
+    safe_file_id = os.path.basename(file_id)
+    safe_stem = os.path.basename(stem)
+    filename = f"{safe_stem}.wav"
+    folder = os.path.join("separated", safe_file_id)
     path = os.path.join(folder, filename)
 
     if os.path.exists(path):
