@@ -614,7 +614,7 @@ function UploadBox() {
         {/* ===== ปุ่มดาวน์โหลด ZIP ของ stem ทั้งหมด ===== */}
         {zipUrl && (
           <a
-            href={zipUrl}
+            href={zipUrl.startsWith("http") ? zipUrl : `${API_BASE}${zipUrl}`}
             download="separated.zip"
             className="block w-full text-center rounded-xl bg-[#22D3EE] hover:bg-[#5B21B6] text-black font-semibold py-3"
           >

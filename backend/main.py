@@ -164,7 +164,7 @@ async def separate(file: UploadFile = File(...)):
             content={
                 "status": "success",
                 "file_id": file_id,
-                "zip_url": f"http://localhost:8000/download/{file_id}",
+                "zip_url": f"/download/{file_id}",
             }
         )
 
