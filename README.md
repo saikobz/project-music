@@ -81,7 +81,7 @@
 
 ### ความต้องการระบบ
 
-- Python 3.14 (64-bit)
+- Python 3.10 (64-bit)
 - Node.js 20+
 - FFmpeg ต้องอยู่ใน `PATH`
 - GPU + CUDA (ถ้ามี) จะช่วยให้ Open-Unmix ทำงานเร็วขึ้น แต่ไม่บังคับ
@@ -91,7 +91,7 @@
 **1. รัน Backend**
 
 ```powershell
-py -3.14 -m venv .venv
+py -3.10 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 pip install -r backend/requirements.txt
