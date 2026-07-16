@@ -73,7 +73,7 @@ async def save_upload(file: UploadFile, upload_dir: str = UPLOAD_DIR) -> Tuple[s
     # ฟังก์ชันช่วยกลางสำหรับ endpoint ที่ต้องรับไฟล์เสียงเข้ามา
     # งานของมันคือ validate ไฟล์, สร้างชื่อไม่ซ้ำ, และเขียนไฟล์ลงดิสก์
     # ดึงชื่อไฟล์เดิมจาก request; ถ้าไม่มีชื่อไฟล์ให้ใช้สตริงว่างแทน
-    filename = file.filename or ""
+    filename = os.path.basename(file.filename or "")
 
     # แยกนามสกุลไฟล์ออกมาเพื่อตรวจชนิดไฟล์
     _, ext = os.path.splitext(filename)
@@ -237,6 +237,7 @@ async def apply_eq_ai(
             delta_clamp_db,
             model_id,
         )
+        schedule_cleanup(result_path, cleanup_ttl)
         return FileResponse(
             result_path,
             media_type="audio/wav",
@@ -303,6 +304,7 @@ async def apply_compressor(
             dry_wet=dry_wet,
             output_ceiling=output_ceiling,
         )
+        schedule_cleanup(output_path, cleanup_ttl)
         return FileResponse(
             output_path,
             media_type="audio/wav",
@@ -332,6 +334,7 @@ async def pitch_shift(file: UploadFile = File(...), steps: float = 0):
         # ฟังก์ชัน pitch_shift_audio จะคืน path ของไฟล์ผลลัพธ์กลับมา
         # ใช้ to_thread เช่นเดียวกับ endpoint อื่นที่ทำงานประมวลผลเสียงหนัก ๆ
         result_path = await asyncio.to_thread(pitch_shift_audio, input_path, steps, output_path)
+        schedule_cleanup(result_path, cleanup_ttl)
         return FileResponse(
             result_path,
             media_type="audio/wav",

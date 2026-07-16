@@ -8,6 +8,7 @@ type Props = {
 
 // ตัวกลางที่แปลง file id จาก backend ให้เป็น base URL ที่ตัวเล่นหลายสเตมใช้งานต่อได้
 export default function MultiStemLivePlayer({ fileId }: Props) {
-    const baseUrl = `http://localhost:8000/separated/${fileId}`;
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+    const baseUrl = `${apiBase}/separated/${fileId}`;
     return <AdvancedMultiTrackPlayer baseUrl={baseUrl} />;
 }
