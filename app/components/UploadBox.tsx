@@ -69,6 +69,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
   const [statusText, setStatusText] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   React.useEffect(() => {
     if (onHeightChange) {
@@ -76,6 +77,34 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
       onHeightChange(expanded);
     }
   }, [action, file, loading, zipUrl, downloadUrl, analysis, onHeightChange]);
+
+  React.useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (loading) {
+        if (abortControllerRef.current) {
+          abortControllerRef.current.abort();
+        }
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [loading]);
+
+  React.useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      if (progressTimerRef.current) {
+        clearInterval(progressTimerRef.current);
+      }
+    };
+  }, []);
 
   // ตัวตรวจสอบกลาง ใช้ร่วมกันทั้ง input file และ drag-and-drop
   // ตัวช่วยสำหรับเลือกไฟล์และลากวาง
@@ -157,6 +186,12 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
     if (progressTimerRef.current) {
       clearInterval(progressTimerRef.current);
     }
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
+
     // ทำ progress แบบจำลองไว้ก่อน เพราะ backend ไม่ได้ส่งสถานะระหว่างประมวลผลกลับมา
     progressTimerRef.current = setInterval(() => {
       setProgress((prev) => {
@@ -177,7 +212,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
       // งานแยก stem จะได้ทั้ง file id และ URL สำหรับดาวน์โหลด ZIP
       // แตก flow ตาม action เพื่อให้ UI ตัวเดียวรองรับหลาย endpoint
       if (action === "separate") {
-        response = await axios.post(`${API_BASE}/separate`, formData);
+        response = await axios.post(`${API_BASE}/separate`, formData, { signal });
         const { file_id, zip_url } = response.data;
         setFileId(file_id);
         setZipUrl(zip_url);
@@ -194,6 +229,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
         });
         response = await axios.post(`${API_BASE}/apply-eq-ai?${params.toString()}`, formData, {
           responseType: "blob",
+          signal,
         });
         const url = window.URL.createObjectURL(new Blob([response.data]));
         setDownloadUrl(url);
@@ -218,6 +254,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
 
         response = await axios.post(`${API_BASE}/apply-compressor?${params.toString()}`, formData, {
           responseType: "blob",
+          signal,
         });
         const url = window.URL.createObjectURL(new Blob([response.data]));
         setDownloadUrl(url);
@@ -229,6 +266,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
       if (action === "pitch") {
         response = await axios.post(`${API_BASE}/pitch-shift?steps=${pitchSteps}`, formData, {
           responseType: "blob", //"blob" หมายถึง บอก axios ว่า response ที่ backend ส่งกลับมาเป็น “ข้อมูลไฟล์ดิบ” ไม่ใช่ JSON หรือ text
+          signal,
         });
         const url = window.URL.createObjectURL(new Blob([response.data]));
         setDownloadUrl(url);
@@ -248,10 +286,14 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
       const analyzeData = new FormData();
       analyzeData.append("file", file);
       try {
-        const analyzeResp = await axios.post(`${API_BASE}/analyze`, analyzeData);
+        const analyzeResp = await axios.post(`${API_BASE}/analyze`, analyzeData, { signal });
         setAnalysis(analyzeResp.data);
       } catch (err) {
-        console.error("Analyze error", err);
+        if (axios.isCancel(err)) {
+          console.log("Analyze request canceled");
+        } else {
+          console.error("Analyze error", err);
+        }
       }
 
       const endTime = Date.now();
@@ -263,6 +305,10 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
       setStatusText("เสร็จแล้ว! ดาวน์โหลดหรือเล่นไฟล์ได้เลย");
       setSuccessMessage((prev) => prev || "ประมวลผลเสร็จแล้ว");
     } catch (err: any) {
+      if (axios.isCancel(err)) {
+        console.log("Request canceled by user or refresh");
+        return;
+      }
       // รวมรูปแบบ error หลายแบบให้เหลือข้อความที่ผู้ใช้เข้าใจได้ง่ายบนหน้าเว็บ
       let message = "เกิดข้อผิดพลาดระหว่างประมวลผล กรุณาลองใหม่";
       if (err?.response?.data?.detail) {
@@ -329,7 +375,12 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                 </div>
                 <button 
                   onClick={() => handleFileSelect(null)}
-                  className="text-xs px-3 py-1.5 rounded bg-[#1A1A1A] border border-[#2A2A2A] text-[#8E8E8E] hover:text-[#F3F3F3] hover:border-[#8E8E8E] transition cursor-pointer"
+                  disabled={loading}
+                  className={`text-xs px-3 py-1.5 rounded bg-[#1A1A1A] border border-[#2A2A2A] text-[#8E8E8E] transition ${
+                    loading 
+                      ? "opacity-50 cursor-not-allowed" 
+                      : "hover:text-[#F3F3F3] hover:border-[#8E8E8E] cursor-pointer"
+                  }`}
                 >
                   Change File
                 </button>
