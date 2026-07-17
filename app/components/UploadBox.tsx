@@ -657,12 +657,6 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                 <span>{statusText || (loading ? "Processing..." : "Ready")}</span>
                 <span>{progress}%</span>
               </div>
-
-              {statusText && (
-                <div className="rounded-lg bg-[#1A1A1A] border border-[#2A2A2A] p-2.5 text-xs text-[#F3F3F3]">
-                  {statusText}
-                </div>
-              )}
               {processingTime && (
                 <div className="text-xs text-[#8E8E8E]">Processing Time: {processingTime}</div>
               )}
@@ -724,7 +718,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                   download={downloadFileName}
                   className="block w-full text-center rounded-lg bg-[#E5A93D] hover:bg-[#F3C05D] text-[#0A0A0A] font-medium py-3 transition shadow-[0_0_15px_rgba(229,169,61,0.2)]"
                 >
-                  Download Output (WAV)
+                  Download Output ({exportFormat.toUpperCase()})
                 </a>
                 <div className="pt-2">
                   <WaveformPlayer audioUrl={downloadUrl} />
