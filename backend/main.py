@@ -145,12 +145,28 @@ def schedule_cleanup(path: str, delay: int = 0):
     timer.start()
 
 
+def convert_to_mp3(wav_path: str) -> str:
+    """แปลงไฟล์ wav เป็น mp3 และลบไฟล์ wav ทิ้ง คืนค่าเป็นพาท mp3"""
+    try:
+        from pydub import AudioSegment
+        mp3_path = wav_path.rsplit(".", 1)[0] + ".mp3"
+        audio = AudioSegment.from_wav(wav_path)
+        audio.export(mp3_path, format="mp3", bitrate="320k")
+        if os.path.exists(wav_path):
+            os.remove(wav_path)
+        return mp3_path
+    except Exception as e:
+        logger.error(f"Error converting to mp3: {e}")
+        return wav_path
+
+
 #เส้น api แยกเสียง
 @app.post("/separate")
 async def separate(
     file: UploadFile = File(...),
     trim_start: float | None = Query(None),
-    trim_end: float | None = Query(None)
+    trim_end: float | None = Query(None),
+    export_format: str = Query("wav", pattern="^(wav|mp3)$")
 ):
     try:
         # บันทึกไฟล์ที่อัปโหลดก่อน แล้วค่อยส่ง path ให้โมดูลแยก stem ทำงานต่อ
@@ -161,6 +177,14 @@ async def separate(
         os.makedirs(output_dir, exist_ok=True)
         # รันงานแยก stem ใน thread แยก เพื่อไม่ block event loop ของ FastAPI
         await asyncio.to_thread(separate_audio, input_path, output_dir)
+
+        # แปลงเป็น MP3 ถ้าผู้ใช้เลือก
+        if export_format == "mp3":
+            for root, _, files in os.walk(output_dir):
+                for name in files:
+                    if name.lower().endswith(".wav"):
+                        wav_path = os.path.join(root, name)
+                        await asyncio.to_thread(convert_to_mp3, wav_path)
 
         # รวม stem ทั้งหมดเป็น ZIP เพื่อให้ frontend ดาวน์โหลดทีเดียวได้
         zip_filename = f"{file_id}_separated.zip"
@@ -231,7 +255,10 @@ async def get_stem(file_id: str, stem: str):
 
 
 @app.get("/karaoke/{file_id}")
-async def get_karaoke(file_id: str):
+async def get_karaoke(
+    file_id: str,
+    export_format: str = Query("wav", pattern="^(wav|mp3)$")
+):
     # รวมไฟล์ stem ดนตรี (Drums, Bass, Other) เข้าด้วยกันเพื่อทำ Karaoke / Backing Track
     safe_file_id = os.path.basename(file_id)
     folder = os.path.join("separated", safe_file_id)
@@ -273,6 +300,11 @@ async def get_karaoke(file_id: str):
 
         # export 
         sf.write(karaoke_path, mix, samplerate)
+
+        if export_format == "mp3":
+            karaoke_path = await asyncio.to_thread(convert_to_mp3, karaoke_path)
+            return FileResponse(karaoke_path, media_type="audio/mpeg", filename="karaoke.mp3")
+
         return FileResponse(karaoke_path, media_type="audio/wav", filename="karaoke.wav")
     except Exception as e:
         logger.error(f"Error creating karaoke mixdown: {e}")
@@ -295,7 +327,8 @@ async def apply_eq_ai(
         description="เพดานการปรับ EQ ต่อจุดในหน่วย dB",
     ),
     trim_start: float | None = Query(None),
-    trim_end: float | None = Query(None)
+    trim_end: float | None = Query(None),
+    export_format: str = Query("wav", pattern="^(wav|mp3)$")
 ):
     try:
         # บันทึกไฟล์ก่อน แล้วส่ง path ไปให้โมเดล Auto-EQ ประมวลผล
@@ -313,9 +346,13 @@ async def apply_eq_ai(
             model_id,
         )
         schedule_cleanup(result_path, cleanup_ttl)
+
+        if export_format == "mp3":
+            result_path = await asyncio.to_thread(convert_to_mp3, result_path)
+
         return FileResponse(
             result_path,
-            media_type="audio/wav",
+            media_type="audio/mpeg" if export_format == "mp3" else "audio/wav",
             filename=os.path.basename(result_path),
         )
     except HTTPException as http_exc:
@@ -360,7 +397,8 @@ async def apply_compressor(
     dry_wet: float = Query(100.0, ge=0.0, le=100.0, description="percent"),
     output_ceiling: float | None = Query(None, ge=-20.0, le=0.0, description="dBFS"),
     trim_start: float | None = Query(None),
-    trim_end: float | None = Query(None)
+    trim_end: float | None = Query(None),
+    export_format: str = Query("wav", pattern="^(wav|mp3)$")
 ):
     try:
         # งาน compressor ใช้ทั้ง preset และค่าที่ผู้ใช้ override ผ่าน query string
@@ -382,9 +420,13 @@ async def apply_compressor(
             output_ceiling=output_ceiling,
         )
         schedule_cleanup(output_path, cleanup_ttl)
+
+        if export_format == "mp3":
+            output_path = await asyncio.to_thread(convert_to_mp3, output_path)
+
         return FileResponse(
             output_path,
-            media_type="audio/wav",
+            media_type="audio/mpeg" if export_format == "mp3" else "audio/wav",
             filename=os.path.basename(output_path),
         )
     except HTTPException as http_exc:
@@ -405,7 +447,8 @@ async def pitch_shift(
     file: UploadFile = File(...), 
     steps: float = 0,
     trim_start: float | None = Query(None),
-    trim_end: float | None = Query(None)
+    trim_end: float | None = Query(None),
+    export_format: str = Query("wav", pattern="^(wav|mp3)$")
 ):
     try:
         # บันทึกไฟล์ก่อน จากนั้นสร้างไฟล์ผลลัพธ์ที่ถูก shift pitch แล้วส่งกลับ
@@ -417,9 +460,13 @@ async def pitch_shift(
         # ใช้ to_thread เช่นเดียวกับ endpoint อื่นที่ทำงานประมวลผลเสียงหนัก ๆ
         result_path = await asyncio.to_thread(pitch_shift_audio, input_path, steps, output_path)
         schedule_cleanup(result_path, cleanup_ttl)
+
+        if export_format == "mp3":
+            result_path = await asyncio.to_thread(convert_to_mp3, result_path)
+
         return FileResponse(
             result_path,
-            media_type="audio/wav",
+            media_type="audio/mpeg" if export_format == "mp3" else "audio/wav",
             filename=os.path.basename(result_path),
         )
     except HTTPException as http_exc:

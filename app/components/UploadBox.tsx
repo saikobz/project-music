@@ -120,6 +120,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
   const [isTrimming, setIsTrimming] = useState(false);
   const [trimStart, setTrimStart] = useState("0");
   const [trimEnd, setTrimEnd] = useState("30");
+  const [exportFormat, setExportFormat] = useState("wav");
 
   // สถานะผลลัพธ์จาก backend ใช้กับการดาวน์โหลด การเล่นไฟล์ และเวลาที่ใช้ประมวลผล
   // สถานะผลลัพธ์สำหรับดาวน์โหลดและผลวิเคราะห์
@@ -288,6 +289,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
           params.set("trim_start", trimStart);
           params.set("trim_end", trimEnd);
         }
+        params.set("export_format", exportFormat);
         response = await axios.post(`${API_BASE}/separate?${params.toString()}`, formData, { signal });
         const { file_id, zip_url } = response.data;
         setFileId(file_id);
@@ -307,6 +309,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
           params.set("trim_start", trimStart);
           params.set("trim_end", trimEnd);
         }
+        params.set("export_format", exportFormat);
         response = await axios.post(`${API_BASE}/apply-eq-ai?${params.toString()}`, formData, {
           responseType: "blob",
           signal,
@@ -335,6 +338,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
           params.set("trim_start", trimStart);
           params.set("trim_end", trimEnd);
         }
+        params.set("export_format", exportFormat);
 
         response = await axios.post(`${API_BASE}/apply-compressor?${params.toString()}`, formData, {
           responseType: "blob",
@@ -353,6 +357,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
           params.set("trim_start", trimStart);
           params.set("trim_end", trimEnd);
         }
+        params.set("export_format", exportFormat);
         response = await axios.post(`${API_BASE}/pitch-shift?${params.toString()}`, formData, {
           responseType: "blob", //"blob" หมายถึง บอก axios ว่า response ที่ backend ส่งกลับมาเป็น “ข้อมูลไฟล์ดิบ” ไม่ใช่ JSON หรือ text
           signal,
@@ -366,7 +371,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
 
       if (file && suffix) {
         const baseName = file.name.replace(/\.[^/.]+$/, "");
-        setDownloadFileName(`${baseName}${suffix}.wav`);
+        setDownloadFileName(`${baseName}${suffix}.${exportFormat}`);
       }
 
       // การวิเคราะห์ถูกแยกรันอีกครั้ง เพื่อให้การ์ดสรุปแสดงข้อมูลของไฟล์ต้นฉบับได้
@@ -601,6 +606,35 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                 )}
               </div>
 
+              {/* ส่วนเลือก Format ส่งออก */}
+              <div className="rounded-lg border border-[#2A2A2A] bg-[#1A1A1A] p-3">
+                <label className="block text-xs font-medium text-[#8E8E8E] uppercase tracking-wider mb-2">Export Format</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input 
+                      type="radio" 
+                      name="exportFormat" 
+                      value="wav" 
+                      checked={exportFormat === "wav"} 
+                      onChange={(e) => setExportFormat(e.target.value)}
+                      className="accent-[#E5A93D]"
+                    />
+                    <span className="text-sm text-[#F3F3F3]">WAV (Lossless)</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input 
+                      type="radio" 
+                      name="exportFormat" 
+                      value="mp3" 
+                      checked={exportFormat === "mp3"} 
+                      onChange={(e) => setExportFormat(e.target.value)}
+                      className="accent-[#E5A93D]"
+                    />
+                    <span className="text-sm text-[#F3F3F3]">MP3 (320kbps)</span>
+                  </label>
+                </div>
+              </div>
+
               <button
                 onClick={handleUpload}
                 disabled={loading || (action === "eq-ai" && !isEqDeltaClampValid)}
@@ -673,8 +707,8 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                 </a>
                 {fileId && (
                   <a
-                    href={`${API_BASE}/karaoke/${fileId}`}
-                    download="karaoke.wav"
+                    href={`${API_BASE}/karaoke/${fileId}?export_format=${exportFormat}`}
+                    download={`karaoke.${exportFormat}`}
                     className="block w-full text-center rounded-lg bg-[#1A1A1A] hover:bg-[#E5A93D]/20 border border-[#E5A93D]/50 hover:border-[#E5A93D] text-[#E5A93D] font-medium py-3 transition shadow-[0_0_10px_rgba(229,169,61,0.1)] hover:shadow-[0_0_15px_rgba(229,169,61,0.2)]"
                   >
                     Download Karaoke
