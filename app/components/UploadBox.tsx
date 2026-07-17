@@ -117,6 +117,10 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
   const [compOutputCeiling, setCompOutputCeiling] = useState("");
   const [pitchSteps, setPitchSteps] = useState(0);
 
+  const [isTrimming, setIsTrimming] = useState(false);
+  const [trimStart, setTrimStart] = useState("0");
+  const [trimEnd, setTrimEnd] = useState("30");
+
   // สถานะผลลัพธ์จาก backend ใช้กับการดาวน์โหลด การเล่นไฟล์ และเวลาที่ใช้ประมวลผล
   // สถานะผลลัพธ์สำหรับดาวน์โหลดและผลวิเคราะห์
   // ===== กลุ่ม state สำหรับผลลัพธ์ที่ backend ส่งกลับมา =====
@@ -279,7 +283,12 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
       // งานแยก stem จะได้ทั้ง file id และ URL สำหรับดาวน์โหลด ZIP
       // แตก flow ตาม action เพื่อให้ UI ตัวเดียวรองรับหลาย endpoint
       if (action === "separate") {
-        response = await axios.post(`${API_BASE}/separate`, formData, { signal });
+        const params = new URLSearchParams();
+        if (isTrimming) {
+          params.set("trim_start", trimStart);
+          params.set("trim_end", trimEnd);
+        }
+        response = await axios.post(`${API_BASE}/separate?${params.toString()}`, formData, { signal });
         const { file_id, zip_url } = response.data;
         setFileId(file_id);
         setZipUrl(zip_url);
@@ -294,6 +303,10 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
           model_id: autoEqModel,
           delta_clamp_db: deltaClampDb || String(AUTO_EQ_DELTA_CLAMP_DEFAULT),
         });
+        if (isTrimming) {
+          params.set("trim_start", trimStart);
+          params.set("trim_end", trimEnd);
+        }
         response = await axios.post(`${API_BASE}/apply-eq-ai?${params.toString()}`, formData, {
           responseType: "blob",
           signal,
@@ -318,6 +331,10 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
         if (compAttack) params.set("attack", compAttack);
         if (compRelease) params.set("release", compRelease);
         if (compOutputCeiling) params.set("output_ceiling", compOutputCeiling);
+        if (isTrimming) {
+          params.set("trim_start", trimStart);
+          params.set("trim_end", trimEnd);
+        }
 
         response = await axios.post(`${API_BASE}/apply-compressor?${params.toString()}`, formData, {
           responseType: "blob",
@@ -331,7 +348,12 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
       }
 
       if (action === "pitch") {
-        response = await axios.post(`${API_BASE}/pitch-shift?steps=${pitchSteps}`, formData, {
+        const params = new URLSearchParams({ steps: String(pitchSteps) });
+        if (isTrimming) {
+          params.set("trim_start", trimStart);
+          params.set("trim_end", trimEnd);
+        }
+        response = await axios.post(`${API_BASE}/pitch-shift?${params.toString()}`, formData, {
           responseType: "blob", //"blob" หมายถึง บอก axios ว่า response ที่ backend ส่งกลับมาเป็น “ข้อมูลไฟล์ดิบ” ไม่ใช่ JSON หรือ text
           signal,
         });
@@ -545,6 +567,39 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                   loading={loading}
                 />
               )}
+
+              {/* ส่วนตัดช่วงเวลาเสียง (Audio Trimming) */}
+              <div className="rounded-lg border border-[#2A2A2A] bg-[#1A1A1A] p-3 space-y-3">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={isTrimming} 
+                    onChange={(e) => setIsTrimming(e.target.checked)} 
+                    disabled={loading}
+                    className="accent-[#E5A93D] w-4 h-4 cursor-pointer"
+                  />
+                  <span className="text-sm font-medium text-[#F3F3F3] select-none">เปิดใช้การตัดช่วงเวลา (Trimming)</span>
+                </label>
+                
+                {isTrimming && (
+                  <div className="grid grid-cols-2 gap-3 pl-6">
+                    <div>
+                      <label className="block text-xs text-[#8E8E8E] mb-1">เริ่ม (วินาที)</label>
+                      <input 
+                        type="number" min="0" value={trimStart} onChange={(e) => setTrimStart(e.target.value)} disabled={loading}
+                        className="w-full rounded bg-[#0A0A0A] border border-[#2A2A2A] p-1.5 text-sm text-[#F3F3F3] focus:border-[#E5A93D] focus:outline-none" 
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-[#8E8E8E] mb-1">สิ้นสุด (วินาที)</label>
+                      <input 
+                        type="number" min="1" value={trimEnd} onChange={(e) => setTrimEnd(e.target.value)} disabled={loading}
+                        className="w-full rounded bg-[#0A0A0A] border border-[#2A2A2A] p-1.5 text-sm text-[#F3F3F3] focus:border-[#E5A93D] focus:outline-none" 
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
 
               <button
                 onClick={handleUpload}

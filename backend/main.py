@@ -8,6 +8,7 @@ import shutil
 import threading
 import zipfile
 import logging
+import soundfile as sf
 from uuid import uuid4
 from typing import Tuple
 
@@ -69,7 +70,12 @@ async def health():
 
 
 # ตั้งค่าอัปโหลดไฟล์
-async def save_upload(file: UploadFile, upload_dir: str = UPLOAD_DIR) -> Tuple[str, str]:
+async def save_upload(
+    file: UploadFile,
+    upload_dir: str = UPLOAD_DIR,
+    trim_start: float | None = None,
+    trim_end: float | None = None
+) -> Tuple[str, str]:
     # ฟังก์ชันช่วยกลางสำหรับ endpoint ที่ต้องรับไฟล์เสียงเข้ามา
     # งานของมันคือ validate ไฟล์, สร้างชื่อไม่ซ้ำ, และเขียนไฟล์ลงดิสก์
     # ดึงชื่อไฟล์เดิมจาก request; ถ้าไม่มีชื่อไฟล์ให้ใช้สตริงว่างแทน
@@ -98,10 +104,20 @@ async def save_upload(file: UploadFile, upload_dir: str = UPLOAD_DIR) -> Tuple[s
     # สร้าง path เต็มของไฟล์ที่จะถูกบันทึกลงในโฟลเดอร์ uploads
     input_path = os.path.join(upload_dir, stored_name)
 
-    # เขียนข้อมูลแบบ binary ลงดิสก์
-    # เขียนไฟล์แบบ binary ลงดิสก์เพื่อให้โมดูลประมวลผลอื่นอ่านต่อได้
     with open(input_path, "wb") as f:
         f.write(data)
+
+    # ตัดช่วงเสียงถ้ามีการกำหนดช่วงเวลา
+    if trim_start is not None or trim_end is not None:
+        try:
+            audio_data, samplerate = sf.read(input_path)
+            start_frame = int(trim_start * samplerate) if trim_start is not None else 0
+            end_frame = int(trim_end * samplerate) if trim_end is not None else len(audio_data)
+            trimmed_data = audio_data[start_frame:end_frame]
+            sf.write(input_path, trimmed_data, samplerate)
+        except Exception as e:
+            logger.error(f"Error trimming audio: {e}")
+            raise HTTPException(status_code=400, detail=f"การตัดช่วงเวลาเสียงล้มเหลว: {e}")
 
     # คืนทั้ง file_id และ path ของไฟล์ที่บันทึกแล้วให้ endpoint ที่เรียกใช้เอาไปทำงานต่อ
     return file_id, input_path
@@ -130,10 +146,14 @@ def schedule_cleanup(path: str, delay: int = 0):
 
 #เส้น api แยกเสียง
 @app.post("/separate")
-async def separate(file: UploadFile = File(...)):
+async def separate(
+    file: UploadFile = File(...),
+    trim_start: float | None = Query(None),
+    trim_end: float | None = Query(None)
+):
     try:
         # บันทึกไฟล์ที่อัปโหลดก่อน แล้วค่อยส่ง path ให้โมดูลแยก stem ทำงานต่อ
-        file_id, input_path = await save_upload(file)
+        file_id, input_path = await save_upload(file, trim_start=trim_start, trim_end=trim_end)
 
         # โฟลเดอร์ผลลัพธ์จะแยกตาม file_id เพื่อไม่ให้แต่ละงานชนกัน
         output_dir = os.path.join("separated", file_id)
@@ -224,10 +244,12 @@ async def apply_eq_ai(
         le=MAX_DELTA_CLAMP_DB,
         description="เพดานการปรับ EQ ต่อจุดในหน่วย dB",
     ),
+    trim_start: float | None = Query(None),
+    trim_end: float | None = Query(None)
 ):
     try:
         # บันทึกไฟล์ก่อน แล้วส่ง path ไปให้โมเดล Auto-EQ ประมวลผล
-        file_id, input_path = await save_upload(file)
+        file_id, input_path = await save_upload(file, trim_start=trim_start, trim_end=trim_end)
         # ตั้งชื่อไฟล์ผลลัพธ์ให้สะท้อนว่าเป็นงาน EQ AI และใช้ genre อะไร
         output_filename = f"{file_id}_eq_ai_{model_id}_{genre}.wav"
         output_path = os.path.join("eq_applied", output_filename)
@@ -287,10 +309,12 @@ async def apply_compressor(
     makeup_gain: float = Query(0.0, ge=-24.0, le=24.0, description="dB"),
     dry_wet: float = Query(100.0, ge=0.0, le=100.0, description="percent"),
     output_ceiling: float | None = Query(None, ge=-20.0, le=0.0, description="dBFS"),
+    trim_start: float | None = Query(None),
+    trim_end: float | None = Query(None)
 ):
     try:
         # งาน compressor ใช้ทั้ง preset และค่าที่ผู้ใช้ override ผ่าน query string
-        _, input_path = await save_upload(file)
+        _, input_path = await save_upload(file, trim_start=trim_start, trim_end=trim_end)
         # เรียกใช้ฟังก์ชัน DSP ใน thread แยก เพราะเป็นงานคำนวณและอ่านเขียนไฟล์
         output_path = await asyncio.to_thread(
             apply_compression,
@@ -327,10 +351,15 @@ async def apply_compressor(
 
 # เส้นทางปรับ pitch
 @app.post("/pitch-shift")
-async def pitch_shift(file: UploadFile = File(...), steps: float = 0):
+async def pitch_shift(
+    file: UploadFile = File(...), 
+    steps: float = 0,
+    trim_start: float | None = Query(None),
+    trim_end: float | None = Query(None)
+):
     try:
         # บันทึกไฟล์ก่อน จากนั้นสร้างไฟล์ผลลัพธ์ที่ถูก shift pitch แล้วส่งกลับ
-        file_id, input_path = await save_upload(file)
+        file_id, input_path = await save_upload(file, trim_start=trim_start, trim_end=trim_end)
         # ตั้งชื่อไฟล์ผลลัพธ์ใหม่เพื่อไม่เขียนทับต้นฉบับ
         output_filename = f"{file_id}_pitch.wav"
         output_path = os.path.join(UPLOAD_DIR, output_filename)
@@ -355,10 +384,14 @@ async def pitch_shift(file: UploadFile = File(...), steps: float = 0):
 
 # เส้น วิเคราะห์เสียง
 @app.post("/analyze")
-async def analyze(file: UploadFile = File(...)):
+async def analyze(
+    file: UploadFile = File(...),
+    trim_start: float | None = Query(None),
+    trim_end: float | None = Query(None)
+):
     try:
         # endpoint นี้คืนข้อมูลวิเคราะห์เป็น JSON ไม่ได้สร้างไฟล์เสียงใหม่
-        _, input_path = await save_upload(file)
+        _, input_path = await save_upload(file, trim_start=trim_start, trim_end=trim_end)
         # วิเคราะห์เสียงใน thread แยก แล้วนำผลลัพธ์ JSON กลับมาโดยตรง
         result = await asyncio.to_thread(analyze_audio, input_path)
         return JSONResponse(content=result)
