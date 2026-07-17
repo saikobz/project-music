@@ -25,12 +25,28 @@ def _cleanup_partial_checkpoints() -> None:
     cache_dir = os.path.join(torch.hub.get_dir(), "checkpoints")
     if not os.path.isdir(cache_dir):
         return
+    
+    # 1. ลบไฟล์ชั่วคราวทั่วไป
     for pattern in ("*.partial", "*.tmp", "tmp*"):
         for path in glob.glob(os.path.join(cache_dir, pattern)):
             try:
                 os.remove(path)
             except OSError:
                 pass
+
+    # 2. ตรวจสอบและลบไฟล์โมเดล Open-Unmix (.pth) ที่มีขนาดไม่สมบูรณ์ (ขนาดปกติจะอยู่ที่ประมาณ 108MB)
+    umx_filenames = ("vocals-bccbd9aa.pth", "drums-69e0ebd4.pth", "bass-85cca050.pth", "other-b8bc42e6.pth")
+    for filename in umx_filenames:
+        path = os.path.join(cache_dir, filename)
+        if os.path.isfile(path):
+            try:
+                file_size = os.path.getsize(path)
+                # หากขนาดไฟล์น้อยกว่า 108,000,000 bytes แสดงว่าดาวน์โหลดไม่สมบูรณ์
+                if file_size < 108000000:
+                    print(f"[CLEANUP] พบไฟล์โมเดลเสียหายและจะทำการลบ: {filename} (ขนาดไฟล์ {file_size} bytes)")
+                    os.remove(path)
+            except Exception as e:
+                print(f"[CLEANUP] ไม่สามารถตรวจสอบหรือลบ {filename} ได้: {e}")
 
 
 def separate_audio(input_path: str, output_dir: str = "separated") -> str:
@@ -52,15 +68,28 @@ def separate_audio(input_path: str, output_dir: str = "separated") -> str:
         # โหลดไฟล์เสียงต้นฉบับ และเก็บจำนวน sample ไว้ใช้เทียบกับผลลัพธ์
         audio_tensor, rate = torchaudio.load(input_path)
         input_frames = int(audio_tensor.shape[-1])
-        # โหลดโมเดล Open-Unmix ที่ฝึกมาแล้วสำหรับแยก 4 stem หลัก
-        # zenodo ซึ่งโฮสต์ checkpoint มักคืน 503 ชั่วคราว ให้ retry พร้อมรอแบบ backoff
+        # ตรวจสอบความพร้อมของโมเดล Open-Unmix ภายในเครื่อง (Local Offline Mode)
+        local_model_path = os.path.join("backend", "models", "umxl")
+        required_files = ["separator.json"] + [f"{t}.json" for t in ["vocals", "drums", "bass", "other"]]
+        has_local_model = False
+        
+        if os.path.isdir(local_model_path):
+            # ตรวจจับไฟล์สเปค JSON ทั้งหมด
+            has_json = all(os.path.isfile(os.path.join(local_model_path, f)) for f in required_files)
+            # ตรวจจับไฟล์โมเดล .pth
+            has_pth = all(len(glob.glob(os.path.join(local_model_path, f"{t}*.pth"))) > 0 for t in ["vocals", "drums", "bass", "other"])
+            if has_json and has_pth:
+                has_local_model = True
+
         max_attempts = 4
         last_error: Exception | None = None
         separator = None
-        for attempt in range(1, max_attempts + 1):
+
+        if has_local_model:
             try:
+                print(f"[INFO] ตรวจพบโมเดล Open-Unmix ในเครื่อง ({local_model_path}) กำลังรันแบบ Local Offline Mode...")
                 separator = openunmix_utils.load_separator(
-                    model_str_or_path="umxl",
+                    model_str_or_path=local_model_path,
                     targets=["vocals", "drums", "bass", "other"],
                     niter=1,
                     residual=False,
@@ -69,19 +98,39 @@ def separate_audio(input_path: str, output_dir: str = "separated") -> str:
                     pretrained=True,
                     filterbank="torch",
                 )
-                break
-            except Exception as load_err:
-                last_error = load_err
-                msg = str(load_err)
-                transient = any(
-                    token in msg
-                    for token in ("503", "502", "504", "timed out", "timeout", "Temporarily")
-                )
-                print(f"[WARN] load_separator ครั้งที่ {attempt}/{max_attempts} ล้มเหลว: {load_err}")
-                _cleanup_partial_checkpoints()
-                if attempt == max_attempts or not transient:
+            except Exception as e:
+                print(f"[WARN] ไม่สามารถเปิดใช้งานโมเดลท้องถิ่นได้: {e} จะสลับไปพยายามดาวน์โหลดแทน...")
+                has_local_model = False
+
+        if separator is None:
+            # หากไม่มีโมเดลในเครื่อง หรือโหลดไม่ผ่าน ให้พยายามดาวน์โหลดจากเน็ตตามกระบวนการเดิม
+            print("[INFO] ไม่พบโมเดลในเครื่องหรือโมเดลชำรุด กำลังเชื่อมต่ออินเทอร์เน็ตเพื่อดาวน์โหลดผ่าน PyTorch Hub...")
+            for attempt in range(1, max_attempts + 1):
+                try:
+                    separator = openunmix_utils.load_separator(
+                        model_str_or_path="umxl",
+                        targets=["vocals", "drums", "bass", "other"],
+                        niter=1,
+                        residual=False,
+                        wiener_win_len=300,
+                        device=str(DEVICE),
+                        pretrained=True,
+                        filterbank="torch",
+                    )
                     break
-                time.sleep(2 ** attempt)
+                except Exception as load_err:
+                    last_error = load_err
+                    msg = str(load_err)
+                    transient = any(
+                        token in msg
+                        for token in ("503", "502", "504", "timed out", "timeout", "Temporarily")
+                    )
+                    print(f"[WARN] load_separator ครั้งที่ {attempt}/{max_attempts} ล้มเหลว: {load_err}")
+                    _cleanup_partial_checkpoints()
+                    if attempt == max_attempts or not transient:
+                        break
+                    time.sleep(2 ** attempt)
+
         if separator is None:
             raise RuntimeError(
                 "ดาวน์โหลดโมเดล Open-Unmix จาก zenodo ไม่สำเร็จ "

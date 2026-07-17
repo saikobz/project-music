@@ -17,7 +17,9 @@ export default function Home() {
       <Navbar />
       <EqKnowledgePanel />
 
-      <main className="mx-auto flex-grow w-full max-w-6xl px-4 py-4 md:py-6 space-y-4 md:space-y-6 flex flex-col justify-center">
+      <main className={`mx-auto flex-grow w-full px-4 py-4 md:py-6 space-y-4 md:space-y-6 flex flex-col justify-center transition-all duration-300 ${
+        isExpanded ? "max-w-7xl" : "max-w-5xl"
+      }`}>
         <header className="flex flex-col gap-2">
           <h1 className="text-3xl md:text-4xl font-bold leading-tight">
             AI Music Stem &amp; Mastering Toolkit

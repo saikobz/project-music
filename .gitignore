@@ -34,6 +34,12 @@ separated/
 eq_applied/
 compressed/
 
+# AI Models (Do not commit files > 50MB)
+backend/models/
+models/
+*.pth
+*.pth.tmp
+
 # misc
 .DS_Store
 *.pem

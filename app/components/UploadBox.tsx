@@ -25,6 +25,73 @@ const AUTO_EQ_MODEL_OPTIONS = [
   { value: "lstm-last", label: "LSTM", hint: "โมเดลใหม่แบบ sequence-aware" },
 ];
 
+// ===== Skeleton Components สำหรับแสดงสถานะกำลังประมวลผล (Processing State) =====
+function AudioAnalysisSkeleton() {
+  return (
+    <div className="rounded-xl border border-[#2A2A2A] bg-[#121212] p-5 shadow-lg animate-pulse">
+      <div className="flex items-center gap-2 mb-4">
+        <div className="h-5 w-28 bg-[#2A2A2A] rounded"></div>
+        <div className="h-5 w-24 bg-[#2A2A2A] rounded opacity-50"></div>
+      </div>
+      <div className="grid grid-cols-3 gap-4 text-center">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="rounded-lg bg-[#1A1A1A] p-3 border border-[#2A2A2A] space-y-2 flex flex-col items-center">
+            <div className="h-3 w-10 bg-[#2A2A2A] rounded"></div>
+            <div className="h-6 w-16 bg-[#2A2A2A] rounded"></div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function StemMixerSkeleton() {
+  return (
+    <div className="rounded-xl border border-[#2A2A2A] bg-[#121212] p-5 shadow-lg animate-pulse space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="h-5 w-32 bg-[#2A2A2A] rounded"></div>
+        <div className="flex gap-2">
+          <div className="h-8 w-24 bg-[#2A2A2A] rounded-lg"></div>
+          <div className="h-8 w-20 bg-[#2A2A2A] rounded-lg"></div>
+        </div>
+      </div>
+      <div className="space-y-3">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="rounded-xl border border-[#2A2A2A] bg-[#1A1A1A] p-3 space-y-3">
+            <div className="flex justify-between items-center">
+              <div className="space-y-1.5">
+                <div className="h-4 w-16 bg-[#2A2A2A] rounded"></div>
+                <div className="h-3 w-28 bg-[#2A2A2A] rounded opacity-60"></div>
+              </div>
+              <div className="flex gap-2">
+                <div className="h-6 w-16 bg-[#2A2A2A] rounded-lg"></div>
+                <div className="h-6 w-12 bg-[#2A2A2A] rounded-lg"></div>
+              </div>
+            </div>
+            <div className="h-14 w-full bg-[#121212] rounded border border-[#2A2A2A] opacity-80 flex items-center px-3">
+              <div className="h-2 w-12 bg-[#2A2A2A] rounded mr-3"></div>
+              <div className="h-1.5 flex-grow bg-[#2A2A2A] rounded"></div>
+              <div className="h-4 w-10 bg-[#2A2A2A] rounded ml-3"></div>
+            </div>
+            <div className="h-10 w-full bg-[#121212] rounded border border-[#2A2A2A] opacity-40"></div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SinglePlayerSkeleton() {
+  return (
+    <div className="rounded-xl border border-[#2A2A2A] bg-[#121212] p-5 shadow-lg animate-pulse space-y-4">
+      <div className="h-12 w-full bg-[#E5A93D]/10 rounded-lg border border-[#E5A93D]/20 flex items-center justify-center">
+        <div className="h-4 w-40 bg-[#E5A93D]/30 rounded"></div>
+      </div>
+      <div className="h-24 w-full bg-[#1A1A1A] rounded-lg border border-[#2A2A2A] opacity-60"></div>
+    </div>
+  );
+}
+
 interface UploadBoxProps {
   onHeightChange?: (expanded: boolean) => void;
 }
@@ -336,7 +403,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
   };
 
   return (
-    <div className={`p-6 text-[#F3F3F3] transition-all duration-500 ${!file ? "flex flex-col items-center justify-center min-h-[50vh]" : "grid gap-6 md:grid-cols-2"}`}>
+    <div className={`p-6 text-[#F3F3F3] transition-all duration-500 ${!file ? "flex flex-col items-center justify-center min-h-[50vh]" : "grid gap-6 lg:grid-cols-12"}`}>
       {!file ? (
         <div className="w-full max-w-3xl text-center space-y-6">
           <h2 className="text-3xl font-bold tracking-tight text-[#F3F3F3]">Upload Audio</h2>
@@ -366,8 +433,8 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
         </div>
       ) : (
         <>
-          <div className="space-y-4">
-            <div className="rounded-xl border border-[#2A2A2A] bg-[#121212] p-5 shadow-lg">
+          <div className="space-y-4 lg:col-span-4">
+            <div className="rounded-xl border border-[#2A2A2A] bg-[#121212] p-4 shadow-lg">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-[#8E8E8E] uppercase tracking-wider mb-1">Source File</p>
@@ -387,7 +454,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
               </div>
             </div>
 
-            <div className="rounded-xl border border-[#2A2A2A] bg-[#121212] p-5 space-y-5 shadow-lg">
+            <div className="rounded-xl border border-[#2A2A2A] bg-[#121212] p-4 space-y-4 shadow-lg">
               <div>
                 <p className="text-xs font-medium text-[#8E8E8E] uppercase tracking-wider mb-2">Processing Module</p>
                 <div className="grid grid-cols-2 gap-2">
@@ -523,17 +590,24 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
             </div>
           </div>
 
-          <div className="space-y-4">
-            {analysis && <AudioAnalysis data={analysis} />}
+          <div className="space-y-4 lg:col-span-8">
+            {loading && (
+              <>
+                <AudioAnalysisSkeleton />
+                {action === "separate" ? <StemMixerSkeleton /> : <SinglePlayerSkeleton />}
+              </>
+            )}
 
-            {fileId && (
+            {!loading && analysis && <AudioAnalysis data={analysis} />}
+
+            {!loading && fileId && (
               <div className="rounded-xl border border-[#2A2A2A] bg-[#121212] p-5 shadow-lg">
                 <h3 className="text-sm font-medium text-[#8E8E8E] uppercase tracking-wider mb-4">Stem Mixer</h3>
                 <MultiStemLivePlayer fileId={fileId} />
               </div>
             )}
 
-            {zipUrl && (
+            {!loading && zipUrl && (
               <a
                 href={zipUrl.startsWith("http") ? zipUrl : `${API_BASE}${zipUrl}`}
                 download="separated.zip"
@@ -543,7 +617,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
               </a>
             )}
 
-            {downloadUrl && downloadFileName && !downloadFileName.endsWith(".zip") && (
+            {!loading && downloadUrl && downloadFileName && !downloadFileName.endsWith(".zip") && (
               <div className="rounded-xl border border-[#2A2A2A] bg-[#121212] p-5 space-y-4 shadow-lg">
                 <a
                   href={downloadUrl}
