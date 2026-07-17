@@ -9,6 +9,7 @@ import threading
 import zipfile
 import logging
 import soundfile as sf
+import numpy as np
 from uuid import uuid4
 from typing import Tuple
 
@@ -227,6 +228,55 @@ async def get_stem(file_id: str, stem: str):
         # frontend ใช้ endpoint นี้โหลด stem เฉพาะตัวไปทำ multitrack playback
         return FileResponse(path, media_type="audio/wav")
     return JSONResponse(status_code=404, content={"status": "error", "message": f"ไม่พบไฟล์ {stem}.wav"})
+
+
+@app.get("/karaoke/{file_id}")
+async def get_karaoke(file_id: str):
+    # รวมไฟล์ stem ดนตรี (Drums, Bass, Other) เข้าด้วยกันเพื่อทำ Karaoke / Backing Track
+    safe_file_id = os.path.basename(file_id)
+    folder = os.path.join("separated", safe_file_id)
+    karaoke_path = os.path.join(folder, "karaoke.wav")
+
+    # ถ้าสร้างไฟล์ไว้แล้ว โหลดได้เลยไม่ต้องสร้างใหม่
+    if os.path.exists(karaoke_path):
+        return FileResponse(karaoke_path, media_type="audio/wav", filename="karaoke.wav")
+
+    if not os.path.exists(folder):
+        return JSONResponse(status_code=404, content={"status": "error", "message": "ไม่พบข้อมูลการแยกเสียงสำหรับ file id นี้"})
+
+    # stems ที่จะรวม
+    targets = ["drums.wav", "bass.wav", "other.wav"]
+    mix = None
+    samplerate = None
+
+    try:
+        for target in targets:
+            path = os.path.join(folder, target)
+            if os.path.exists(path):
+                data, sr = sf.read(path)
+                if samplerate is None:
+                    samplerate = sr
+                if mix is None:
+                    mix = np.zeros_like(data)
+                
+                # เอาความยาวที่สั้นที่สุด เพื่อกันขนาด array ไม่เท่ากัน
+                min_len = min(len(mix), len(data))
+                mix[:min_len] += data[:min_len]
+
+        if mix is None:
+            return JSONResponse(status_code=404, content={"status": "error", "message": "ไม่พบไฟล์ stem เสียงดนตรีเพื่อทำคาราโอเกะ"})
+
+        # กันค่าเกิน (Clip) ถ้าเกิดการรวมเสียงแล้วดังเกินไป
+        max_val = np.max(np.abs(mix))
+        if max_val > 1.0:
+            mix = mix / max_val
+
+        # export 
+        sf.write(karaoke_path, mix, samplerate)
+        return FileResponse(karaoke_path, media_type="audio/wav", filename="karaoke.wav")
+    except Exception as e:
+        logger.error(f"Error creating karaoke mixdown: {e}")
+        return JSONResponse(status_code=500, content={"status": "error", "message": f"การรวมไฟล์คาราโอเกะล้มเหลว: {str(e)}"})
 
 
 # เส้นทาง Auto-EQ แบบ AI

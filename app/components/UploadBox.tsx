@@ -663,13 +663,24 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
             )}
 
             {!loading && zipUrl && (
-              <a
-                href={zipUrl.startsWith("http") ? zipUrl : `${API_BASE}${zipUrl}`}
-                download="separated.zip"
-                className="block w-full text-center rounded-lg bg-[#1A1A1A] hover:bg-[#2A2A2A] border border-[#2A2A2A] hover:border-[#555555] text-[#F3F3F3] font-medium py-3 transition"
-              >
-                Download All Stems (ZIP)
-              </a>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <a
+                  href={zipUrl.startsWith("http") ? zipUrl : `${API_BASE}${zipUrl}`}
+                  download="separated.zip"
+                  className="block w-full text-center rounded-lg bg-[#1A1A1A] hover:bg-[#2A2A2A] border border-[#2A2A2A] hover:border-[#555555] text-[#F3F3F3] font-medium py-3 transition"
+                >
+                  Download All Stems (ZIP)
+                </a>
+                {fileId && (
+                  <a
+                    href={`${API_BASE}/karaoke/${fileId}`}
+                    download="karaoke.wav"
+                    className="block w-full text-center rounded-lg bg-[#1A1A1A] hover:bg-[#E5A93D]/20 border border-[#E5A93D]/50 hover:border-[#E5A93D] text-[#E5A93D] font-medium py-3 transition shadow-[0_0_10px_rgba(229,169,61,0.1)] hover:shadow-[0_0_15px_rgba(229,169,61,0.2)]"
+                  >
+                    Download Karaoke
+                  </a>
+                )}
+              </div>
             )}
 
             {!loading && downloadUrl && downloadFileName && !downloadFileName.endsWith(".zip") && (
