@@ -1,15 +1,11 @@
-"use client";
-import React from "react";
-
-export const Footer: React.FC = () => {
+// Footer ที่ใช้ร่วมกันสำหรับทุกหน้าย่อย
+export function Footer() {
   return (
-    <footer className="w-full border-t border-[#2A2A2A] bg-[#0A0A0A] py-6 text-center text-xs text-[#666666]">
-      <div className="mx-auto max-w-6xl px-4 space-y-1.5">
-        <p>© 2026 HarmoniQ. All rights reserved.</p>
-        <p className="text-[11px] text-[#555555]">
-          ระบบแยกสเตมเพลงและปรับระดับเสียงอัตโนมัติด้วยปัญญาประดิษฐ์
-        </p>
+    <footer className="border-t border-[#1E1E1E] py-6 mt-auto">
+      <div className="mx-auto max-w-7xl px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+        <p className="text-xs text-[#444444]">© 2025 HarmoniQ — AI Audio Toolkit</p>
+        <p className="text-xs text-[#333333]">Built with Next.js · FastAPI · PyTorch · Open-Unmix</p>
       </div>
     </footer>
   );
-};
+}
