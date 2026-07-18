@@ -12,6 +12,7 @@ import { AutoEqSettings } from "./settings/AutoEqSettings";
 import { CompressorSettings } from "./settings/CompressorSettings";
 import { PitchShiftSettings } from "./settings/PitchShiftSettings";
 import ExportMasterModal from "./ExportMasterModal";
+import SingleExportModal from "./SingleExportModal";
 // ที่อยู่ของ backend และข้อจำกัดขนาดไฟล์ฝั่งหน้าเว็บ
 
 // ค่าตั้งต้นของ API และข้อจำกัดการอัปโหลด
@@ -135,6 +136,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
   // สถานะสำหรับ Export Modal และ Mastering
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isSingleExportModalOpen, setIsSingleExportModalOpen] = useState(false);
 
   // สถานะของ UI ล้วน ๆ เช่น banner ข้อความ, ผลวิเคราะห์, และ progress จำลอง
   // สถานะข้อความและการตอบสนองของ UI
@@ -279,11 +281,13 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
   // 4. วิเคราะห์ไฟล์ต้นฉบับเพื่อหา tempo, key และ pitch
   // โฟลว์หลักสำหรับประมวลผลทุก action
   // ===== ฟังก์ชันหลัก: ส่งไฟล์ไป backend และอัปเดตผลลัพธ์บนหน้า =====
-  const handleUpload = async () => {
+  const handleUpload = async (overrideFormat?: string | React.MouseEvent | React.FormEvent) => {
     if (!file) {
       setErrorMessage("กรุณาเลือกไฟล์ WAV (≤100MB) ก่อนเริ่มประมวลผล");
       return;
     }
+    
+    const actualFormat = typeof overrideFormat === "string" ? overrideFormat : exportFormat;
 
     setLoading(true);
     setDownloadUrl(null);
@@ -350,7 +354,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
           params.set("trim_start", trimStart);
           params.set("trim_end", trimEnd);
         }
-        params.set("export_format", exportFormat);
+        params.set("export_format", actualFormat);
         response = await axios.post(`${API_BASE}/apply-eq-ai?${params.toString()}`, formData, {
           responseType: "blob",
           signal,
@@ -379,7 +383,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
           params.set("trim_start", trimStart);
           params.set("trim_end", trimEnd);
         }
-        params.set("export_format", exportFormat);
+        params.set("export_format", actualFormat);
 
         response = await axios.post(`${API_BASE}/apply-compressor?${params.toString()}`, formData, {
           responseType: "blob",
@@ -398,7 +402,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
           params.set("trim_start", trimStart);
           params.set("trim_end", trimEnd);
         }
-        params.set("export_format", exportFormat);
+        params.set("export_format", actualFormat);
         response = await axios.post(`${API_BASE}/pitch-shift?${params.toString()}`, formData, {
           responseType: "blob", //"blob" หมายถึง บอก axios ว่า response ที่ backend ส่งกลับมาเป็น “ข้อมูลไฟล์ดิบ” ไม่ใช่ JSON หรือ text
           signal,
@@ -412,7 +416,11 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
 
       if (file && suffix) {
         const baseName = file.name.replace(/\.[^/.]+$/, "");
-        setDownloadFileName(`${baseName}${suffix}.${exportFormat}`);
+        setDownloadFileName(`${baseName}${suffix}.${actualFormat}`);
+      }
+
+      if (overrideFormat) {
+        setExportFormat(actualFormat);
       }
 
       // การวิเคราะห์ถูกแยกรันอีกครั้ง เพื่อให้การ์ดสรุปแสดงข้อมูลของไฟล์ต้นฉบับได้
@@ -467,6 +475,28 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
         progressTimerRef.current = null;
       }
       setLoading(false);
+    }
+  };
+
+  const handleSingleExport = async (format: string) => {
+    if (format === exportFormat && downloadUrl && downloadFileName) {
+      // If same format, just download the existing blob
+      const a = document.createElement("a");
+      a.href = downloadUrl;
+      a.download = downloadFileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setIsSingleExportModalOpen(false);
+    } else {
+      // If different format, we must re-process the file
+      setIsExporting(true);
+      await handleUpload(format);
+      setIsExporting(false);
+      setIsSingleExportModalOpen(false);
+      // Let the user manually click download again once done, or we could trigger it automatically 
+      // but the UX is fine to just close the modal and they see the new waveform.
+      // Alternatively, we can auto-trigger it if we had the new URL here, but state updates are async.
     }
   };
 
@@ -765,18 +795,28 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
               isExporting={isExporting}
             />
 
+            <SingleExportModal
+              isOpen={isSingleExportModalOpen}
+              onClose={() => setIsSingleExportModalOpen(false)}
+              onExport={handleSingleExport}
+              isExporting={isExporting}
+              currentFormat={exportFormat}
+            />
+
             {!loading && downloadUrl && downloadFileName && !downloadFileName.endsWith(".zip") && (
-              <div className="rounded-xl border border-[#2A2A2A] bg-[#121212] p-5 space-y-4 shadow-lg">
-                <a
-                  href={downloadUrl}
-                  download={downloadFileName}
-                  className="block w-full text-center rounded-lg bg-[#E5A93D] hover:bg-[#F3C05D] text-[#0A0A0A] font-medium py-3 transition shadow-[0_0_15px_rgba(229,169,61,0.2)]"
-                >
-                  Download Output ({exportFormat.toUpperCase()})
-                </a>
-                <div className="pt-2">
+              <div className="rounded-2xl border border-[#222] bg-[#0A0A0A] p-5 space-y-5 shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
+                <div>
                   <WaveformPlayer audioUrl={downloadUrl} />
                 </div>
+                <button
+                  onClick={() => setIsSingleExportModalOpen(true)}
+                  className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[#E5A93D] to-[#D6962A] px-4 py-3.5 font-bold text-[#0A0A0A] shadow-[0_4px_15px_rgba(229,169,61,0.2)] transition-all hover:shadow-[0_6px_25px_rgba(229,169,61,0.35)] hover:from-[#F3C05D] hover:to-[#E5A93D]"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                  Export & Download
+                </button>
               </div>
             )}
           </div>

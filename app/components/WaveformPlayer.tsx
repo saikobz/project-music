@@ -22,11 +22,11 @@ const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl }) => {
 
     waveSurferRef.current = WaveSurfer.create({
       container: containerRef.current,
-      waveColor: "#555555",
+      waveColor: "#333333",
       progressColor: "#E5A93D",
-      cursorColor: "#E5A93D",
-      height: 124,
-      barGap: 1.75,
+      cursorColor: "#FFFFFF",
+      height: 96,
+      barGap: 2,
       barWidth: 2,
       barRadius: 999,
       normalize: true,
@@ -94,42 +94,58 @@ const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl }) => {
   };
 
   return (
-    <div className="space-y-3 rounded-2xl border border-[#7C3AED]/30 bg-[#1C162C] p-4 backdrop-blur">
-      <div className="flex items-center justify-between text-sm font-semibold text-[#EDE9FE]">
-        <span>ตัวเล่นไฟล์ที่ประมวลผลแล้ว (WAV)</span>
-        <span className="text-[#A78BFA]">{isPlaying ? "กำลังเล่น" : "หยุดอยู่"}</span>
-      </div>
-      <div
-        ref={containerRef}
-        className="rounded-xl border border-[#67E8F9]/25 bg-[#08111D] px-2 py-2 cursor-pointer shadow-[inset_0_1px_14px_rgba(255,255,255,0.03)]"
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerUp}
-      />
-      <div className="flex items-center gap-3 justify-center">
-        <button
-          onClick={togglePlay}
-          className="rounded-lg bg-[#7C3AED] px-4 py-2 font-semibold text-white hover:bg-[#A78BFA] cursor-pointer"
-        >
-          {isPlaying ? "หยุดชั่วคราว / เล่นต่อ" : "เล่น"}
-        </button>
-        <button
-          onClick={stopPlayback}
-          className="rounded-lg bg-[#F472B6] px-4 py-2 font-semibold text-white hover:bg-[#A78BFA] cursor-pointer"
-        >
-          รีเซ็ต
-        </button>
-      </div>
-      <div className="rounded-xl border border-[#2A2A2A] bg-[#0A0A0A] px-3 py-2">
-        <div className="mb-2 flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-[#8E8E8E]">
-          <span>Volume</span>
-          <span className="rounded-full border border-[#E5A93D]/35 bg-[#121212] px-2 py-0.5 text-[#F3F3F3]">{volume}%</span>
-        </div>
+    <div className="space-y-4 rounded-2xl border border-[#222] bg-[#0A0A0A] p-5 shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
+      <div className="flex items-center justify-between border-b border-[#222] pb-4">
         <div className="flex items-center gap-3">
-          <span className="rounded-md border border-[#E5A93D]/35 bg-[#121212] px-2 py-1 text-[10px] font-semibold text-[#E5A93D]">
-            VOL
-          </span>
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E5A93D]/10 border border-[#E5A93D]/20">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#E5A93D]" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <div>
+            <span className="text-sm font-bold uppercase tracking-widest text-white">Processed Audio</span>
+            <div className="text-[10px] text-[#8E8E8E] font-medium mt-0.5">READY TO PLAY</div>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={stopPlayback}
+            className="rounded-xl border border-[#333] bg-[#121212] px-4 py-2 text-xs font-semibold text-[#8E8E8E] transition-all hover:border-[#555] hover:text-white"
+          >
+            Reset
+          </button>
+          <button
+            onClick={togglePlay}
+            className={`flex min-w-[90px] items-center justify-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
+              isPlaying
+                ? "bg-[#222] text-white hover:bg-[#333] shadow-inner"
+                : "bg-gradient-to-br from-[#E5A93D] to-[#D6962A] text-[#0A0A0A] shadow-[0_0_15px_rgba(229,169,61,0.2)] hover:shadow-[0_0_20px_rgba(229,169,61,0.3)] hover:from-[#F3C05D]"
+            }`}
+          >
+            {isPlaying ? "Pause" : "Play"}
+          </button>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        {/* Waveform container */}
+        <div
+          ref={containerRef}
+          className="relative h-[96px] w-full cursor-pointer overflow-hidden rounded-xl border border-[#222] bg-[#050505] shadow-inner"
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerLeave={handlePointerUp}
+        >
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/40 pointer-events-none z-10" />
+        </div>
+
+        {/* Volume control */}
+        <div className="flex items-center gap-4 rounded-xl border border-[#222] bg-[#111] px-4 py-3">
+          <div className="flex w-16 items-center gap-2 border-r border-[#333] pr-3">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#555]" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clipRule="evenodd" /></svg>
+            <span className="text-xs font-bold text-white font-mono">{String(volume).padStart(3, "0")}</span>
+          </div>
           <input
             type="range"
             min="0"
@@ -137,13 +153,25 @@ const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl }) => {
             step="1"
             value={volume}
             onChange={handleVolumeChange}
-            className="h-2 w-full cursor-pointer rounded-full bg-[#1A1A1A]"
-            style={{ accentColor: "#E5A93D" }}
-            aria-label="ปรับระดับเสียงไฟล์ที่ประมวลผลแล้ว"
+            className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-[#333]"
+            style={{ 
+              background: `linear-gradient(to right, #E5A93D ${volume}%, #333 ${volume}%)`
+            }}
+            aria-label="Volume"
           />
+          <style>{`
+            input[type=range]::-webkit-slider-thumb {
+              -webkit-appearance: none;
+              height: 12px;
+              width: 12px;
+              border-radius: 50%;
+              background: #fff;
+              box-shadow: 0 0 10px rgba(229,169,61,0.5);
+              margin-top: -5.25px;
+            }
+          `}</style>
         </div>
       </div>
-      <p className="text-center text-xs text-[#EDE9FE]/70">เลื่อนเพื่อ seek ไปยังตำแหน่งที่ต้องการบน waveform ได้ทันที</p>
     </div>
   );
 };
