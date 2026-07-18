@@ -1,2 +1,8 @@
 /* นำเข้า utility layers ของ Tailwind เพื่อใช้ทั้งแอป */
 @import "tailwindcss";
+
+/* Keyframe สำหรับ shimmer animation บนปุ่ม Execute ขณะประมวลผล */
+@keyframes shimmer {
+  0%   { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}

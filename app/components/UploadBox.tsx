@@ -552,195 +552,318 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
               </div>
             </div>
 
-            <div className="rounded-xl border border-[#2A2A2A] bg-[#121212] p-4 space-y-4 shadow-lg">
-              <div>
-                <p className="text-xs font-medium text-[#8E8E8E] uppercase tracking-wider mb-2">Processing Module</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { value: "separate", label: "Stem Separation" },
-                    { value: "eq-ai", label: "Auto EQ (AI)" },
-                    { value: "compressor", label: "Compressor" },
-                    { value: "pitch", label: "Pitch Shift" },
-                  ].map((item) => (
+            {/* ===== PROCESSING MODULE – redesigned studio console style ===== */}
+            <div className="rounded-xl border border-[#1E1E1E] bg-[#0E0E0E] shadow-xl overflow-hidden">
+
+              {/* ── หัว Module พร้อม indicator LED ── */}
+              <div className="flex items-center gap-2.5 px-4 pt-4 pb-3 border-b border-[#1E1E1E]">
+                {/* LED indicator กะพริบเมื่อกำลังประมวลผล */}
+                <span className={`w-2 h-2 rounded-full flex-shrink-0 transition-all duration-300 ${
+                  loading
+                    ? "bg-emerald-400 shadow-[0_0_6px_2px_rgba(52,211,153,0.6)] animate-pulse"
+                    : action === "separate" ? "bg-[#A78BFA] shadow-[0_0_5px_rgba(167,139,250,0.5)]"
+                    : action === "eq-ai" ? "bg-[#22D3EE] shadow-[0_0_5px_rgba(34,211,238,0.5)]"
+                    : action === "compressor" ? "bg-[#E5A93D] shadow-[0_0_5px_rgba(229,169,61,0.5)]"
+                    : "bg-[#34D399] shadow-[0_0_5px_rgba(52,211,153,0.5)]"
+                }`} />
+                <p className="text-[10px] font-semibold text-[#555555] uppercase tracking-[0.15em]">Processing Module</p>
+                <div className="ml-auto text-[10px] font-mono text-[#333333]">
+                  {loading ? "RUNNING" : "STANDBY"}
+                </div>
+              </div>
+
+              <div className="p-4 space-y-4">
+
+                {/* ── Tab selector: console-style ── */}
+                <div className="grid grid-cols-2 gap-1.5 p-1 rounded-lg bg-[#080808] border border-[#1A1A1A]">
+                  {([
+                    { value: "separate", label: "Stem Separation", icon: "⊗", activeColor: "text-[#A78BFA] border-[#A78BFA]/60 bg-[#A78BFA]/10 shadow-[0_0_12px_rgba(167,139,250,0.15)]" },
+                    { value: "eq-ai",    label: "Auto EQ (AI)",    icon: "⟿", activeColor: "text-[#22D3EE] border-[#22D3EE]/60 bg-[#22D3EE]/10 shadow-[0_0_12px_rgba(34,211,238,0.15)]" },
+                    { value: "compressor",label: "Compressor",     icon: "◉", activeColor: "text-[#E5A93D] border-[#E5A93D]/60 bg-[#E5A93D]/10 shadow-[0_0_12px_rgba(229,169,61,0.15)]" },
+                    { value: "pitch",    label: "Pitch Shift",     icon: "♯", activeColor: "text-[#34D399] border-[#34D399]/60 bg-[#34D399]/10 shadow-[0_0_12px_rgba(52,211,153,0.15)]" },
+                  ] as const).map((item) => (
                     <button
                       key={item.value}
                       onClick={() => setAction(item.value)}
-                      className={`rounded-lg px-3 py-2.5 text-sm font-medium border cursor-pointer transition ${
-                        action === item.value
-                          ? "bg-[#E5A93D] text-[#0A0A0A] border-[#E5A93D]"
-                          : "bg-[#1A1A1A] border-[#2A2A2A] text-[#8E8E8E] hover:text-[#F3F3F3] hover:border-[#555555]"
-                      }`}
                       disabled={loading}
+                      className={`relative flex flex-col items-center gap-0.5 rounded-md px-2 py-2.5 text-xs font-medium border transition-all duration-200 cursor-pointer ${
+                        action === item.value
+                          ? item.activeColor
+                          : "text-[#444444] border-transparent bg-transparent hover:text-[#888888] hover:bg-[#111111]"
+                      } disabled:opacity-40 disabled:cursor-not-allowed`}
                     >
-                      {item.label}
+                      <span className={`text-base leading-none transition-all duration-200 ${
+                        action === item.value ? "opacity-100" : "opacity-40"
+                      }`}>{item.icon}</span>
+                      <span className="leading-tight text-center">{item.label}</span>
                     </button>
                   ))}
                 </div>
-              </div>
 
-              {(action === "eq-ai" || action === "compressor") && (
-                <div>
-                  <label className="block text-xs font-medium text-[#8E8E8E] uppercase tracking-wider mb-2">Genre Profile</label>
-                  <select
-                    value={genre}
-                    onChange={(e) => setGenre(e.target.value)}
-                    className="w-full rounded-lg bg-[#0A0A0A] border border-[#2A2A2A] p-2.5 text-[#F3F3F3] focus:border-[#E5A93D] focus:outline-none transition"
-                    disabled={loading}
-                  >
-                    <option value="pop">Pop</option>
-                    <option value="rock">Rock</option>
-                    <option value="trap">Trap</option>
-                    <option value="country">Country</option>
-                    <option value="soul">Soul</option>
-                  </select>
-                </div>
-              )}
-
-              {action === "eq-ai" && (
-                <AutoEqSettings
-                  autoEqModel={autoEqModel}
-                  setAutoEqModel={setAutoEqModel}
-                  deltaClampDb={deltaClampDb}
-                  setDeltaClampDb={setDeltaClampDb}
-                  loading={loading}
-                  modelOptions={AUTO_EQ_MODEL_OPTIONS}
-                  minDeltaClamp={AUTO_EQ_DELTA_CLAMP_MIN}
-                  maxDeltaClamp={AUTO_EQ_DELTA_CLAMP_MAX}
-                  defaultDeltaClamp={AUTO_EQ_DELTA_CLAMP_DEFAULT}
-                  isValid={isEqDeltaClampValid}
-                  warningText={eqDeltaClampWarning}
-                />
-              )}
-
-              {action === "compressor" && (
-                <CompressorSettings
-                  strength={strength}
-                  setStrength={setStrength}
-                  compThreshold={compThreshold}
-                  setCompThreshold={setCompThreshold}
-                  compRatio={compRatio}
-                  setCompRatio={setCompRatio}
-                  compAttack={compAttack}
-                  setCompAttack={setCompAttack}
-                  compRelease={compRelease}
-                  setCompRelease={setCompRelease}
-                  compKnee={compKnee}
-                  setCompKnee={setCompKnee}
-                  compMakeupGain={compMakeupGain}
-                  setCompMakeupGain={setCompMakeupGain}
-                  compDryWet={compDryWet}
-                  setCompDryWet={setCompDryWet}
-                  compOutputCeiling={compOutputCeiling}
-                  setCompOutputCeiling={setCompOutputCeiling}
-                  loading={loading}
-                />
-              )}
-
-              {action === "pitch" && (
-                <PitchShiftSettings
-                  pitchSteps={pitchSteps}
-                  setPitchSteps={setPitchSteps}
-                  loading={loading}
-                />
-              )}
-
-              {/* ส่วนตัดช่วงเวลาเสียง (Audio Trimming) */}
-              <div className="rounded-lg border border-[#2A2A2A] bg-[#1A1A1A] p-3 space-y-3">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input 
-                    type="checkbox" 
-                    checked={isTrimming} 
-                    onChange={(e) => setIsTrimming(e.target.checked)} 
-                    disabled={loading}
-                    className="accent-[#E5A93D] w-4 h-4 cursor-pointer"
-                  />
-                  <span className="text-sm font-medium text-[#F3F3F3] select-none">เปิดใช้การตัดช่วงเวลา (Trimming)</span>
-                </label>
-                
-                {isTrimming && (
-                  <div className="grid grid-cols-2 gap-3 pl-6">
-                    <div>
-                      <label className="block text-xs text-[#8E8E8E] mb-1">เริ่ม (วินาที)</label>
-                      <input 
-                        type="number" min="0" value={trimStart} onChange={(e) => setTrimStart(e.target.value)} disabled={loading}
-                        className="w-full rounded bg-[#0A0A0A] border border-[#2A2A2A] p-1.5 text-sm text-[#F3F3F3] focus:border-[#E5A93D] focus:outline-none" 
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-[#8E8E8E] mb-1">สิ้นสุด (วินาที)</label>
-                      <input 
-                        type="number" min="1" value={trimEnd} onChange={(e) => setTrimEnd(e.target.value)} disabled={loading}
-                        className="w-full rounded bg-[#0A0A0A] border border-[#2A2A2A] p-1.5 text-sm text-[#F3F3F3] focus:border-[#E5A93D] focus:outline-none" 
-                      />
+                {/* ── Panel ตั้งค่าแต่ละ Module ── */}
+                {/* Stem Separation: ไม่มี settings เพิ่มเติม แสดง info card */}
+                {action === "separate" && (
+                  <div className="rounded-lg border border-[#A78BFA]/20 bg-[#A78BFA]/5 p-3 space-y-2">
+                    <p className="text-xs text-[#A78BFA] font-medium">Stem Separation</p>
+                    <p className="text-[11px] text-[#666666] leading-relaxed">
+                      แยกไฟล์เสียงออกเป็น 4 แทร็กอิสระ — Vocals, Drums, Bass, Other — พร้อมเล่นและ Mix ได้ทันที
+                    </p>
+                    <div className="grid grid-cols-4 gap-1 pt-1">
+                      {["Vocals","Drums","Bass","Other"].map((s) => (
+                        <div key={s} className="rounded bg-[#A78BFA]/10 border border-[#A78BFA]/20 py-1 text-center text-[10px] text-[#A78BFA]/80">{s}</div>
+                      ))}
                     </div>
                   </div>
                 )}
-              </div>
 
-              {/* ส่วนเลือก Format ส่งออก */}
-              <div className="rounded-lg border border-[#2A2A2A] bg-[#1A1A1A] p-3">
-                <label className="block text-xs font-medium text-[#8E8E8E] uppercase tracking-wider mb-2">Export Format</label>
-                <div className="flex gap-4">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input 
-                      type="radio" 
-                      name="exportFormat" 
-                      value="wav" 
-                      checked={exportFormat === "wav"} 
-                      onChange={(e) => setExportFormat(e.target.value)}
-                      className="accent-[#E5A93D]"
+                {/* Genre Profile (เฉพาะ EQ / Compressor) */}
+                {(action === "eq-ai" || action === "compressor") && (
+                  <div>
+                    <label className="block text-[10px] font-semibold text-[#555555] uppercase tracking-[0.12em] mb-1.5">Genre Profile</label>
+                    <select
+                      value={genre}
+                      onChange={(e) => setGenre(e.target.value)}
+                      className={`w-full rounded-lg bg-[#080808] border p-2.5 text-[#C8C8C8] text-sm focus:outline-none transition ${
+                        action === "eq-ai"
+                          ? "border-[#22D3EE]/30 focus:border-[#22D3EE]/70"
+                          : "border-[#E5A93D]/30 focus:border-[#E5A93D]/70"
+                      }`}
+                      disabled={loading}
+                    >
+                      <option value="pop">Pop</option>
+                      <option value="rock">Rock</option>
+                      <option value="trap">Trap</option>
+                      <option value="country">Country</option>
+                      <option value="soul">Soul</option>
+                    </select>
+                  </div>
+                )}
+
+                {/* Auto EQ Settings */}
+                {action === "eq-ai" && (
+                  <div className="rounded-lg border border-[#22D3EE]/20 bg-[#22D3EE]/5 p-3">
+                    <AutoEqSettings
+                      autoEqModel={autoEqModel}
+                      setAutoEqModel={setAutoEqModel}
+                      deltaClampDb={deltaClampDb}
+                      setDeltaClampDb={setDeltaClampDb}
+                      loading={loading}
+                      modelOptions={AUTO_EQ_MODEL_OPTIONS}
+                      minDeltaClamp={AUTO_EQ_DELTA_CLAMP_MIN}
+                      maxDeltaClamp={AUTO_EQ_DELTA_CLAMP_MAX}
+                      defaultDeltaClamp={AUTO_EQ_DELTA_CLAMP_DEFAULT}
+                      isValid={isEqDeltaClampValid}
+                      warningText={eqDeltaClampWarning}
                     />
-                    <span className="text-sm text-[#F3F3F3]">WAV (Lossless)</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input 
-                      type="radio" 
-                      name="exportFormat" 
-                      value="mp3" 
-                      checked={exportFormat === "mp3"} 
-                      onChange={(e) => setExportFormat(e.target.value)}
-                      className="accent-[#E5A93D]"
+                  </div>
+                )}
+
+                {/* Compressor Settings */}
+                {action === "compressor" && (
+                  <div className="rounded-lg border border-[#E5A93D]/20 bg-[#E5A93D]/5 p-3">
+                    <CompressorSettings
+                      strength={strength}
+                      setStrength={setStrength}
+                      compThreshold={compThreshold}
+                      setCompThreshold={setCompThreshold}
+                      compRatio={compRatio}
+                      setCompRatio={setCompRatio}
+                      compAttack={compAttack}
+                      setCompAttack={setCompAttack}
+                      compRelease={compRelease}
+                      setCompRelease={setCompRelease}
+                      compKnee={compKnee}
+                      setCompKnee={setCompKnee}
+                      compMakeupGain={compMakeupGain}
+                      setCompMakeupGain={setCompMakeupGain}
+                      compDryWet={compDryWet}
+                      setCompDryWet={setCompDryWet}
+                      compOutputCeiling={compOutputCeiling}
+                      setCompOutputCeiling={setCompOutputCeiling}
+                      loading={loading}
                     />
-                    <span className="text-sm text-[#F3F3F3]">MP3 (320kbps)</span>
+                  </div>
+                )}
+
+                {/* Pitch Shift Settings */}
+                {action === "pitch" && (
+                  <div className="rounded-lg border border-[#34D399]/20 bg-[#34D399]/5 p-3 space-y-3">
+                    <PitchShiftSettings
+                      pitchSteps={pitchSteps}
+                      setPitchSteps={setPitchSteps}
+                      loading={loading}
+                    />
+                  </div>
+                )}
+
+                {/* ── Trimming ── */}
+                <div className="rounded-lg border border-[#1A1A1A] bg-[#080808] p-3 space-y-3">
+                  <label className="flex items-center gap-2.5 cursor-pointer select-none group">
+                    {/* Custom checkbox */}
+                    <span className={`w-4 h-4 rounded flex-shrink-0 border transition-all duration-150 flex items-center justify-center ${
+                      isTrimming ? "bg-[#E5A93D] border-[#E5A93D]" : "border-[#333333] bg-transparent group-hover:border-[#555555]"
+                    }`}
+                      onClick={() => !loading && setIsTrimming(!isTrimming)}
+                    >
+                      {isTrimming && (
+                        <svg className="w-2.5 h-2.5 text-[#0A0A0A]" viewBox="0 0 10 10" fill="none">
+                          <path d="M1.5 5L4 7.5L8.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      )}
+                    </span>
+                    <input type="checkbox" checked={isTrimming} onChange={(e) => setIsTrimming(e.target.checked)} disabled={loading} className="sr-only" />
+                    <span className="text-xs font-medium text-[#888888] group-hover:text-[#AAAAAA] transition-colors">Trim — ตัดช่วงเวลาก่อนประมวลผล</span>
                   </label>
+                  {isTrimming && (
+                    <div className="grid grid-cols-2 gap-2 pl-6">
+                      <div>
+                        <label className="block text-[10px] text-[#555555] mb-1">เริ่ม (วินาที)</label>
+                        <input
+                          type="number" min="0" value={trimStart}
+                          onChange={(e) => setTrimStart(e.target.value)} disabled={loading}
+                          className="w-full rounded-md bg-[#111111] border border-[#2A2A2A] px-2.5 py-1.5 text-sm text-[#E0E0E0] focus:border-[#E5A93D]/50 focus:outline-none transition"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-[#555555] mb-1">สิ้นสุด (วินาที)</label>
+                        <input
+                          type="number" min="1" value={trimEnd}
+                          onChange={(e) => setTrimEnd(e.target.value)} disabled={loading}
+                          className="w-full rounded-md bg-[#111111] border border-[#2A2A2A] px-2.5 py-1.5 text-sm text-[#E0E0E0] focus:border-[#E5A93D]/50 focus:outline-none transition"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
 
-              <button
-                onClick={handleUpload}
-                disabled={loading || (action === "eq-ai" && !isEqDeltaClampValid)}
-                className={`w-full rounded-lg py-3 text-sm font-bold uppercase tracking-wider transition ${
-                  loading || (action === "eq-ai" && !isEqDeltaClampValid)
-                    ? "bg-[#2A2A2A] text-[#555555] cursor-not-allowed border border-[#2A2A2A]"
-                    : "bg-[#E5A93D] hover:bg-[#F3C05D] text-[#0A0A0A] cursor-pointer shadow-[0_0_15px_rgba(229,169,61,0.2)] hover:shadow-[0_0_20px_rgba(229,169,61,0.4)]"
-                }`}
-              >
-                {loading ? "Processing..." : "Execute"}
-              </button>
+                {/* ── Export Format – custom pill toggle ── */}
+                <div className="space-y-1.5">
+                  <p className="text-[10px] font-semibold text-[#555555] uppercase tracking-[0.12em]">Export Format</p>
+                  <div className="grid grid-cols-2 gap-1.5 p-1 rounded-lg bg-[#080808] border border-[#1A1A1A]">
+                    {([{ value: "wav", label: "WAV", sub: "Lossless" }, { value: "mp3", label: "MP3", sub: "320 kbps" }] as const).map((fmt) => (
+                      <button
+                        key={fmt.value}
+                        onClick={() => setExportFormat(fmt.value)}
+                        className={`flex flex-col items-center py-2 rounded-md text-xs font-medium border transition-all duration-150 cursor-pointer ${
+                          exportFormat === fmt.value
+                            ? "bg-[#1A1A1A] border-[#E5A93D]/50 text-[#E5A93D] shadow-[0_0_8px_rgba(229,169,61,0.12)]"
+                            : "border-transparent text-[#444444] hover:text-[#777777]"
+                        }`}
+                      >
+                        <span className="font-bold text-sm">{fmt.label}</span>
+                        <span className="text-[10px] opacity-60 mt-0.5">{fmt.sub}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-              <div className="h-1.5 w-full rounded-full bg-[#0A0A0A] overflow-hidden border border-[#2A2A2A]">
-                <div
-                  className="h-full bg-[#E5A93D] transition-[width] duration-200"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-              <div className="flex justify-between text-xs text-[#8E8E8E]">
-                <span>{statusText || (loading ? "Processing..." : "Ready")}</span>
-                <span>{progress}%</span>
-              </div>
-              {processingTime && (
-                <div className="text-xs text-[#8E8E8E]">Processing Time: {processingTime}</div>
-              )}
-              {errorMessage && (
-                <div className="rounded-lg bg-red-900/30 border border-red-900/50 p-2.5 text-xs text-red-400">
-                  {errorMessage}
+                {/* ── Execute Button ── */}
+                {(() => {
+                  // สีและ shadow ของปุ่มเปลี่ยนตาม module ที่เลือก
+                  type ActionKey = "separate" | "eq-ai" | "compressor" | "pitch";
+                  const moduleStyles: Record<ActionKey, { base: string; glow: string; label: string }> = {
+                    separate:   { base: "from-[#7C3AED] to-[#A78BFA]", glow: "rgba(167,139,250,0.35)", label: "Run Stem Separation" },
+                    "eq-ai":    { base: "from-[#0891B2] to-[#22D3EE]", glow: "rgba(34,211,238,0.35)",  label: "Apply Auto EQ" },
+                    compressor: { base: "from-[#B45309] to-[#E5A93D]", glow: "rgba(229,169,61,0.35)",  label: "Apply Compressor" },
+                    pitch:      { base: "from-[#059669] to-[#34D399]", glow: "rgba(52,211,153,0.35)",  label: "Shift Pitch" },
+                  };
+                  const moduleStyle = moduleStyles[action as ActionKey] ?? moduleStyles.compressor;
+                  const isDisabled = loading || (action === "eq-ai" && !isEqDeltaClampValid);
+                  return (
+                    <button
+                      onClick={handleUpload}
+                      disabled={isDisabled}
+                      className={`relative w-full rounded-lg py-3.5 text-sm font-bold tracking-widest uppercase overflow-hidden transition-all duration-300 ${
+                        isDisabled
+                          ? "bg-[#1A1A1A] text-[#333333] cursor-not-allowed border border-[#222222]"
+                          : `bg-gradient-to-r ${moduleStyle.base} text-white cursor-pointer`
+                      }`}
+                      style={!isDisabled ? { boxShadow: loading ? `0 0 20px ${moduleStyle.glow}` : `0 0 10px ${moduleStyle.glow}` } : {}}
+                    >
+                      {/* shimmer overlay เมื่อ processing */}
+                      {loading && (
+                        <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-[shimmer_1.5s_linear_infinite]" style={{backgroundSize: "200% 100%"}} />
+                      )}
+                      <span className="relative flex items-center justify-center gap-2">
+                        {loading ? (
+                          <>
+                            <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+                              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeOpacity="0.3"/>
+                              <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/>
+                            </svg>
+                            Processing…
+                          </>
+                        ) : moduleStyle.label}
+                      </span>
+                    </button>
+                  );
+                })()}
+
+                {/* ── Progress + Status ── */}
+                <div className="space-y-2">
+                  {/* Segmented meter bar */}
+                  <div className="flex gap-px h-1.5 w-full overflow-hidden rounded-full bg-[#111111] border border-[#1A1A1A]">
+                    {Array.from({ length: 20 }).map((_, i) => {
+                      // แต่ละ segment จะสว่างถ้า progress เกิน threshold
+                      const threshold = ((i + 1) / 20) * 100;
+                      const lit = progress >= threshold;
+                      const segColor = action === "separate" ? "bg-[#A78BFA]"
+                        : action === "eq-ai" ? "bg-[#22D3EE]"
+                        : action === "compressor" ? "bg-[#E5A93D]"
+                        : "bg-[#34D399]";
+                      return (
+                        <div
+                          key={i}
+                          className={`flex-1 transition-all duration-150 ${
+                            lit ? `${segColor} ${i > 15 ? "opacity-100" : i > 10 ? "opacity-90" : "opacity-80"}` : "bg-[#1C1C1C]"
+                          }`}
+                        />
+                      );
+                    })}
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[11px] text-[#555555]">{statusText || (loading ? "Processing…" : "Ready")}</span>
+                    <span className="text-[11px] font-mono text-[#444444]">{progress}%</span>
+                  </div>
+                  {processingTime && (
+                    <div className="text-[11px] text-[#444444] font-mono">⏱ {processingTime}</div>
+                  )}
                 </div>
-              )}
-              {successMessage && (
-                <div className="rounded-lg bg-[#E5A93D]/10 border border-[#E5A93D]/30 p-2.5 text-xs text-[#E5A93D]">
-                  {successMessage}
-                </div>
-              )}
+
+                {/* ── Error / Success ── */}
+                {errorMessage && (
+                  <div className="flex items-start gap-2 rounded-lg border border-red-900/40 bg-red-950/30 px-3 py-2.5">
+                    <svg className="w-3.5 h-3.5 text-red-400 flex-shrink-0 mt-0.5" viewBox="0 0 16 16" fill="currentColor">
+                      <path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 10.5a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5zm.75-3.25a.75.75 0 0 1-1.5 0v-3a.75.75 0 0 1 1.5 0v3z"/>
+                    </svg>
+                    <span className="text-xs text-red-400 leading-snug">{errorMessage}</span>
+                  </div>
+                )}
+                {successMessage && (
+                  <div className={`flex items-start gap-2 rounded-lg border px-3 py-2.5 ${
+                    action === "separate" ? "border-[#A78BFA]/30 bg-[#A78BFA]/10"
+                    : action === "eq-ai" ? "border-[#22D3EE]/30 bg-[#22D3EE]/10"
+                    : action === "compressor" ? "border-[#E5A93D]/30 bg-[#E5A93D]/10"
+                    : "border-[#34D399]/30 bg-[#34D399]/10"
+                  }`}>
+                    <svg className={`w-3.5 h-3.5 flex-shrink-0 mt-0.5 ${
+                      action === "separate" ? "text-[#A78BFA]"
+                      : action === "eq-ai" ? "text-[#22D3EE]"
+                      : action === "compressor" ? "text-[#E5A93D]"
+                      : "text-[#34D399]"
+                    }`} viewBox="0 0 16 16" fill="currentColor">
+                      <path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm3.28 5.28-4 4a.75.75 0 0 1-1.06 0l-2-2a.75.75 0 1 1 1.06-1.06l1.47 1.47 3.47-3.47a.75.75 0 0 1 1.06 1.06z"/>
+                    </svg>
+                    <span className={`text-xs leading-snug ${
+                      action === "separate" ? "text-[#A78BFA]"
+                      : action === "eq-ai" ? "text-[#22D3EE]"
+                      : action === "compressor" ? "text-[#E5A93D]"
+                      : "text-[#34D399]"
+                    }`}>{successMessage}</span>
+                  </div>
+                )}
+
+              </div>
             </div>
           </div>
 
