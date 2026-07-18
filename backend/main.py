@@ -30,6 +30,7 @@ from backend.auto_eq_inference import (
     DEFAULT_AUTO_EQ_MODEL_ID,
     SUPPORTED_AUTO_EQ_MODELS,
 )
+from backend.auto_mastering import polish_vocal_file, apply_lufs_mastering
 
 # ไฟล์นี้เป็นจุดรวมการตั้งค่า FastAPI และประกาศ endpoint หลักของระบบทั้งหมด
 
@@ -500,3 +501,125 @@ async def analyze(
         # งาน analyze ใช้ไฟล์ชั่วคราวระยะสั้น จึงลบทิ้งทันทีหลังได้ผล
         if "input_path" in locals() and os.path.exists(input_path):
             os.remove(input_path)
+
+
+@app.post("/api/process/vocal-polish")
+async def process_vocal_polish(file_id: str = Query(...)):
+    """API สำหรับขัดเกลาเสียงร้องอัตโนมัติ"""
+    safe_file_id = os.path.basename(file_id)
+    folder = os.path.join("separated", safe_file_id)
+    input_path = os.path.join(folder, "vocals.wav")
+    
+    if not os.path.exists(input_path):
+        raise HTTPException(status_code=404, detail="ไม่พบไฟล์เสียงร้อง (vocals.wav) ในระบบ")
+        
+    output_filename = "vocals_polished.wav"
+    output_path = os.path.join(folder, output_filename)
+    
+    try:
+        await asyncio.to_thread(polish_vocal_file, input_path, output_path)
+        # เราส่งกลับเป็น URL เดียวกันกับที่ใช้ดึง stem แต่เปลี่ยนชื่อไฟล์
+        return {"status": "success", "file_url": f"/separated/{safe_file_id}/{output_filename}"}
+    except Exception as e:
+        logger.error(f"Error polishing vocals: {e}")
+        raise HTTPException(status_code=500, detail="เกิดข้อผิดพลาดในการปรับแต่งเสียงร้อง")
+
+@app.post("/api/process/export")
+async def process_export(
+    file_id: str = Query(...),
+    target_lufs: float = Query(-14.0),
+    stems: list[str] = Query(...)
+):
+    """API สำหรับ Export Mixdown และ/หรือ Stems แยกตามความต้องการ"""
+    safe_file_id = os.path.basename(file_id)
+    folder = os.path.join("separated", safe_file_id)
+    
+    if not os.path.exists(folder):
+        raise HTTPException(status_code=404, detail="ไม่พบข้อมูลสำหรับการส่งออก")
+        
+    export_files = [] # list of (file_path, arcname)
+    
+    try:
+        # 1. จัดการการทำ Stereo Mix (Mastered)
+        if "mix" in stems:
+            stems_to_mix = ["drums.wav", "bass.wav", "other.wav"]
+            if os.path.exists(os.path.join(folder, "vocals_polished.wav")):
+                stems_to_mix.append("vocals_polished.wav")
+            else:
+                stems_to_mix.append("vocals.wav")
+                
+            mix = None
+            samplerate = None
+            
+            for target in stems_to_mix:
+                path = os.path.join(folder, target)
+                if os.path.exists(path):
+                    data, sr = sf.read(path)
+                    if samplerate is None:
+                        samplerate = sr
+                    if mix is None:
+                        mix = np.zeros_like(data)
+                    min_len = min(len(mix), len(data))
+                    mix[:min_len] += data[:min_len]
+            
+            if mix is not None:
+                max_val = np.max(np.abs(mix))
+                if max_val > 1.0:
+                    mix = mix / max_val
+                
+                mixed_path = os.path.join(folder, "mixed.wav")
+                sf.write(mixed_path, mix, samplerate)
+                
+                output_filename = f"mastered_{target_lufs}.wav"
+                output_path = os.path.join(folder, output_filename)
+                
+                await asyncio.to_thread(apply_lufs_mastering, mixed_path, output_path, target_lufs)
+                export_files.append((output_path, f"Mastered_Mix_{target_lufs}LUFS.wav"))
+                
+        # 2. จัดการ Stems อื่นๆ
+        for stem in ["vocals", "drums", "bass", "other"]:
+            if stem in stems:
+                filename = f"{stem}.wav"
+                if stem == "vocals" and os.path.exists(os.path.join(folder, "vocals_polished.wav")):
+                    filename = "vocals_polished.wav"
+                    
+                path = os.path.join(folder, filename)
+                if os.path.exists(path):
+                    export_files.append((path, f"{stem}.wav"))
+                    
+        if not export_files:
+            raise HTTPException(status_code=400, detail="กรุณาเลือกอย่างน้อย 1 รายการเพื่อ Export")
+            
+        # 3. ตรวจสอบจำนวนไฟล์ที่ส่งออก
+        if len(export_files) == 1:
+            file_path, arcname = export_files[0]
+            filename_only = os.path.basename(file_path)
+            return {
+                "status": "success", 
+                "type": "file",
+                "file_url": f"/separated/{safe_file_id}/{filename_only}",
+                "filename": arcname
+            }
+        else:
+            zip_filename = f"export_{target_lufs}.zip"
+            zip_path = os.path.join(folder, zip_filename)
+            
+            # ย้ายการทำงาน Zip เข้าไปทำใน thread แยก
+            def create_zip():
+                with zipfile.ZipFile(zip_path, "w") as zipf:
+                    for f_path, a_name in export_files:
+                        zipf.write(f_path, a_name)
+                        
+            await asyncio.to_thread(create_zip)
+            return {
+                "status": "success",
+                "type": "zip",
+                "file_url": f"/separated/{safe_file_id}/{zip_filename}",
+                "filename": "Exported_Tracks.zip"
+            }
+            
+    except HTTPException as http_exc:
+        raise http_exc
+    except Exception as e:
+        logger.error(f"Error exporting audio: {e}")
+        raise HTTPException(status_code=500, detail="เกิดข้อผิดพลาดในขั้นตอน Export")

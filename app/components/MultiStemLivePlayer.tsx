@@ -10,5 +10,5 @@ type Props = {
 export default function MultiStemLivePlayer({ fileId }: Props) {
     const apiBase = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
     const baseUrl = `${apiBase}/separated/${fileId}`;
-    return <AdvancedMultiTrackPlayer baseUrl={baseUrl} />;
+    return <AdvancedMultiTrackPlayer baseUrl={baseUrl} fileId={fileId} />;
 }

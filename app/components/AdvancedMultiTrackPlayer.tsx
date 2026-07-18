@@ -43,10 +43,11 @@ const STEM_THEME: Record<StemType, { wave: string; progress: string; accent: str
 
 type Props = {
   baseUrl: string;
+  fileId?: string; // เพิ่ม fileId สำหรับเรียก API ประมวลผล
 };
 
 // ตัวเล่นหลายแทร็กที่คุม WaveSurfer 4 ตัวให้เล่นและ seek ไปพร้อมกัน
-export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {
+export default function AdvancedMultiTrackPlayer({ baseUrl, fileId }: Props) {
   // เก็บ instance ของ WaveSurfer แยกตาม stem เพื่อให้สั่ง play, pause, seek และ setVolume ได้ทีหลัง
   const waveSurferRefs = useRef<Record<StemType, WaveSurfer | null>>({
     vocals: null,
@@ -83,6 +84,13 @@ export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {
     other: 0,
   });
 
+  // สถานะสำหรับ Vocal Polish
+  const [isVocalPolished, setIsVocalPolished] = useState(false);
+  const [isPolishing, setIsPolishing] = useState(false);
+
+  // สถานะสำหรับ Solo (เก็บได้ทีละ 1 แทร็ก)
+  const [soloedTrack, setSoloedTrack] = useState<StemType | null>(null);
+
   useEffect(() => {
     // สร้าง waveform player แยกสำหรับแต่ละ stem ทุกครั้งที่ base URL เปลี่ยน
     stems.forEach((stem) => {
@@ -109,8 +117,11 @@ export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {
         normalize: true,
       });
 
-      // โหลดไฟล์เสียงของ stem นี้จาก baseUrl ที่ส่งเข้ามา
-      ws.load(`${baseUrl}/${stem}.wav`);
+      // โหลดไฟล์เสียงของ stem นี้จาก baseUrl ที่ส่งเข้ามา (ถ้าเป็น vocals และถูก polish ให้ใช้ไฟล์ polished)
+      const audioUrl = (stem === "vocals" && isVocalPolished) 
+        ? `${baseUrl}/vocals_polished.wav`
+        : `${baseUrl}/${stem}.wav`;
+      ws.load(audioUrl);
       ws.on("ready", () => {
         // เมื่อไฟล์พร้อมใช้งานแล้วค่อยเก็บ instance ลง ref
         waveSurferRefs.current[stem] = ws;
@@ -146,18 +157,26 @@ export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {
         waveSurferRefs.current[stem]?.destroy();
       });
     };
-  }, [baseUrl]);
+  }, [baseUrl, isVocalPolished, fileId]);
 
   useEffect(() => {
-    // ทำให้สถานะ mute และ volume slider สะท้อนลงไปยัง WaveSurfer ของแต่ละแทร็กจริง
+    // ทำให้สถานะ mute, solo และ volume slider สะท้อนลงไปยัง WaveSurfer ของแต่ละแทร็กจริง
     stems.forEach((stem) => {
-      // ดึง player ของ stem นี้ออกมาเพื่ออัปเดตระดับเสียงจริง
       const ws = waveSurferRefs.current[stem];
       if (!ws) return;
-      // ถ้า mute ให้เสียงเป็น 0 ไม่งั้นแปลงค่าจาก 0-100 เป็น 0-1
-      ws.setVolume(mutedTracks[stem] ? 0 : trackVolumes[stem] / 100);
+      
+      let shouldPlay = true;
+      if (soloedTrack !== null) {
+        // ถ้ามีการโซโล่ แทร็กที่ตรงกับ soloedTrack เท่านั้นที่จะดัง
+        shouldPlay = soloedTrack === stem;
+      } else {
+        // ถ้าไม่มีการโซโล่ แทร็กที่ไม่ได้ถูก Mute จะดังปกติ
+        shouldPlay = !mutedTracks[stem];
+      }
+      
+      ws.setVolume(shouldPlay ? trackVolumes[stem] / 100 : 0);
     });
-  }, [mutedTracks, trackVolumes]);
+  }, [mutedTracks, trackVolumes, soloedTrack]);
 
   // ตัวคำนวณกลางสำหรับแปลงการลากบน waveform ให้เป็นตำแหน่ง seek
   const seekToPointer = (stem: StemType, clientX: number) => {
@@ -209,53 +228,53 @@ export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {
 
   const toggleMute = (stem: StemType) => {
     // สลับค่า mute ของ stem นี้จากค่าเดิม
-    const nextMuted = !mutedTracks[stem];
-    const ws = waveSurferRefs.current[stem];
+    setMutedTracks((prev) => ({ ...prev, [stem]: !prev[stem] }));
+  };
 
-    // อัปเดต state เพื่อให้ปุ่มและ label เปลี่ยนตาม
-    setMutedTracks((prev) => ({ ...prev, [stem]: nextMuted }));
-    if (ws) {
-      // ถ้า mute ให้เสียงเป็น 0 ไม่งั้นใช้ค่าจาก slider เดิม
-      ws.setVolume(nextMuted ? 0 : trackVolumes[stem] / 100);
-    }
+  const toggleSolo = (stem: StemType) => {
+    // สลับค่า solo ของ stem นี้ (ถ้าคลิกซ้ำให้ปิดโซโล่ ถ้าคลิกตัวอื่นให้สลับไปโซโล่ตัวใหม่แทน)
+    setSoloedTrack((prev) => (prev === stem ? null : stem));
   };
 
   const handleVolumeChange = (stem: StemType, value: number) => {
     // กันค่าที่หลุดช่วงจาก input โดยบังคับให้อยู่ระหว่าง 0 ถึง 100
     const nextVolume = Math.min(Math.max(value, 0), 100);
-    const ws = waveSurferRefs.current[stem];
 
     // เก็บค่าระดับเสียงใหม่ของ stem นี้
     setTrackVolumes((prev) => ({ ...prev, [stem]: nextVolume }));
     // ถ้าปรับจนเหลือ 0 ให้ถือว่า mute อัตโนมัติ
     setMutedTracks((prev) => ({ ...prev, [stem]: nextVolume === 0 }));
-    if (ws) {
-      // ส่งค่าระดับเสียงใหม่ไปให้ WaveSurfer ทันที
-      ws.setVolume(nextVolume === 0 ? 0 : nextVolume / 100);
+  };
+
+
+
+  const handleToggleVocalPolish = async () => {
+    if (!fileId) return;
+    
+    // ถ้าเคย polish แล้ว และกดอีกครั้งให้ปิด
+    if (isVocalPolished) {
+      setIsVocalPolished(false);
+      return;
+    }
+    
+    // ถ้ายังไม่เคย polish ให้เรียก API
+    setIsPolishing(true);
+    try {
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+      const res = await fetch(`${apiBase}/api/process/vocal-polish?file_id=${fileId}`, {
+        method: 'POST'
+      });
+      if (res.ok) {
+        setIsVocalPolished(true);
+      }
+    } catch (err) {
+      console.error("Failed to polish vocals:", err);
+    } finally {
+      setIsPolishing(false);
     }
   };
 
-  const handleDownload = async (stem: StemType) => {
-    try {
-      // ดาวน์โหลด stem จาก backend แล้วสั่ง browser ให้โหลดไฟล์ตามปกติ
-      const response = await fetch(`${baseUrl}/${stem}.wav`);
-      // แปลง response เป็น blob ก่อนสร้างไฟล์ดาวน์โหลด
-      const blob = await response.blob();
-      // สร้าง URL ชั่วคราวที่อ้างถึงไฟล์ในหน่วยความจำ
-      const url = URL.createObjectURL(blob);
-      // สร้างลิงก์ชั่วคราวแล้วสั่ง click เพื่อเริ่มดาวน์โหลด
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `${stem}.wav`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      // คืนหน่วยความจำหลังดาวน์โหลดเสร็จ
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("Download failed", error);
-    }
-  };
+
 
   return (
     // กรอบหลักของ multitrack player
@@ -300,13 +319,20 @@ export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {
                 </span>
               </div>
               <div className="flex gap-2">
-                {/* ปุ่มดาวน์โหลดไฟล์เสียงของ stem นี้ */}
-                <button
-                  onClick={() => handleDownload(stem)}
-                  className="cursor-pointer rounded-lg bg-[#E5A93D] px-3 py-1 text-xs font-semibold text-[#0A0A0A] hover:bg-[#F3C05D]"
-                >
-                  ดาวน์โหลด
-                </button>
+                {/* ปุ่ม ✨ AI Vocal Polish (เฉพาะ vocals) */}
+                {stem === "vocals" && (
+                  <button
+                    onClick={handleToggleVocalPolish}
+                    disabled={isPolishing}
+                    className={`cursor-pointer rounded-lg border px-3 py-1 text-xs font-semibold ${
+                      isVocalPolished
+                        ? "bg-purple-600/20 border-purple-500 text-purple-300"
+                        : "bg-[#1A1A1A] border-[#2A2A2A] text-[#F3F3F3] hover:border-purple-500 hover:text-purple-400"
+                    }`}
+                  >
+                    {isPolishing ? "กำลังประมวลผล..." : isVocalPolished ? "✨ ปิด AI Polish" : "✨ AI Vocal Polish"}
+                  </button>
+                )}
                 {/* ปุ่ม mute/unmute เฉพาะ stem นี้ */}
                 <button
                   onClick={() => toggleMute(stem)}
@@ -317,6 +343,17 @@ export default function AdvancedMultiTrackPlayer({ baseUrl }: Props) {
                   }`}
                 >
                   {mutedTracks[stem] ? "เปิดเสียง" : "ปิดเสียง"}
+                </button>
+                {/* ปุ่ม solo เฉพาะ stem นี้ */}
+                <button
+                  onClick={() => toggleSolo(stem)}
+                  className={`cursor-pointer rounded-lg border px-3 py-1 text-xs font-semibold transition ${
+                    soloedTrack === stem
+                      ? "bg-[#E5A93D]/20 border-[#E5A93D] text-[#E5A93D] shadow-[0_0_10px_rgba(229,169,61,0.2)]"
+                      : "bg-[#1A1A1A] border-[#2A2A2A] text-[#F3F3F3] hover:border-[#E5A93D]/50 hover:text-[#E5A93D]"
+                  }`}
+                >
+                  Solo
                 </button>
               </div>
             </div>

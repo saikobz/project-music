@@ -11,6 +11,7 @@ import AudioAnalysis from "./AudioAnalysis";
 import { AutoEqSettings } from "./settings/AutoEqSettings";
 import { CompressorSettings } from "./settings/CompressorSettings";
 import { PitchShiftSettings } from "./settings/PitchShiftSettings";
+import ExportMasterModal from "./ExportMasterModal";
 // ที่อยู่ของ backend และข้อจำกัดขนาดไฟล์ฝั่งหน้าเว็บ
 
 // ค่าตั้งต้นของ API และข้อจำกัดการอัปโหลด
@@ -131,6 +132,10 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
   const [fileId, setFileId] = useState<string | null>(null);
   const [zipUrl, setZipUrl] = useState<string | null>(null);
 
+  // สถานะสำหรับ Export Modal และ Mastering
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+
   // สถานะของ UI ล้วน ๆ เช่น banner ข้อความ, ผลวิเคราะห์, และ progress จำลอง
   // สถานะข้อความและการตอบสนองของ UI
   // ===== กลุ่ม state สำหรับสถานะของหน้า =====
@@ -142,6 +147,40 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
   const [progress, setProgress] = useState(0);
   const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  const handleExport = async (targetLufs: number, selectedStems: string[]) => {
+    if (!fileId) return;
+    setIsExporting(true);
+    try {
+      const queryParams = new URLSearchParams();
+      queryParams.append("file_id", fileId);
+      queryParams.append("target_lufs", targetLufs.toString());
+      selectedStems.forEach((stem) => queryParams.append("stems", stem));
+
+      const res = await fetch(`${API_BASE}/api/process/export?${queryParams.toString()}`, {
+        method: 'POST'
+      });
+      const data = await res.json();
+      if (data.status === "success") {
+        const url = data.file_url.startsWith("http") ? data.file_url : `${API_BASE}${data.file_url}`;
+        const fileRes = await fetch(url);
+        const blob = await fileRes.blob();
+        const downloadUrlLocal = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = downloadUrlLocal;
+        link.download = data.filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(downloadUrlLocal);
+        setIsExportModalOpen(false);
+      }
+    } catch (err) {
+      console.error("Export failed:", err);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   React.useEffect(() => {
     if (onHeightChange) {
@@ -692,13 +731,14 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
 
             {!loading && zipUrl && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <a
-                  href={zipUrl.startsWith("http") ? zipUrl : `${API_BASE}${zipUrl}`}
-                  download="separated.zip"
-                  className="block w-full text-center rounded-lg bg-[#1A1A1A] hover:bg-[#2A2A2A] border border-[#2A2A2A] hover:border-[#555555] text-[#F3F3F3] font-medium py-3 transition"
-                >
-                  Download All Stems (ZIP)
-                </a>
+                {fileId && (
+                  <button
+                    onClick={() => setIsExportModalOpen(true)}
+                    className="block w-full text-center rounded-lg bg-[#E5A93D] hover:bg-[#F3C05D] text-[#0A0A0A] font-semibold py-3 transition shadow-[0_0_10px_rgba(229,169,61,0.2)] cursor-pointer animate-pulse-subtle"
+                  >
+                    Export & Download Stems / Mix
+                  </button>
+                )}
                 {fileId && (
                   <a
                     href={`${API_BASE}/karaoke/${fileId}?export_format=${exportFormat}`}
@@ -710,6 +750,13 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                 )}
               </div>
             )}
+
+            <ExportMasterModal 
+              isOpen={isExportModalOpen} 
+              onClose={() => setIsExportModalOpen(false)} 
+              onExport={handleExport}
+              isExporting={isExporting}
+            />
 
             {!loading && downloadUrl && downloadFileName && !downloadFileName.endsWith(".zip") && (
               <div className="rounded-xl border border-[#2A2A2A] bg-[#121212] p-5 space-y-4 shadow-lg">
