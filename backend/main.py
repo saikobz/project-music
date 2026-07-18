@@ -240,19 +240,35 @@ async def download_zip(file_id: str):
     return JSONResponse(status_code=404, content={"status": "error", "message": "ไม่พบไฟล์ zip สำหรับดาวน์โหลด"})
 
 
-@app.get("/separated/{file_id}/{stem}.wav")
-async def get_stem(file_id: str, stem: str):
-    # ส่งคืน stem เดี่ยวให้ตัวเล่นหลายแทร็กเรียกไปเปิดทีละไฟล์
+@app.get("/separated/{file_id}/{filename}")
+async def get_separated_file(file_id: str, filename: str):
+    # ส่งคืนไฟล์ใด ๆ ในโฟลเดอร์ separated (เช่น wav, mp3, zip)
     safe_file_id = os.path.basename(file_id)
-    safe_stem = os.path.basename(stem)
-    filename = f"{safe_stem}.wav"
+    safe_filename = os.path.basename(filename)
     folder = os.path.join("separated", safe_file_id)
-    path = os.path.join(folder, filename)
+    path = os.path.join(folder, safe_filename)
 
     if os.path.exists(path):
-        # frontend ใช้ endpoint นี้โหลด stem เฉพาะตัวไปทำ multitrack playback
-        return FileResponse(path, media_type="audio/wav")
-    return JSONResponse(status_code=404, content={"status": "error", "message": f"ไม่พบไฟล์ {stem}.wav"})
+        # ตรวจสอบนามสกุลไฟล์เพื่อกำหนด media type และ headers ที่ถูกต้อง
+        ext = safe_filename.lower().split(".")[-1]
+        media_types = {
+            "wav": "audio/wav",
+            "mp3": "audio/mpeg",
+            "zip": "application/zip",
+            "json": "application/json"
+        }
+        media_type = media_types.get(ext, "application/octet-stream")
+        
+        # สำหรับไฟล์ zip หรือเมื่อต้องการบังคับดาวน์โหลด
+        if ext == "zip":
+            return FileResponse(
+                path,
+                media_type=media_type,
+                filename=safe_filename
+            )
+        return FileResponse(path, media_type=media_type)
+    return JSONResponse(status_code=404, content={"status": "error", "message": f"ไม่พบไฟล์ {filename}"})
+
 
 
 @app.get("/karaoke/{file_id}")

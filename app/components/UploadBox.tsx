@@ -736,26 +736,6 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                   )}
                 </div>
 
-                {/* ── Export Format – custom pill toggle ── */}
-                <div className="space-y-1.5">
-                  <p className="text-[10px] font-semibold text-[#555555] uppercase tracking-[0.12em]">Export Format</p>
-                  <div className="grid grid-cols-2 gap-1.5 p-1 rounded-lg bg-[#080808] border border-[#1A1A1A]">
-                    {([{ value: "wav", label: "WAV", sub: "Lossless" }, { value: "mp3", label: "MP3", sub: "320 kbps" }] as const).map((fmt) => (
-                      <button
-                        key={fmt.value}
-                        onClick={() => setExportFormat(fmt.value)}
-                        className={`flex flex-col items-center py-2 rounded-md text-xs font-medium border transition-all duration-150 cursor-pointer ${
-                          exportFormat === fmt.value
-                            ? "bg-[#1A1A1A] border-[#E5A93D]/50 text-[#E5A93D] shadow-[0_0_8px_rgba(229,169,61,0.12)]"
-                            : "border-transparent text-[#444444] hover:text-[#777777]"
-                        }`}
-                      >
-                        <span className="font-bold text-sm">{fmt.label}</span>
-                        <span className="text-[10px] opacity-60 mt-0.5">{fmt.sub}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
 
                 {/* ── Execute Button ── */}
                 {(() => {
