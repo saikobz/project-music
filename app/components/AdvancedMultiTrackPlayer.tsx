@@ -277,150 +277,163 @@ export default function AdvancedMultiTrackPlayer({ baseUrl, fileId }: Props) {
 
 
   return (
-    // กรอบหลักของ multitrack player
-    <div className="space-y-4 rounded-xl border border-[#2A2A2A] bg-[#121212] p-5 shadow-lg">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 font-semibold text-[#EDE9FE]">
-          <span className="text-lg">เครื่องเล่นหลายสเตม</span>
-          <span>Stem</span>
+    <div className="space-y-6 rounded-2xl border border-[#222] bg-[#0A0A0A] p-6 shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
+      <div className="flex items-center justify-between border-b border-[#222] pb-5">
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#E5A93D]/20 to-[#E5A93D]/5 border border-[#E5A93D]/20">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[#E5A93D]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+            </svg>
+          </div>
+          <div>
+            <h2 className="text-xl font-bold tracking-tight text-white">Stem Mixer</h2>
+            <p className="text-xs font-medium uppercase tracking-widest text-[#8E8E8E] mt-0.5">Studio Grade Playback</p>
+          </div>
         </div>
-        <div className="flex gap-2">
-          {/* ปุ่มควบคุมการเล่น/หยุดของทุก stem พร้อมกัน */}
-          <button
-            onClick={togglePlay}
-            className="rounded-lg bg-[#E5A93D] px-3 py-2 text-sm font-semibold text-[#0A0A0A] hover:bg-[#F3C05D] cursor-pointer"
-          >
-            {isPlaying ? "หยุดชั่วคราว" : "เล่นทั้งหมด"}
-          </button>
-          {/* ปุ่มรีเซ็ตทุก stem กลับไปตำแหน่งเริ่มต้น */}
+        <div className="flex gap-3">
           <button
             onClick={resetAll}
-            className="rounded-lg border border-[#2A2A2A] bg-[#1A1A1A] px-3 py-2 text-sm font-semibold text-[#F3F3F3] hover:bg-[#2A2A2A] cursor-pointer"
+            className="rounded-xl border border-[#333] bg-[#121212] px-5 py-2.5 text-sm font-semibold text-[#8E8E8E] transition-all hover:border-[#555] hover:text-white"
           >
-            เริ่มต้นใหม่
+            Reset
+          </button>
+          <button
+            onClick={togglePlay}
+            className={`flex items-center justify-center gap-2 rounded-xl px-6 py-2.5 text-sm font-bold transition-all min-w-[120px] ${
+              isPlaying
+                ? "bg-[#222] text-white hover:bg-[#333] shadow-inner"
+                : "bg-gradient-to-b from-[#E5A93D] to-[#D6962A] text-[#0A0A0A] shadow-[0_0_20px_rgba(229,169,61,0.2)] hover:shadow-[0_0_25px_rgba(229,169,61,0.4)] hover:to-[#E5A93D]"
+            }`}
+          >
+            {isPlaying ? "Pause" : "Play All"}
           </button>
         </div>
       </div>
 
-      <div className="space-y-3">
-        {/* วนสร้าง UI แยกให้แต่ละ stem */}
-        {stems.map((stem) => (
-          <div
-            key={stem}
-            className={`space-y-2 rounded-xl border p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] bg-gradient-to-br ${STEM_THEME[stem].panel}`}
-            style={{ borderColor: `${STEM_THEME[stem].accent}44` }}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex flex-col">
-                {/* แสดงชื่อ stem และเวลาเล่นปัจจุบันเทียบกับเวลารวม */}
-                <span className="capitalize font-semibold text-[#F8FAFC]">{stem}</span>
-                <span className="text-xs" style={{ color: STEM_THEME[stem].accent }}>
-                  เวลา: {formatTime(currentTimes[stem])} / {durations[stem] ? formatTime(durations[stem]) : "-"}
-                </span>
-              </div>
-              <div className="flex gap-2">
-                {/* ปุ่ม ✨ AI Vocal Polish (เฉพาะ vocals) */}
-                {stem === "vocals" && (
-                  <button
-                    onClick={handleToggleVocalPolish}
-                    disabled={isPolishing}
-                    className={`cursor-pointer rounded-lg border px-3 py-1 text-xs font-semibold ${
-                      isVocalPolished
-                        ? "bg-purple-600/20 border-purple-500 text-purple-300"
-                        : "bg-[#1A1A1A] border-[#2A2A2A] text-[#F3F3F3] hover:border-purple-500 hover:text-purple-400"
-                    }`}
-                  >
-                    {isPolishing ? "กำลังประมวลผล..." : isVocalPolished ? "✨ ปิด AI Polish" : "✨ AI Vocal Polish"}
-                  </button>
-                )}
-                {/* ปุ่ม mute/unmute เฉพาะ stem นี้ */}
-                <button
-                  onClick={() => toggleMute(stem)}
-                  className={`cursor-pointer rounded-lg border px-3 py-1 text-xs font-semibold ${
-                    mutedTracks[stem]
-                      ? "bg-[#1A1A1A] border-[#2A2A2A] text-[#F3F3F3]"
-                      : "bg-[#331111] border-[#551111] text-[#FF4444]"
-                  }`}
-                >
-                  {mutedTracks[stem] ? "เปิดเสียง" : "ปิดเสียง"}
-                </button>
-                {/* ปุ่ม solo เฉพาะ stem นี้ */}
-                <button
-                  onClick={() => toggleSolo(stem)}
-                  className={`cursor-pointer rounded-lg border px-3 py-1 text-xs font-semibold transition ${
-                    soloedTrack === stem
-                      ? "bg-[#E5A93D]/20 border-[#E5A93D] text-[#E5A93D] shadow-[0_0_10px_rgba(229,169,61,0.2)]"
-                      : "bg-[#1A1A1A] border-[#2A2A2A] text-[#F3F3F3] hover:border-[#E5A93D]/50 hover:text-[#E5A93D]"
-                  }`}
-                >
-                  Solo
-                </button>
-              </div>
-            </div>
+      <div className="space-y-4">
+        {stems.map((stem) => {
+          const isMuted = mutedTracks[stem];
+          const isSoloed = soloedTrack === stem;
+          const isDimmed = soloedTrack !== null && !isSoloed;
 
+          return (
             <div
-              className="rounded-lg border bg-[#08101C]/85 px-3 py-2"
-              style={{ borderColor: `${STEM_THEME[stem].accent}33` }}
+              key={stem}
+              className={`relative overflow-hidden rounded-2xl border transition-all duration-300 ${
+                isDimmed 
+                  ? "border-[#111] opacity-30 grayscale" 
+                  : isSoloed 
+                    ? "border-[#E5A93D]/50 bg-[#121212] shadow-[0_0_30px_rgba(229,169,61,0.05)]" 
+                    : "border-[#222] bg-[#111] hover:border-[#333]"
+              }`}
             >
-              {/* ส่วนควบคุมระดับเสียงของ stem นี้ */}
-              <div className="mb-2 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide">
-                <span>Volume</span>
-                <span
-                  className="rounded-full border bg-[#0B1220] px-2 py-0.5 text-[#EDE9FE]"
-                  style={{ borderColor: `${STEM_THEME[stem].accent}33`, color: STEM_THEME[stem].accent }}
-                >
-                  {mutedTracks[stem] ? "Mute" : `${trackVolumes[stem]}%`}
-                </span>
-              </div>
-              <div className="flex items-center gap-3">
-                <span
-                  className="rounded-md border bg-[#0B1220] px-2 py-1 text-[10px] font-semibold"
-                  style={{ borderColor: `${STEM_THEME[stem].accent}33`, color: STEM_THEME[stem].accent }}
-                >
-                  VOL
-                </span>
-                {/* slider จะเรียก handleVolumeChange ทุกครั้งที่ผู้ใช้ลากปรับค่า */}
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="1"
-                  value={trackVolumes[stem]}
-                  onChange={(event) => handleVolumeChange(stem, Number(event.target.value))}
-                  className="h-2 w-full cursor-pointer rounded-full bg-[#312E81]"
-                  style={{ accentColor: STEM_THEME[stem].progress }}
-                  aria-label={`ปรับระดับเสียงของ ${stem}`}
-                />
+              {/* Subtle background tint based on stem color */}
+              <div 
+                className="absolute inset-0 opacity-[0.03]" 
+                style={{ backgroundColor: STEM_THEME[stem].accent }} 
+              />
+              
+              <div className="relative flex flex-col md:flex-row p-4 gap-5">
+                {/* Control Panel (Left) */}
+                <div className="flex w-full md:w-56 flex-shrink-0 flex-col justify-between border-b border-[#222] pb-4 md:border-b-0 md:border-r md:pb-0 md:pr-5">
+                  <div className="flex items-center justify-between mb-4 mt-1">
+                    <span className="text-[13px] font-bold uppercase tracking-widest text-white drop-shadow-md">
+                      {stem}
+                    </span>
+                    <span className="text-[11px] font-mono font-medium text-[#8E8E8E] bg-[#000] px-2 py-0.5 rounded-md border border-[#222]">
+                      {formatTime(currentTimes[stem])}
+                    </span>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => toggleMute(stem)}
+                      className={`flex-1 rounded-lg border py-2 text-[11px] font-bold tracking-wider transition-all ${
+                        isMuted
+                          ? "border-[#FF4444] bg-[#FF4444]/10 text-[#FF4444] shadow-[0_0_10px_rgba(255,68,68,0.15)]"
+                          : "border-[#333] bg-[#0A0A0A] text-[#8E8E8E] hover:border-[#555] hover:text-white"
+                      }`}
+                    >
+                      MUTE
+                    </button>
+                    <button
+                      onClick={() => toggleSolo(stem)}
+                      className={`flex-1 rounded-lg border py-2 text-[11px] font-bold tracking-wider transition-all ${
+                        isSoloed
+                          ? "border-[#E5A93D] bg-[#E5A93D] text-[#0A0A0A] shadow-[0_0_15px_rgba(229,169,61,0.3)]"
+                          : "border-[#333] bg-[#0A0A0A] text-[#8E8E8E] hover:border-[#E5A93D]/50 hover:text-[#E5A93D]"
+                      }`}
+                    >
+                      SOLO
+                    </button>
+                    {stem === "vocals" && (
+                      <button
+                        onClick={handleToggleVocalPolish}
+                        disabled={isPolishing}
+                        title="AI Vocal Polish"
+                        className={`flex-1 flex items-center justify-center rounded-lg border py-2 transition-all ${
+                          isVocalPolished
+                            ? "border-purple-500 bg-purple-500/15 text-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.15)]"
+                            : "border-[#333] bg-[#0A0A0A] text-[#8E8E8E] hover:border-purple-500 hover:text-purple-400"
+                        }`}
+                      >
+                        {isPolishing ? (
+                          <span className="h-3 w-3 animate-spin rounded-full border-2 border-purple-500 border-t-transparent"></span>
+                        ) : (
+                          <span className="text-sm leading-none">✨</span>
+                        )}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Waveform & Volume (Right) */}
+                <div className="flex flex-1 flex-col justify-center gap-3">
+                  <div className="flex items-center gap-4 rounded-xl border border-[#222] bg-[#050505] p-2 px-4">
+                    <div className="flex items-center gap-1.5 w-14">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-[#555]" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clipRule="evenodd" /></svg>
+                      <span className="text-[10px] font-bold text-white font-mono">{String(trackVolumes[stem]).padStart(3, "0")}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="1"
+                      value={trackVolumes[stem]}
+                      onChange={(event) => handleVolumeChange(stem, Number(event.target.value))}
+                      className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-[#333]"
+                      style={{ accentColor: STEM_THEME[stem].progress }}
+                      aria-label={`Volume for ${stem}`}
+                    />
+                  </div>
+                  
+                  <div
+                    id={`waveform-${stem}`}
+                    className="h-[72px] w-full cursor-pointer rounded-xl border border-[#222] bg-[#050505] shadow-inner relative overflow-hidden"
+                    onPointerDown={(e) => {
+                      draggingStemRef.current = stem;
+                      seekToPointer(stem, e.clientX);
+                    }}
+                    onPointerMove={(e) => {
+                      if (draggingStemRef.current === stem) {
+                        seekToPointer(stem, e.clientX);
+                      }
+                    }}
+                    onPointerUp={() => {
+                      draggingStemRef.current = null;
+                    }}
+                    onPointerLeave={() => {
+                      draggingStemRef.current = null;
+                    }}
+                  >
+                    {/* Dark gradient overlay for a polished look */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/40 pointer-events-none z-10" />
+                  </div>
+                </div>
               </div>
             </div>
-
-            {/* div นี้เป็นพื้นที่ให้ WaveSurfer วาด waveform ลงไป */}
-            <div
-              id={`waveform-${stem}`}
-              className="rounded-xl border bg-[#06101A] px-2 py-2 cursor-pointer shadow-[inset_0_1px_12px_rgba(255,255,255,0.03)]"
-              style={{ borderColor: `${STEM_THEME[stem].accent}40` }}
-              onPointerDown={(e) => {
-                // เริ่ม drag seek และ seek ไปยังจุดที่กดทันที
-                draggingStemRef.current = stem;
-                seekToPointer(stem, e.clientX);
-              }}
-              onPointerMove={(e) => {
-                // ถ้ายังลากอยู่ ให้ seek ตาม pointer แบบต่อเนื่อง
-                if (draggingStemRef.current === stem) {
-                  seekToPointer(stem, e.clientX);
-                }
-              }}
-              onPointerUp={() => {
-                // จบการลากเมื่อปล่อย pointer
-                draggingStemRef.current = null;
-              }}
-              onPointerLeave={() => {
-                // กัน pointer หลุดออกนอกพื้นที่แล้วค้างสถานะลากไว้
-                draggingStemRef.current = null;
-              }}
-            />
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

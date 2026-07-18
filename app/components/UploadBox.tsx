@@ -148,12 +148,14 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
   const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const handleExport = async (targetLufs: number, selectedStems: string[]) => {
+  const handleExport = async (exportType: string, format: string, targetLufs: number, selectedStems: string[]) => {
     if (!fileId) return;
     setIsExporting(true);
     try {
       const queryParams = new URLSearchParams();
       queryParams.append("file_id", fileId);
+      queryParams.append("export_type", exportType);
+      queryParams.append("export_format", format);
       queryParams.append("target_lufs", targetLufs.toString());
       selectedStems.forEach((stem) => queryParams.append("stems", stem));
 
@@ -723,8 +725,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
             {!loading && analysis && <AudioAnalysis data={analysis} />}
 
             {!loading && fileId && (
-              <div className="rounded-xl border border-[#2A2A2A] bg-[#121212] p-5 shadow-lg">
-                <h3 className="text-sm font-medium text-[#8E8E8E] uppercase tracking-wider mb-4">Stem Mixer</h3>
+              <div>
                 <MultiStemLivePlayer fileId={fileId} />
               </div>
             )}
@@ -734,17 +735,23 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                 {fileId && (
                   <button
                     onClick={() => setIsExportModalOpen(true)}
-                    className="block w-full text-center rounded-lg bg-[#E5A93D] hover:bg-[#F3C05D] text-[#0A0A0A] font-semibold py-3 transition shadow-[0_0_10px_rgba(229,169,61,0.2)] cursor-pointer animate-pulse-subtle"
+                    className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[#E5A93D] to-[#D6962A] px-4 py-3.5 font-bold text-[#0A0A0A] shadow-[0_4px_15px_rgba(229,169,61,0.2)] transition-all hover:shadow-[0_6px_25px_rgba(229,169,61,0.35)] hover:from-[#F3C05D] hover:to-[#E5A93D]"
                   >
-                    Export & Download Stems / Mix
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                    Export & Download
                   </button>
                 )}
                 {fileId && (
                   <a
                     href={`${API_BASE}/karaoke/${fileId}?export_format=${exportFormat}`}
                     download={`karaoke.${exportFormat}`}
-                    className="block w-full text-center rounded-lg bg-[#1A1A1A] hover:bg-[#E5A93D]/20 border border-[#E5A93D]/50 hover:border-[#E5A93D] text-[#E5A93D] font-medium py-3 transition shadow-[0_0_10px_rgba(229,169,61,0.1)] hover:shadow-[0_0_15px_rgba(229,169,61,0.2)]"
+                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#2A2A2A] bg-[#121212] px-4 py-3.5 font-semibold text-white shadow-[0_4px_15px_rgba(0,0,0,0.2)] transition-all hover:border-[#E5A93D]/50 hover:text-[#E5A93D] hover:bg-[#1A1A1A]"
                   >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 opacity-70" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.938l3-8V5a1 1 0 00-1-1H4a1 1 0 00-1 1v1.938l3 8V17a3 3 0 006 0v-2.062z" clipRule="evenodd" />
+                    </svg>
                     Download Karaoke
                   </a>
                 )}
