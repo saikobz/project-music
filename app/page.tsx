@@ -4,9 +4,8 @@ import React, { useState } from "react";
 import { Navbar } from "./components/Navbar";
 import { Footer } from "./components/Footer";
 import UploadBox from "./components/UploadBox";
-import EqKnowledgePanel from "./components/EqKnowledgePanel";
 
-// หน้าแรกของระบบ ประกอบจากคู่มือ EQ แบบลอย, กล่องอัปโหลด, และการ์ด preset อ้างอิง
+// หน้าแรกของระบบ ประกอบจากกล่องอัปโหลดและการแสดงผลเป็นหลัก
 export default function Home() {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -15,7 +14,6 @@ export default function Home() {
       isExpanded ? "overflow-y-auto" : "md:h-screen md:overflow-hidden overflow-y-auto"
     }`}>
       <Navbar />
-      <EqKnowledgePanel />
 
       <main className={`mx-auto flex-grow w-full px-4 py-4 md:py-6 space-y-4 md:space-y-6 flex flex-col justify-center transition-all duration-300 ${
         isExpanded ? "max-w-7xl" : "max-w-5xl"
