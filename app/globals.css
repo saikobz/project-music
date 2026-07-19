@@ -1,8 +1,22 @@
-/* นำเข้า utility layers ของ Tailwind เพื่อใช้ทั้งแอป */
 @import "tailwindcss";
 
-/* Keyframe สำหรับ shimmer animation บนปุ่ม Execute ขณะประมวลผล */
-@keyframes shimmer {
-  0%   { background-position: 200% center; }
-  100% { background-position: -200% center; }
+@theme {
+  --animate-audiowave: audiowave 1.2s ease-in-out infinite;
+  --animate-fade-in-up: fade-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-shimmer: shimmer 2s linear infinite;
+
+  @keyframes audiowave {
+    0%, 100% { transform: scaleY(0.3); }
+    50% { transform: scaleY(1); }
+  }
+
+  @keyframes fade-in-up {
+    0% { opacity: 0; transform: translateY(12px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 200% center; }
+    100% { background-position: -200% center; }
+  }
 }

@@ -789,10 +789,12 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                       <span className="relative flex items-center justify-center gap-2">
                         {loading ? (
                           <>
-                            <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
-                              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeOpacity="0.3"/>
-                              <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/>
-                            </svg>
+                            <div className="flex items-end gap-[3px] h-3.5 w-5 pb-[1px]">
+                              <div className="w-[3px] h-full bg-white rounded-full origin-bottom animate-audiowave" style={{ animationDelay: "0.1s" }} />
+                              <div className="w-[3px] h-full bg-white rounded-full origin-bottom animate-audiowave" style={{ animationDelay: "0.3s" }} />
+                              <div className="w-[3px] h-full bg-white rounded-full origin-bottom animate-audiowave" style={{ animationDelay: "0.5s" }} />
+                              <div className="w-[3px] h-full bg-white rounded-full origin-bottom animate-audiowave" style={{ animationDelay: "0.2s" }} />
+                            </div>
                             Processing…
                           </>
                         ) : moduleStyle.label}
@@ -809,16 +811,27 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                       // แต่ละ segment จะสว่างถ้า progress เกิน threshold
                       const threshold = ((i + 1) / 20) * 100;
                       const lit = progress >= threshold;
-                      const segColor = action === "separate" ? "bg-[#A78BFA]"
-                        : action === "eq-ai" ? "bg-[#22D3EE]"
-                        : action === "compressor" ? "bg-[#E5A93D]"
-                        : "bg-[#34D399]";
+                      
+                      let segClass = "bg-[#1C1C1C]";
+                      if (lit) {
+                        if (loading) {
+                          const gradientColors = action === "separate" ? "from-[#A78BFA] via-[#C084FC] to-[#A78BFA]"
+                            : action === "eq-ai" ? "from-[#22D3EE] via-[#67e8f9] to-[#22D3EE]"
+                            : action === "compressor" ? "from-[#E5A93D] via-[#FBBF24] to-[#E5A93D]"
+                            : "from-[#34D399] via-[#6EE7B7] to-[#34D399]";
+                          segClass = `bg-gradient-to-r ${gradientColors} bg-[length:200%_auto] animate-shimmer`;
+                        } else {
+                          const flatColor = action === "separate" ? "bg-[#A78BFA]"
+                            : action === "eq-ai" ? "bg-[#22D3EE]"
+                            : action === "compressor" ? "bg-[#E5A93D]"
+                            : "bg-[#34D399]";
+                          segClass = `${flatColor} ${i > 15 ? "opacity-100" : i > 10 ? "opacity-90" : "opacity-80"}`;
+                        }
+                      }
                       return (
                         <div
                           key={i}
-                          className={`flex-1 transition-all duration-150 ${
-                            lit ? `${segColor} ${i > 15 ? "opacity-100" : i > 10 ? "opacity-90" : "opacity-80"}` : "bg-[#1C1C1C]"
-                          }`}
+                          className={`flex-1 transition-all duration-150 ${segClass}`}
                         />
                       );
                     })}
@@ -877,38 +890,59 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
               </>
             )}
 
-            {!loading && analysis && <AudioAnalysis data={analysis} />}
+            {!loading && (analysis || fileId || downloadUrl) && (
+              <div className="animate-fade-in-up space-y-4">
+                {analysis && <AudioAnalysis data={analysis} />}
 
-            {!loading && fileId && (
-              <div>
-                <MultiStemLivePlayer fileId={fileId} />
-              </div>
-            )}
-
-            {!loading && zipUrl && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {fileId && (
-                  <button
-                    onClick={() => setIsExportModalOpen(true)}
-                    className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[#E5A93D] to-[#D6962A] px-4 py-3.5 font-bold text-[#0A0A0A] shadow-[0_4px_15px_rgba(229,169,61,0.2)] transition-all hover:shadow-[0_6px_25px_rgba(229,169,61,0.35)] hover:from-[#F3C05D] hover:to-[#E5A93D]"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                    Export & Download
-                  </button>
+                  <div>
+                    <MultiStemLivePlayer fileId={fileId} />
+                  </div>
                 )}
-                {fileId && (
-                  <a
-                    href={`${API_BASE}/karaoke/${fileId}?export_format=${exportFormat}`}
-                    download={`karaoke.${exportFormat}`}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#2A2A2A] bg-[#121212] px-4 py-3.5 font-semibold text-white shadow-[0_4px_15px_rgba(0,0,0,0.2)] transition-all hover:border-[#E5A93D]/50 hover:text-[#E5A93D] hover:bg-[#1A1A1A]"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 opacity-70" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.938l3-8V5a1 1 0 00-1-1H4a1 1 0 00-1 1v1.938l3 8V17a3 3 0 006 0v-2.062z" clipRule="evenodd" />
-                    </svg>
-                    Download Karaoke
-                  </a>
+
+                {zipUrl && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {fileId && (
+                      <button
+                        onClick={() => setIsExportModalOpen(true)}
+                        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[#E5A93D] to-[#D6962A] px-4 py-3.5 font-bold text-[#0A0A0A] shadow-[0_4px_15px_rgba(229,169,61,0.2)] transition-all hover:shadow-[0_6px_25px_rgba(229,169,61,0.35)] hover:from-[#F3C05D] hover:to-[#E5A93D]"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                        Export & Download
+                      </button>
+                    )}
+                    {fileId && (
+                      <a
+                        href={`${API_BASE}/karaoke/${fileId}?export_format=${exportFormat}`}
+                        download={`karaoke.${exportFormat}`}
+                        className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#2A2A2A] bg-[#121212] px-4 py-3.5 font-semibold text-white shadow-[0_4px_15px_rgba(0,0,0,0.2)] transition-all hover:border-[#E5A93D]/50 hover:text-[#E5A93D] hover:bg-[#1A1A1A]"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 opacity-70" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.938l3-8V5a1 1 0 00-1-1H4a1 1 0 00-1 1v1.938l3 8V17a3 3 0 006 0v-2.062z" clipRule="evenodd" />
+                        </svg>
+                        Download Karaoke
+                      </a>
+                    )}
+                  </div>
+                )}
+
+                {downloadUrl && downloadFileName && !downloadFileName.endsWith(".zip") && (
+                  <div className="rounded-2xl border border-[#222] bg-[#0A0A0A] p-5 space-y-5 shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
+                    <div>
+                      <WaveformPlayer audioUrl={downloadUrl} />
+                    </div>
+                    <button
+                      onClick={() => setIsSingleExportModalOpen(true)}
+                      className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[#E5A93D] to-[#D6962A] px-4 py-3.5 font-bold text-[#0A0A0A] shadow-[0_4px_15px_rgba(229,169,61,0.2)] transition-all hover:shadow-[0_6px_25px_rgba(229,169,61,0.35)] hover:from-[#F3C05D] hover:to-[#E5A93D]"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                      Export & Download
+                    </button>
+                  </div>
                 )}
               </div>
             )}
@@ -927,23 +961,6 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
               isExporting={isExporting}
               currentFormat={exportFormat}
             />
-
-            {!loading && downloadUrl && downloadFileName && !downloadFileName.endsWith(".zip") && (
-              <div className="rounded-2xl border border-[#222] bg-[#0A0A0A] p-5 space-y-5 shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
-                <div>
-                  <WaveformPlayer audioUrl={downloadUrl} />
-                </div>
-                <button
-                  onClick={() => setIsSingleExportModalOpen(true)}
-                  className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[#E5A93D] to-[#D6962A] px-4 py-3.5 font-bold text-[#0A0A0A] shadow-[0_4px_15px_rgba(229,169,61,0.2)] transition-all hover:shadow-[0_6px_25px_rgba(229,169,61,0.35)] hover:from-[#F3C05D] hover:to-[#E5A93D]"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
-                  Export & Download
-                </button>
-              </div>
-            )}
           </div>
         </>
       )}
