@@ -17,6 +17,9 @@ from typing import Tuple
 from fastapi import FastAPI, UploadFile, File, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
+from contextlib import asynccontextmanager
+
+from backend.cleanup_task import periodic_cleanup
 
 # import ฟังก์ชันประมวลผลจากโมดูลย่อยของ backend
 from backend.process_audio import separate_audio, analyze_audio, pitch_shift_audio
@@ -34,11 +37,25 @@ from backend.auto_mastering import polish_vocal_file, apply_lufs_mastering
 
 # ไฟล์นี้เป็นจุดรวมการตั้งค่า FastAPI และประกาศ endpoint หลักของระบบทั้งหมด
 
+# เวลาหลังประมวลผลเสร็จที่ไฟล์ชั่วคราวจะถูกลบทิ้งอัตโนมัติ
+cleanup_ttl = int(os.getenv("SEPARATE_TTL_SECONDS", "1200"))  # 20 นาทีลบ
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # เริ่มต้น background task กวาดลบไฟล์ขยะ
+    cleanup_task = asyncio.create_task(periodic_cleanup(interval_seconds=300, ttl_seconds=cleanup_ttl))
+    yield
+    # เมื่อเซิร์ฟเวอร์ปิดการทำงาน
+    cleanup_task.cancel()
 
 # การตั้งค่าแอปพลิเคชัน
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 # logger ใช้บันทึก error หรือสถานะสำคัญของ backend ระหว่างรันจริง
 logger = logging.getLogger(__name__)
+
+# จำกัดจำนวนการประมวลผล AI พร้อมกันเพื่อป้องกัน CPU/RAM เต็ม
+MAX_CONCURRENT_TASKS = 2
+processing_semaphore = asyncio.Semaphore(MAX_CONCURRENT_TASKS)
 
 # โฟลเดอร์ทำงานและข้อจำกัดของไฟล์
 UPLOAD_DIR = "uploads"
@@ -49,8 +66,7 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 allow_origins_env = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000")
 # แยกค่า origin ที่คั่นด้วย comma ให้เป็น list สำหรับ CORS middleware
 allow_origins = [origin.strip() for origin in allow_origins_env.split(",") if origin.strip()]
-# เวลาหลังประมวลผลเสร็จที่ไฟล์ชั่วคราวจะถูกลบทิ้งอัตโนมัติ
-cleanup_ttl = int(os.getenv("SEPARATE_TTL_SECONDS", "1200"))  # 20 นาทีลบ
+
 # จำกัดขนาดไฟล์อัปโหลดสูงสุดเพื่อกันใช้หน่วยความจำมากเกินไป
 MAX_UPLOAD_BYTES = 100 * 1024 * 1024  # 100MB
 
@@ -90,11 +106,8 @@ async def save_upload(
     if ext.lower() != ".wav":
         raise HTTPException(status_code=400, detail="รองรับเฉพาะไฟล์ WAV (.wav)")
 
-    # อ่านข้อมูลไฟล์ทั้งหมดจาก UploadFile มาเป็น bytes
-    data = await file.read()
-
-    # ป้องกันการอัปโหลดไฟล์ใหญ่เกินที่ระบบกำหนด
-    if len(data) > MAX_UPLOAD_BYTES:
+    # ป้องกันการอัปโหลดไฟล์ใหญ่เกินที่ระบบกำหนด (ตรวจจาก Header ก่อนถ้ามี)
+    if file.size is not None and file.size > MAX_UPLOAD_BYTES:
         raise HTTPException(status_code=400, detail="ไฟล์ต้องมีขนาดไม่เกิน 100MB")
 
     # สร้าง id ไม่ซ้ำเพื่อกันชื่อไฟล์ชนกันและใช้อ้างอิงไฟล์นี้ในขั้นตอนถัดไป
@@ -106,8 +119,14 @@ async def save_upload(
     # สร้าง path เต็มของไฟล์ที่จะถูกบันทึกลงในโฟลเดอร์ uploads
     input_path = os.path.join(upload_dir, stored_name)
 
-    with open(input_path, "wb") as f:
-        f.write(data)
+    # เขียนไฟล์ลงดิสก์แบบสตรีมมิ่งผ่าน shutil.copyfileobj ลดปัญหาการกิน RAM 100% ตอนอัปโหลดไฟล์ใหญ่
+    with open(input_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+        
+    # เช็คขนาดไฟล์อีกครั้งหลังเขียนเสร็จ (ป้องกันกรณีขนาดไม่ส่งมาใน Header)
+    if os.path.getsize(input_path) > MAX_UPLOAD_BYTES:
+        os.remove(input_path)
+        raise HTTPException(status_code=400, detail="ไฟล์ต้องมีขนาดไม่เกิน 100MB")
 
     # ตัดช่วงเสียงถ้ามีการกำหนดช่วงเวลา
     if trim_start is not None or trim_end is not None:
@@ -125,25 +144,7 @@ async def save_upload(
     return file_id, input_path
 
 
-def schedule_cleanup(path: str, delay: int = 0):
-    # ลบไฟล์หรือโฟลเดอร์แบบหน่วงเวลาใน background เพื่อไม่ให้ request หลักต้องรอ
 
-
-    def _cleanup():
-        try:
-            # ถ้าเป็นโฟลเดอร์ให้ลบทั้งโฟลเดอร์ ถ้าเป็นไฟล์ให้ลบเฉพาะไฟล์นั้น
-            if os.path.isdir(path):
-                shutil.rmtree(path, ignore_errors=True)
-            elif os.path.exists(path):
-                os.remove(path)
-        except Exception as exc:
-            # cleanup ไม่ควรทำให้เซิร์ฟเวอร์ล่ม จึงแค่ log ปัญหาแล้วจบ
-            print(f"cleanup failed for {path}: {exc}")
-
-    # ใช้ Timer แยก background thread เพื่อรอแล้วค่อยลบทีหลัง
-    timer = threading.Timer(delay, _cleanup)
-    timer.daemon = True
-    timer.start()
 
 
 def convert_to_mp3(wav_path: str) -> str:
@@ -176,8 +177,9 @@ async def separate(
         # โฟลเดอร์ผลลัพธ์จะแยกตาม file_id เพื่อไม่ให้แต่ละงานชนกัน
         output_dir = os.path.join("separated", file_id)
         os.makedirs(output_dir, exist_ok=True)
-        # รันงานแยก stem ใน thread แยก เพื่อไม่ block event loop ของ FastAPI
-        await asyncio.to_thread(separate_audio, input_path, output_dir)
+        # รันงานแยก stem ใน thread แยก โดยรอคิวผ่าน semaphore เพื่อไม่ให้ CPU โหลดหนักเกินไป
+        async with processing_semaphore:
+            await asyncio.to_thread(separate_audio, input_path, output_dir)
 
         # แปลงเป็น MP3 ถ้าผู้ใช้เลือก
         if export_format == "mp3":
@@ -201,9 +203,6 @@ async def separate(
         # ลบไฟล์อัปโหลดต้นฉบับทันทีเพราะไม่ต้องใช้ต่อแล้ว
         if os.path.exists(input_path):
             os.remove(input_path)
-        # เก็บ zip และโฟลเดอร์ผลลัพธ์ไว้ชั่วคราวให้ผู้ใช้โหลดได้ก่อน แล้วค่อยลบตาม TTL
-        schedule_cleanup(zip_path, cleanup_ttl)
-        schedule_cleanup(output_dir, cleanup_ttl)
 
         # ส่ง URL ที่ frontend ใช้เรียกดาวน์โหลด zip ภายหลัง
         return JSONResponse(
@@ -353,16 +352,16 @@ async def apply_eq_ai(
         # ตั้งชื่อไฟล์ผลลัพธ์ให้สะท้อนว่าเป็นงาน EQ AI และใช้ genre อะไร
         output_filename = f"{file_id}_eq_ai_{model_id}_{genre}.wav"
         output_path = os.path.join("eq_applied", output_filename)
-        # inference รันใน worker thread เพื่อไม่ block FastAPI main loop
-        result_path = await asyncio.to_thread(
-            apply_auto_eq_file,
-            input_path,
-            output_path,
-            genre,
-            delta_clamp_db,
-            model_id,
-        )
-        schedule_cleanup(result_path, cleanup_ttl)
+        # inference รันใน worker thread โดยรอคิวผ่าน semaphore เพื่อไม่ให้ CPU โหลดหนักเกินไป
+        async with processing_semaphore:
+            result_path = await asyncio.to_thread(
+                apply_auto_eq_file,
+                input_path,
+                output_path,
+                genre,
+                delta_clamp_db,
+                model_id,
+            )
 
         if export_format == "mp3":
             result_path = await asyncio.to_thread(convert_to_mp3, result_path)
@@ -420,23 +419,23 @@ async def apply_compressor(
     try:
         # งาน compressor ใช้ทั้ง preset และค่าที่ผู้ใช้ override ผ่าน query string
         _, input_path = await save_upload(file, trim_start=trim_start, trim_end=trim_end)
-        # เรียกใช้ฟังก์ชัน DSP ใน thread แยก เพราะเป็นงานคำนวณและอ่านเขียนไฟล์
-        output_path = await asyncio.to_thread(
-            apply_compression,
-            input_path,
-            strength,
-            genre,
-            "compressed",
-            threshold=threshold,
-            ratio=ratio,
-            attack=attack,
-            release=release,
-            knee=knee,
-            makeup_gain=makeup_gain,
-            dry_wet=dry_wet,
-            output_ceiling=output_ceiling,
-        )
-        schedule_cleanup(output_path, cleanup_ttl)
+        # เรียกใช้ฟังก์ชัน DSP ใน thread แยก โดยรอคิวผ่าน semaphore
+        async with processing_semaphore:
+            output_path = await asyncio.to_thread(
+                apply_compression,
+                input_path,
+                strength,
+                genre,
+                "compressed",
+                threshold=threshold,
+                ratio=ratio,
+                attack=attack,
+                release=release,
+                knee=knee,
+                makeup_gain=makeup_gain,
+                dry_wet=dry_wet,
+                output_ceiling=output_ceiling,
+            )
 
         if export_format == "mp3":
             output_path = await asyncio.to_thread(convert_to_mp3, output_path)
@@ -474,9 +473,9 @@ async def pitch_shift(
         output_filename = f"{file_id}_pitch.wav"
         output_path = os.path.join(UPLOAD_DIR, output_filename)
         # ฟังก์ชัน pitch_shift_audio จะคืน path ของไฟล์ผลลัพธ์กลับมา
-        # ใช้ to_thread เช่นเดียวกับ endpoint อื่นที่ทำงานประมวลผลเสียงหนัก ๆ
-        result_path = await asyncio.to_thread(pitch_shift_audio, input_path, steps, output_path)
-        schedule_cleanup(result_path, cleanup_ttl)
+        # ใช้ to_thread โดยรอคิวผ่าน semaphore
+        async with processing_semaphore:
+            result_path = await asyncio.to_thread(pitch_shift_audio, input_path, steps, output_path)
 
         if export_format == "mp3":
             result_path = await asyncio.to_thread(convert_to_mp3, result_path)
@@ -506,8 +505,9 @@ async def analyze(
     try:
         # endpoint นี้คืนข้อมูลวิเคราะห์เป็น JSON ไม่ได้สร้างไฟล์เสียงใหม่
         _, input_path = await save_upload(file, trim_start=trim_start, trim_end=trim_end)
-        # วิเคราะห์เสียงใน thread แยก แล้วนำผลลัพธ์ JSON กลับมาโดยตรง
-        result = await asyncio.to_thread(analyze_audio, input_path)
+        # วิเคราะห์เสียงใน thread แยก โดยรอคิวผ่าน semaphore
+        async with processing_semaphore:
+            result = await asyncio.to_thread(analyze_audio, input_path)
         return JSONResponse(content=result)
     except HTTPException as http_exc:
         raise http_exc
@@ -533,7 +533,8 @@ async def process_vocal_polish(file_id: str = Query(...)):
     output_path = os.path.join(folder, output_filename)
     
     try:
-        await asyncio.to_thread(polish_vocal_file, input_path, output_path)
+        async with processing_semaphore:
+            await asyncio.to_thread(polish_vocal_file, input_path, output_path)
         # เราส่งกลับเป็น URL เดียวกันกับที่ใช้ดึง stem แต่เปลี่ยนชื่อไฟล์
         return {"status": "success", "file_url": f"/separated/{safe_file_id}/{output_filename}"}
     except Exception as e:
@@ -599,7 +600,8 @@ async def process_export(
                 output_filename = f"custom_mix_{target_lufs}.wav"
                 output_path = os.path.join(folder, output_filename)
                 
-                await asyncio.to_thread(apply_lufs_mastering, mixed_path, output_path, target_lufs)
+                async with processing_semaphore:
+                    await asyncio.to_thread(apply_lufs_mastering, mixed_path, output_path, target_lufs)
                 
                 if export_format == "mp3":
                     output_path = await asyncio.to_thread(convert_to_mp3, output_path)
