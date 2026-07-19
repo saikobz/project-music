@@ -5,6 +5,7 @@
 "use client";
 import React, { useRef, useState } from "react";
 import axios from "axios";
+import { toast } from "sonner";
 import WaveformPlayer from "./WaveformPlayer";
 import MultiStemLivePlayer from "./MultiStemLivePlayer";
 import AudioAnalysis from "./AudioAnalysis";
@@ -164,10 +165,16 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
       const res = await fetch(`${API_BASE}/api/process/export?${queryParams.toString()}`, {
         method: 'POST'
       });
+      if (!res.ok) {
+        throw new Error(`เซิร์ฟเวอร์ส่งข้อผิดพลาด (${res.status})`);
+      }
       const data = await res.json();
       if (data.status === "success") {
         const url = data.file_url.startsWith("http") ? data.file_url : `${API_BASE}${data.file_url}`;
         const fileRes = await fetch(url);
+        if (!fileRes.ok) {
+          throw new Error("ดาวน์โหลดไฟล์เสียงที่ประมวลผลแล้วไม่สำเร็จ");
+        }
         const blob = await fileRes.blob();
         const downloadUrlLocal = URL.createObjectURL(blob);
         const link = document.createElement("a");
@@ -178,9 +185,13 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
         document.body.removeChild(link);
         URL.revokeObjectURL(downloadUrlLocal);
         setIsExportModalOpen(false);
+        toast.success("ส่งออกไฟล์เสียงและเริ่มดาวน์โหลดสำเร็จ");
+      } else {
+        throw new Error(data.message || "เกิดข้อผิดพลาดในการส่งออกไฟล์");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Export failed:", err);
+      toast.error(err.message || "การส่งออกไฟล์ล้มเหลว กรุณาลองใหม่อีกครั้ง");
     } finally {
       setIsExporting(false);
     }
@@ -231,14 +242,19 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
     if (!selected) return;
     const ext = selected.name.toLowerCase().split(".").pop();
     if (ext !== "wav") {
-      setErrorMessage("รองรับเฉพาะไฟล์ WAV (.wav)");
+      const msg = "รองรับเฉพาะไฟล์ WAV (.wav) เท่านั้น";
+      setErrorMessage(msg);
+      toast.error(msg);
       return;
     }
     if (selected.size > MAX_SIZE_BYTES) {
-      setErrorMessage("ไฟล์ต้องมีขนาดไม่เกิน 100MB");
+      const msg = "ไฟล์ต้องมีขนาดไม่เกิน 100MB";
+      setErrorMessage(msg);
+      toast.error(msg);
       return;
     }
     setFile(selected);
+    toast.success(`โหลดไฟล์ ${selected.name} สำเร็จ`);
   };
 
   const handleDrop = (e: React.DragEvent<HTMLLabelElement>) => {
@@ -325,6 +341,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
     try {
       let response;
       let suffix = "";
+      let successMsg = "ประมวลผลเสร็จแล้ว";
 
       // งานแยก stem จะได้ทั้ง file id และ URL สำหรับดาวน์โหลด ZIP
       // แตก flow ตาม action เพื่อให้ UI ตัวเดียวรองรับหลาย endpoint
@@ -339,7 +356,8 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
         const { file_id, zip_url } = response.data;
         setFileId(file_id);
         setZipUrl(zip_url);
-        setSuccessMessage("แยกเสียงเสร็จแล้ว ดาวน์โหลด ZIP หรือลองเล่นทีละสเตมได้เลย");
+        successMsg = "แยกเสียงเสร็จแล้ว ดาวน์โหลด ZIP หรือลองเล่นทีละสเตมได้เลย";
+        setSuccessMessage(successMsg);
         setStatusText("กำลังเตรียมไฟล์สเตม...");
       }
 
@@ -362,7 +380,8 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
         const url = window.URL.createObjectURL(new Blob([response.data]));
         setDownloadUrl(url);
         suffix = `_eq_ai_${autoEqModel}_${genre}_${deltaClampDb}db`;
-        setSuccessMessage(`Auto-EQ (${selectedAutoEqModel.label}) completed successfully.`);
+        successMsg = `Auto-EQ (${selectedAutoEqModel.label}) ประมวลผลเสร็จสิ้น`;
+        setSuccessMessage(successMsg);
         setStatusText(`Running Auto-EQ with ${selectedAutoEqModel.label}...`);
       }
 
@@ -392,7 +411,8 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
         const url = window.URL.createObjectURL(new Blob([response.data]));
         setDownloadUrl(url);
         suffix = `_compressed_${strength}`;
-        setSuccessMessage("ประมวลผล Compressor เสร็จแล้ว");
+        successMsg = "ประมวลผล Compressor เสร็จแล้ว";
+        setSuccessMessage(successMsg);
         setStatusText("กำลังสร้างไฟล์ Compressor...");
       }
 
@@ -410,7 +430,8 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
         const url = window.URL.createObjectURL(new Blob([response.data]));
         setDownloadUrl(url);
         suffix = `_pitch_${pitchSteps}`;
-        setSuccessMessage("ประมวลผล Pitch Shift เสร็จแล้ว");
+        successMsg = "ประมวลผล Pitch Shift เสร็จแล้ว";
+        setSuccessMessage(successMsg);
         setStatusText("กำลังสร้างไฟล์ Pitch Shift...");
       }
 
@@ -446,7 +467,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
       setProcessingTime(`${minutes} นาที ${seconds} วินาที`);
       setProgress(100);
       setStatusText("เสร็จแล้ว! ดาวน์โหลดหรือเล่นไฟล์ได้เลย");
-      setSuccessMessage((prev) => prev || "ประมวลผลเสร็จแล้ว");
+      toast.success(successMsg);
     } catch (err: any) {
       if (axios.isCancel(err)) {
         console.log("Request canceled by user or refresh");
@@ -467,6 +488,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
         }
       }
       setErrorMessage(message);
+      toast.error(message);
       setStatusText(null);
       setProgress(100);
     } finally {
