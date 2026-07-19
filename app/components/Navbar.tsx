@@ -2,9 +2,6 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import axios from "axios";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
 
 // รายการเมนูหลักของ Navbar
 const NAV_LINKS = [
@@ -17,23 +14,8 @@ const NAV_LINKS = [
 
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
-  const [apiOnline, setApiOnline] = useState<boolean | null>(null);
   // สถานะเปิด/ปิดเมนูสำหรับมือถือ
   const [mobileOpen, setMobileOpen] = useState(false);
-
-  useEffect(() => {
-    const checkStatus = async () => {
-      try {
-        const res = await axios.get(`${API_BASE}/health`, { timeout: 3000 });
-        setApiOnline(res.data?.status === "ok");
-      } catch {
-        setApiOnline(false);
-      }
-    };
-    checkStatus();
-    const interval = setInterval(checkStatus, 10000);
-    return () => clearInterval(interval);
-  }, []);
 
   // ปิดเมนูมือถือเมื่อเปลี่ยนหน้า
   useEffect(() => {
@@ -69,17 +51,8 @@ export const Navbar: React.FC = () => {
           })}
         </nav>
 
-        {/* API Status + Hamburger */}
+        {/* Hamburger */}
         <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-1.5 rounded-full bg-[#111111] px-3 py-1 border border-[#1E1E1E] text-xs font-medium">
-            <span className={`h-2 w-2 rounded-full transition-all duration-500 ${
-              apiOnline === null ? "bg-amber-500 shadow-[0_0_6px_#f59e0b]"
-              : apiOnline ? "bg-emerald-500 shadow-[0_0_6px_#10b981]"
-              : "bg-rose-500 shadow-[0_0_6px_#f43f5e]"
-            }`} />
-            <span className="text-[#555555]">{apiOnline === null ? "Checking…" : apiOnline ? "Online" : "Offline"}</span>
-          </div>
-
           {/* ปุ่ม Hamburger สำหรับมือถือ */}
           <button
             className="md:hidden p-2 rounded-md text-[#555555] hover:text-[#F3F3F3] hover:bg-[#111111] transition cursor-pointer"
