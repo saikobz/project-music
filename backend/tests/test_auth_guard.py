@@ -11,9 +11,13 @@ class TestAuthGuard(unittest.TestCase):
 
     def test_free_tier_exceeded_quota(self):
         with self.assertRaises(HTTPException) as cm:
-            validate_tier_and_quota(user_tier="FREE", used_quota=1, model_type="LSTM")
+            validate_tier_and_quota(user_tier="FREE", used_quota=3, model_type="LSTM")
         self.assertEqual(cm.exception.status_code, 403)
         self.assertIn("Monthly quota reached", cm.exception.detail)
+
+    def test_free_tier_within_quota(self):
+        # Should not raise exception when used_quota is 2 (< 3)
+        validate_tier_and_quota(user_tier="FREE", used_quota=2, model_type="LSTM")
 
     def test_pitch_shift_range_limit_free_tier(self):
         with self.assertRaises(HTTPException) as cm:

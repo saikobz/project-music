@@ -11,7 +11,7 @@
 HarmoniQ requires a robust subscription and usage quota management system to monetize music processing services. The system targets the Thai market using **Omise (Opn Payments)** as the sole payment gateway.
 
 ### Key Goals
-- **3-Tier Subscription Model:** Free, Basic (99 THB/mo), Pro (299 THB/mo).
+- **3-Tier Subscription Model:** Free (3 songs/mo), Basic (99 THB/mo, 15 songs/mo), Pro (299 THB/mo, Unlimited).
 - **Hybrid Payment Processing:** Automated monthly credit/debit card recurring billing via Omise Schedule API + Manual monthly PromptPay QR Code renewal.
 - **Quota & Feature Restrictions:** Control song limits per month and restrict high-tier features (e.g., AutoEQ CNN model locked for Free tier users, Pitch Shift ranges, Compressor capabilities).
 - **Seamless Auth Integration:** NextAuth.js (Auth.js) session tokens with Prisma ORM database.
@@ -22,13 +22,13 @@ HarmoniQ requires a robust subscription and usage quota management system to mon
 
 | Feature / Model | 🆓 Free Tier | 🥈 Basic Tier (99 THB/mo) | 🥇 Pro Tier (299 THB/mo) |
 | :--- | :---: | :---: | :---: |
-| **Monthly Song Separation Quota** | 1 song / month (max 3 min) | 15 songs / month | **Unlimited** |
+| **Monthly Song Separation Quota** | 3 songs / month (max 3 min) | 15 songs / month | **Unlimited** |
 | **AutoEQ - LSTM Model** | ✅ Allowed (uses quota) | ✅ Allowed | ✅ Allowed |
 | **AutoEQ - CNN Model** | 🔒 **Locked (HTTP 403)** | ✅ Allowed | ✅ Allowed |
 | **Audio Compressor** | Basic Presets | Studio Compressor (Custom Knee/Gain) | Multiband Pro & Auto Knee |
 | **Pitch Shift Range** | Limited (±2 Semitones) | Expanded (±6 Semitones) | Full Studio (±12 Semitones / Full Octave) |
 | **Audio Export Quality** | MP3 / Standard WAV | Lossless WAV | Lossless WAV (High bitrate) |
-| **AI Auto Mastering** | 🔒 Locked | ✅ Allowed | ✅ Full Features |
+| **AI Auto Mastering** | 🔒 Locked | 🔒 Locked | ✅ Full Features (LUFS & Peak Mastering) |
 
 ---
 
@@ -74,7 +74,7 @@ model UsageQuota {
   id           String   @id @default(cuid())
   userId       String
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  monthlyQuota Int      // Free=1, Basic=15, Pro=-1 (Unlimited)
+  monthlyQuota Int      // Free=3, Basic=15, Pro=-1 (Unlimited)
   usedCount    Int      @default(0)
   periodStart  DateTime
   periodEnd    DateTime

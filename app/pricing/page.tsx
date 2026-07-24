@@ -27,12 +27,12 @@ export default function PricingPage() {
               <h3 className="text-xl font-bold mb-2 text-[#34D399]">Free</h3>
               <div className="text-3xl font-extrabold mb-4 text-[#F3F3F3]">0 THB</div>
               <ul className="text-[#8E8E8E] text-sm space-y-3 mb-6">
-                <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> 1 เพลง / เดือน (ความยาวไม่เกิน 3 นาที)</li>
+                <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> **3 เพลง / เดือน** (ความยาวไม่เกิน 3 นาที)</li>
                 <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> AutoEQ - โมเดล **LSTM**</li>
                 <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> Audio Compressor (Basic Presets)</li>
                 <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> Pitch Shift (จำกัดช่วง ±2 Semitones)</li>
                 <li className="flex items-center gap-2 text-[#555555] line-through"><span>✗</span> AutoEQ - โมเดล **CNN** (Locked)</li>
-                <li className="flex items-center gap-2 text-[#555555] line-through"><span>✗</span> AI Auto Mastering</li>
+                <li className="flex items-center gap-2 text-[#555555] line-through"><span>✗</span> LUFS & Peak Auto Mastering</li>
               </ul>
             </div>
             <button className="w-full py-2.5 bg-[#1A1A1A] text-[#666666] font-medium rounded-lg cursor-not-allowed">
@@ -54,7 +54,7 @@ export default function PricingPage() {
                 <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> Studio Compressor (ปรับแต่ง Knee, Gain, Dry/Wet)</li>
                 <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> Pitch Shift (ขยายช่วง ±6 Semitones)</li>
                 <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> Export ไฟล์ WAV Lossless</li>
-                <li className="flex items-center gap-2 text-[#555555] line-through"><span>✗</span> AI Auto Mastering</li>
+                <li className="flex items-center gap-2 text-[#555555] line-through"><span>✗</span> LUFS & Peak Auto Mastering</li>
               </ul>
             </div>
             <button
@@ -76,7 +76,7 @@ export default function PricingPage() {
                 <li className="flex items-center gap-2"><span className="text-purple-400">✓</span> Pro Multiband Compressor & Auto Knee</li>
                 <li className="flex items-center gap-2"><span className="text-purple-400">✓</span> Full Studio Pitch Shift (±12 Semitones / Full Octave)</li>
                 <li className="flex items-center gap-2"><span className="text-purple-400">✓</span> Export ไฟล์ WAV Lossless (High-bitrate)</li>
-                <li className="flex items-center gap-2"><span className="text-purple-400">✓</span> **AI Auto Mastering แบบจัดเต็ม**</li>
+                <li className="flex items-center gap-2"><span className="text-purple-400">✓</span> **LUFS & Peak Auto Mastering แบบจัดเต็ม**</li>
               </ul>
             </div>
             <button

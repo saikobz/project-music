@@ -28,14 +28,14 @@ def validate_tier_and_quota(user_tier: str, used_quota: int, model_type: str = "
             detail=f"Pitch shift of {pitch_shift_semitones} semitones exceeds allowed limit for {tier_upper} tier (Max ±{max_allowed})."
         )
 
-    # 3. Quota Check (Free=1, Basic=15, Pro=-1 Unlimited)
+    # 3. Quota Check (Free=3, Basic=15, Pro=-1 Unlimited)
     tier_limits = {
-        "FREE": 1,
+        "FREE": 3,
         "BASIC": 15,
         "PRO": -1
     }
 
-    limit = tier_limits.get(tier_upper, 1)
+    limit = tier_limits.get(tier_upper, 3)
     if limit != -1 and used_quota >= limit:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

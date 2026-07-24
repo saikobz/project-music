@@ -20,8 +20,8 @@ export async function POST(req: Request) {
           create: { userId, tier, status: "ACTIVE", currentPeriodEnd: periodEnd },
         });
 
-        // Reset Quota
-        const maxQuota = tier === "PRO" ? -1 : tier === "BASIC" ? 15 : 1;
+        // Reset Quota (Free=3, Basic=15, Pro=-1)
+        const maxQuota = tier === "PRO" ? -1 : tier === "BASIC" ? 15 : 3;
         await prisma.usageQuota.create({
           data: {
             userId,
