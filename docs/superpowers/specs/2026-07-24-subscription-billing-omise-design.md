@@ -13,7 +13,7 @@ HarmoniQ requires a robust subscription and usage quota management system to mon
 ### Key Goals
 - **3-Tier Subscription Model:** Free, Basic (99 THB/mo), Pro (299 THB/mo).
 - **Hybrid Payment Processing:** Automated monthly credit/debit card recurring billing via Omise Schedule API + Manual monthly PromptPay QR Code renewal.
-- **Quota & Feature Restrictions:** Control song limits per month and restrict high-tier features (e.g., AutoEQ CNN model locked for Free tier users).
+- **Quota & Feature Restrictions:** Control song limits per month and restrict high-tier features (e.g., AutoEQ CNN model locked for Free tier users, Pitch Shift ranges, Compressor capabilities).
 - **Seamless Auth Integration:** NextAuth.js (Auth.js) session tokens with Prisma ORM database.
 
 ---
@@ -25,6 +25,8 @@ HarmoniQ requires a robust subscription and usage quota management system to mon
 | **Monthly Song Separation Quota** | 1 song / month (max 3 min) | 15 songs / month | **Unlimited** |
 | **AutoEQ - LSTM Model** | ✅ Allowed (uses quota) | ✅ Allowed | ✅ Allowed |
 | **AutoEQ - CNN Model** | 🔒 **Locked (HTTP 403)** | ✅ Allowed | ✅ Allowed |
+| **Audio Compressor** | Basic Presets | Studio Compressor (Custom Knee/Gain) | Multiband Pro & Auto Knee |
+| **Pitch Shift Range** | Limited (±2 Semitones) | Expanded (±6 Semitones) | Full Studio (±12 Semitones / Full Octave) |
 | **Audio Export Quality** | MP3 / Standard WAV | Lossless WAV | Lossless WAV (High bitrate) |
 | **AI Auto Mastering** | 🔒 Locked | ✅ Allowed | ✅ Full Features |
 
@@ -58,9 +60,9 @@ model Subscription {
   id                 String             @id @default(cuid())
   userId             String             @unique
   user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tier               SubscriptionTier   @default(FREE)
-  status             SubscriptionStatus @default(ACTIVE)
-  paymentMethod      PaymentMethod?
+  tier               String             @default("FREE")
+  status             String             @default("ACTIVE")
+  paymentMethod      String?
   omiseScheduleId    String?            // For Card Auto-recurring schedule
   currentPeriodStart DateTime           @default(now())
   currentPeriodEnd   DateTime?
@@ -131,11 +133,11 @@ sequenceDiagram
     API->>DB: Update Subscription Status & Reset Quota
     
     User->>PY: Call /process-audio with JWT Header
-    PY->>DB: Verify Tier & Quota & Model Permission (CNN vs LSTM)
+    PY->>DB: Verify Tier & Quota & Model Permission (CNN vs LSTM & Pitch Shift Range)
     alt Validation Passed
         PY-->>User: Audio Processing Result
     else Validation Failed
-        PY-->>User: 403 Forbidden (Quota exceeded / Model locked)
+        PY-->>User: 403 Forbidden (Quota exceeded / Model locked / Range exceeded)
     end
 ```
 
@@ -157,6 +159,7 @@ sequenceDiagram
 1. `POST /process-audio`
    - Checks `Authorization: Bearer <jwt_token>` decoded session.
    - Restricts `model_type == "CNN"` when `tier == FREE`.
+   - Restricts Pitch Shift range > ±2 semitones when `tier == FREE`.
    - Rejects request when `usedQuota >= maxQuota` (unless unlimited).
 
 ---

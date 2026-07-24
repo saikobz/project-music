@@ -1,8 +1,8 @@
 from fastapi import HTTPException, status
 
-def validate_tier_and_quota(user_tier: str, used_quota: int, model_type: str = "LSTM"):
+def validate_tier_and_quota(user_tier: str, used_quota: int, model_type: str = "LSTM", pitch_shift_semitones: int = 0):
     """
-    Validates user tier permissions and usage quotas for music separation and AutoEQ.
+    Validates user tier permissions and usage quotas for music separation, AutoEQ, Compressor, and Pitch Shifting.
     Python 3.10 compatible.
     """
     tier_upper = (user_tier or "FREE").upper()
@@ -15,7 +15,20 @@ def validate_tier_and_quota(user_tier: str, used_quota: int, model_type: str = "
             detail="AutoEQ CNN model requires Basic or Pro subscription. Please upgrade to unlock."
         )
 
-    # 2. Quota Check (Free=1, Basic=15, Pro=-1 Unlimited)
+    # 2. Pitch Shift Range Check
+    max_pitch_shifts = {
+        "FREE": 2,
+        "BASIC": 6,
+        "PRO": 12
+    }
+    max_allowed = max_pitch_shifts.get(tier_upper, 2)
+    if abs(pitch_shift_semitones) > max_allowed:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Pitch shift of {pitch_shift_semitones} semitones exceeds allowed limit for {tier_upper} tier (Max ±{max_allowed})."
+        )
+
+    # 3. Quota Check (Free=1, Basic=15, Pro=-1 Unlimited)
     tier_limits = {
         "FREE": 1,
         "BASIC": 15,

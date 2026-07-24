@@ -16,7 +16,7 @@ export default function PricingPage() {
           <p className="text-xs font-semibold tracking-[0.2em] text-[#34D399] uppercase">Subscription Plans</p>
           <h1 className="text-4xl font-extrabold tracking-tight"> HarmoniQ Plans & Pricing</h1>
           <p className="text-[#8E8E8E] max-w-2xl mx-auto text-sm leading-relaxed">
-            เลือกแพ็กเกจที่เหมาะสำหรับการแยกแทร็กเสียง และการมิกซ์เสียงด้วย AI AutoEQ (LSTM & CNN)
+            เลือกแพ็กเกจที่เหมาะสำหรับการแยกแทร็กเสียง, AI AutoEQ, Compressor และ Pitch Shifting
           </p>
         </div>
 
@@ -28,8 +28,10 @@ export default function PricingPage() {
               <div className="text-3xl font-extrabold mb-4 text-[#F3F3F3]">0 THB</div>
               <ul className="text-[#8E8E8E] text-sm space-y-3 mb-6">
                 <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> 1 เพลง / เดือน (ความยาวไม่เกิน 3 นาที)</li>
-                <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> AutoEQ - โมเดล LSTM</li>
-                <li className="flex items-center gap-2 text-[#555555] line-through"><span>✗</span> AutoEQ - โมเดล CNN (Locked)</li>
+                <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> AutoEQ - โมเดล **LSTM**</li>
+                <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> Audio Compressor (Basic Presets)</li>
+                <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> Pitch Shift (จำกัดช่วง ±2 Semitones)</li>
+                <li className="flex items-center gap-2 text-[#555555] line-through"><span>✗</span> AutoEQ - โมเดล **CNN** (Locked)</li>
                 <li className="flex items-center gap-2 text-[#555555] line-through"><span>✗</span> AI Auto Mastering</li>
               </ul>
             </div>
@@ -49,6 +51,8 @@ export default function PricingPage() {
               <ul className="text-[#CCCCCC] text-sm space-y-3 mb-6">
                 <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> 15 เพลง / เดือน</li>
                 <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> AutoEQ ได้ทั้งโมเดล **LSTM & CNN**</li>
+                <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> Studio Compressor (ปรับแต่ง Knee, Gain, Dry/Wet)</li>
+                <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> Pitch Shift (ขยายช่วง ±6 Semitones)</li>
                 <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> Export ไฟล์ WAV Lossless</li>
                 <li className="flex items-center gap-2 text-[#555555] line-through"><span>✗</span> AI Auto Mastering</li>
               </ul>
@@ -69,6 +73,8 @@ export default function PricingPage() {
               <ul className="text-[#CCCCCC] text-sm space-y-3 mb-6">
                 <li className="flex items-center gap-2"><span className="text-purple-400">✓</span> **ไม่จำกัดจำนวนเพลง (Unlimited)**</li>
                 <li className="flex items-center gap-2"><span className="text-purple-400">✓</span> ใช้ได้ทุกโมเดล (LSTM & CNN)</li>
+                <li className="flex items-center gap-2"><span className="text-purple-400">✓</span> Pro Multiband Compressor & Auto Knee</li>
+                <li className="flex items-center gap-2"><span className="text-purple-400">✓</span> Full Studio Pitch Shift (±12 Semitones / Full Octave)</li>
                 <li className="flex items-center gap-2"><span className="text-purple-400">✓</span> Export ไฟล์ WAV Lossless (High-bitrate)</li>
                 <li className="flex items-center gap-2"><span className="text-purple-400">✓</span> **AI Auto Mastering แบบจัดเต็ม**</li>
               </ul>
