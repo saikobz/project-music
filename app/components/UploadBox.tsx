@@ -357,7 +357,6 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
         setFileId(file_id);
         setZipUrl(zip_url);
         successMsg = "แยกเสียงเสร็จแล้ว ดาวน์โหลด ZIP หรือลองเล่นทีละสเตมได้เลย";
-        setSuccessMessage(successMsg);
         setStatusText("กำลังเตรียมไฟล์สเตม...");
       }
 
@@ -381,7 +380,6 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
         setDownloadUrl(url);
         suffix = `_eq_ai_${autoEqModel}_${genre}_${deltaClampDb}db`;
         successMsg = `Auto-EQ (${selectedAutoEqModel.label}) ประมวลผลเสร็จสิ้น`;
-        setSuccessMessage(successMsg);
         setStatusText(`Running Auto-EQ with ${selectedAutoEqModel.label}...`);
       }
 
@@ -412,7 +410,6 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
         setDownloadUrl(url);
         suffix = `_compressed_${strength}`;
         successMsg = "ประมวลผล Compressor เสร็จแล้ว";
-        setSuccessMessage(successMsg);
         setStatusText("กำลังสร้างไฟล์ Compressor...");
       }
 
@@ -431,7 +428,6 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
         setDownloadUrl(url);
         suffix = `_pitch_${pitchSteps}`;
         successMsg = "ประมวลผล Pitch Shift เสร็จแล้ว";
-        setSuccessMessage(successMsg);
         setStatusText("กำลังสร้างไฟล์ Pitch Shift...");
       }
 
@@ -467,6 +463,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
       setProcessingTime(`${minutes} นาที ${seconds} วินาที`);
       setProgress(100);
       setStatusText("เสร็จแล้ว! ดาวน์โหลดหรือเล่นไฟล์ได้เลย");
+      setSuccessMessage(successMsg);
       toast.success(successMsg);
     } catch (err: any) {
       if (axios.isCancel(err)) {
@@ -854,7 +851,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                     <span className="text-xs text-red-400 leading-snug">{errorMessage}</span>
                   </div>
                 )}
-                {successMessage && (
+                {!loading && successMessage && (
                   <div className={`flex items-start gap-2 rounded-lg border px-3 py-2.5 ${
                     action === "separate" ? "border-[#A78BFA]/30 bg-[#A78BFA]/10"
                     : action === "eq-ai" ? "border-[#22D3EE]/30 bg-[#22D3EE]/10"
