@@ -2,7 +2,7 @@ jest.mock("@auth/prisma-adapter", () => ({
   PrismaAdapter: jest.fn(),
 }));
 
-import { authOptions } from "../app/api/auth/[...nextauth]/route";
+import { authOptions } from "../lib/auth";
 
 describe("NextAuth Session Callback", () => {
   it("should enrich session with user tier and subscription status", async () => {

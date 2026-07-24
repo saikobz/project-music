@@ -2,7 +2,7 @@ jest.mock("@auth/prisma-adapter", () => ({
   PrismaAdapter: jest.fn(),
 }));
 
-import { authOptions } from "../app/api/auth/[...nextauth]/route";
+import { authOptions } from "../lib/auth";
 
 describe("Multi-Auth Providers Test", () => {
   it("should configure Credentials, Google, Facebook, and LINE providers", () => {
