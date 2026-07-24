@@ -24,7 +24,11 @@ export default function Home() {
             </div>
 
             <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight max-w-4xl mx-auto">
-              แยกแทร็กเสียงดนตรีและมาสเตอริ่งด้วย <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">AI อัจฉริยะ</span>
+              <span className="inline-block">แยกแทร็กเสียงดนตรี</span>{" "}
+              <span className="inline-block">และมาสเตอริ่ง</span>{" "}
+              <span className="inline-block bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
+                ด้วย AI อัจฉริยะ
+              </span>
             </h1>
 
             <p className="text-base md:text-xl text-[#999999] max-w-2xl mx-auto font-light leading-relaxed">
