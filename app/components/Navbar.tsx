@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import UserMenu from "./UserMenu";
 
 // รายการเมนูหลักของ Navbar
 const NAV_LINKS = [
@@ -51,8 +52,10 @@ export const Navbar: React.FC = () => {
           })}
         </nav>
 
-        {/* Hamburger */}
+        {/* User Menu & Hamburger */}
         <div className="flex items-center gap-3">
+          <UserMenu />
+
           {/* ปุ่ม Hamburger สำหรับมือถือ */}
           <button
             className="md:hidden p-2 rounded-md text-[#555555] hover:text-[#F3F3F3] hover:bg-[#111111] transition cursor-pointer"
