@@ -16,8 +16,8 @@ export function Footer() {
               </div>
               <span>HarmoniQ</span>
             </div>
-            <p className="text-xs text-[#777777] leading-relaxed">
-              แพลตฟอร์ม AI สำหรับแยกแทร็กเสียงดนตรี ปรับ EQ &amp; Compressor ระดับสตูอิโอมืออาชีพ
+            <p className="text-xs text-[#777777] leading-relaxed max-w-xs">
+              ระบบ AI แยกแทร็กเสียงดนตรีและมาสเตอริ่งสำหรับโปรดิวเซอร์มืออาชีพ
             </p>
           </div>
 
