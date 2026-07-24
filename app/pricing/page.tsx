@@ -27,11 +27,11 @@ export default function PricingPage() {
               <h3 className="text-xl font-bold mb-2 text-[#34D399]">Free</h3>
               <div className="text-3xl font-extrabold mb-4 text-[#F3F3F3]">0 THB</div>
               <ul className="text-[#8E8E8E] text-sm space-y-3 mb-6">
-                <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> **3 เพลง / เดือน** (ความยาวไม่เกิน 3 นาที)</li>
-                <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> AutoEQ - โมเดล **LSTM**</li>
+                <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> 3 เพลง / เดือน (ความยาวไม่เกิน 3 นาที)</li>
+                <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> AutoEQ - โมเดล LSTM</li>
                 <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> Audio Compressor (Basic Presets)</li>
                 <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> Pitch Shift (จำกัดช่วง ±2 Semitones)</li>
-                <li className="flex items-center gap-2 text-[#555555] line-through"><span>✗</span> AutoEQ - โมเดล **CNN** (Locked)</li>
+                <li className="flex items-center gap-2 text-[#555555] line-through"><span>✗</span> AutoEQ - โมเดล CNN (Locked)</li>
                 <li className="flex items-center gap-2 text-[#555555] line-through"><span>✗</span> LUFS & Peak Auto Mastering</li>
               </ul>
             </div>
@@ -50,7 +50,7 @@ export default function PricingPage() {
               <div className="text-3xl font-extrabold mb-4 text-[#F3F3F3]">99 THB<span className="text-sm font-normal text-[#8E8E8E]">/เดือน</span></div>
               <ul className="text-[#CCCCCC] text-sm space-y-3 mb-6">
                 <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> 15 เพลง / เดือน</li>
-                <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> AutoEQ ได้ทั้งโมเดล **LSTM & CNN**</li>
+                <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> AutoEQ ได้ทั้งโมเดล LSTM & CNN</li>
                 <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> Studio Compressor (ปรับแต่ง Knee, Gain, Dry/Wet)</li>
                 <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> Pitch Shift (ขยายช่วง ±6 Semitones)</li>
                 <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> Export ไฟล์ WAV Lossless</li>
@@ -71,12 +71,12 @@ export default function PricingPage() {
               <h3 className="text-xl font-bold mb-2 text-purple-400">Pro</h3>
               <div className="text-3xl font-extrabold mb-4 text-[#F3F3F3]">299 THB<span className="text-sm font-normal text-[#8E8E8E]">/เดือน</span></div>
               <ul className="text-[#CCCCCC] text-sm space-y-3 mb-6">
-                <li className="flex items-center gap-2"><span className="text-purple-400">✓</span> **ไม่จำกัดจำนวนเพลง (Unlimited)**</li>
+                <li className="flex items-center gap-2"><span className="text-purple-400">✓</span> ไม่จำกัดจำนวนเพลง (Unlimited)</li>
                 <li className="flex items-center gap-2"><span className="text-purple-400">✓</span> ใช้ได้ทุกโมเดล (LSTM & CNN)</li>
                 <li className="flex items-center gap-2"><span className="text-purple-400">✓</span> Pro Multiband Compressor & Auto Knee</li>
                 <li className="flex items-center gap-2"><span className="text-purple-400">✓</span> Full Studio Pitch Shift (±12 Semitones / Full Octave)</li>
                 <li className="flex items-center gap-2"><span className="text-purple-400">✓</span> Export ไฟล์ WAV Lossless (High-bitrate)</li>
-                <li className="flex items-center gap-2"><span className="text-purple-400">✓</span> **LUFS & Peak Auto Mastering แบบจัดเต็ม**</li>
+                <li className="flex items-center gap-2"><span className="text-purple-400">✓</span> LUFS & Peak Auto Mastering แบบจัดเต็ม</li>
               </ul>
             </div>
             <button
