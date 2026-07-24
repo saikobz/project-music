@@ -54,14 +54,40 @@ yarn-error.log*
 .env
 .env.*
 
-# vercel
-.vercel/
-
-# cursor / agent skills (local tooling)
+# cursor / agent skills / testsprite (local tooling)
 .agents/
 .cursor/
+.testsprite/
+.superpowers/
+.claude/
+
+# database & prisma local DB
+prisma/*.db
+prisma/*.db-journal
+*.db
+*.sqlite
+*.sqlite3
+*.sqlite-journal
+
+# audio files (prevent committing large media)
+*.wav
+*.mp3
+*.flac
+*.aac
+*.ogg
+*.m4a
+
+# logs
+*.log
+
+# OS & IDE
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.vscode/
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
 .vercel
+

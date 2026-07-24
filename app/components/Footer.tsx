@@ -51,7 +51,7 @@ export function Footer() {
         <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#555555]">
           <p>© {new Date().getFullYear()} HarmoniQ Inc. All rights reserved.</p>
           <div className="flex items-center gap-1.5 text-[#777777]">
-            <span>🎵</span>
+            <span></span>
             <span>สร้างสรรค์เพื่อโปรดิวเซอร์และนักดนตรี</span>
           </div>
         </div>
