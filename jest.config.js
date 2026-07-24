@@ -5,7 +5,14 @@ module.exports = {
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",
   },
-  transformIgnorePatterns: [
-    "/node_modules/(?!(@auth/prisma-adapter)/)",
-  ],
+  transform: {
+    "^.+\\.(ts|tsx)$": [
+      "ts-jest",
+      {
+        tsconfig: {
+          jsx: "react-jsx",
+        },
+      },
+    ],
+  },
 };

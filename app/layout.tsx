@@ -1,37 +1,21 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { Toaster } from "sonner";
+import AuthProvider from "./components/SessionProvider";
 import "./globals.css";
 
-// ลงทะเบียนฟอนต์หลักไว้ที่ root layout เพื่อให้ทั้งแอปใช้ตัวแปรฟอนต์ชุดเดียวกันได้
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "HarmoniQ",
-  description: "Web Application for Music Source Separation Using AI with Automatic EQ and Compressor",
+  title: "HarmoniQ — AI Audio Toolkit",
+  description: "ระบบแยกแทร็กเสียงดนตรีและปรับแต่งเสียงด้วย AI",
 };
 
-// layout หลักของแอป ทำหน้าที่ห่อทุกหน้าและใส่สไตล์ระดับทั้งระบบ
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
-        <Toaster theme="dark" position="bottom-right" richColors />
+    <html lang="th" className="dark">
+      <body className="bg-[#0A0A0A] text-[#F3F3F3] antialiased">
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
