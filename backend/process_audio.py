@@ -49,93 +49,54 @@ def _cleanup_partial_checkpoints() -> None:
                 print(f"[CLEANUP] ไม่สามารถตรวจสอบหรือลบ {filename} ได้: {e}")
 
 
+from functools import lru_cache
+
+@lru_cache(maxsize=1)
+def get_openunmix_separator():
+    """โหลดและแคช OpenUnmix separator โมเดลไว้ใน RAM ด้วย lru_cache เพื่อใช้ซ้ำ"""
+    from openunmix import utils as openunmix_utils
+    local_model_path = os.path.join("backend", "models", "umxl")
+    required_files = ["separator.json"] + [f"{t}.json" for t in ["vocals", "drums", "bass", "other"]]
+
+    if os.path.isdir(local_model_path):
+        has_json = all(os.path.isfile(os.path.join(local_model_path, f)) for f in required_files)
+        has_pth = all(len(glob.glob(os.path.join(local_model_path, f"{t}*.pth"))) > 0 for t in ["vocals", "drums", "bass", "other"])
+        if has_json and has_pth:
+            try:
+                print(f"[INFO] โหลดและแคชโมเดล Open-Unmix ท้องถิ่น ({local_model_path})...")
+                return openunmix_utils.load_separator(
+                    model_str_or_path=local_model_path,
+                    targets=["vocals", "drums", "bass", "other"],
+                    niter=1, residual=False, wiener_win_len=300,
+                    device=str(DEVICE), pretrained=True, filterbank="torch",
+                )
+            except Exception as e:
+                print(f"[WARN] ไม่สามารถโหลดโมเดลท้องถิ่นได้: {e}")
+
+    print("[INFO] โหลดและแคชโมเดล Open-Unmix (umxl) จาก PyTorch Hub...")
+    return openunmix_utils.load_separator(
+        model_str_or_path="umxl",
+        targets=["vocals", "drums", "bass", "other"],
+        niter=1, residual=False, wiener_win_len=300,
+        device=str(DEVICE), pretrained=True, filterbank="torch",
+    )
+
+
 def separate_audio(input_path: str, output_dir: str = "separated") -> str:
-    # import openunmix เฉพาะตอนเรียกใช้ฟังก์ชันนี้
-    # ถ้ายังไม่ได้ติดตั้ง แค่ฟีเจอร์แยกเสียงจะใช้ไม่ได้ แต่ส่วนอื่นของ backend ยังรันได้
     try:
         from openunmix.predict import separate
-        from openunmix import utils as openunmix_utils
     except ImportError as exc:
         raise RuntimeError("ต้องติดตั้ง openunmix ก่อน: pip install openunmix") from exc
 
     os.makedirs(output_dir, exist_ok=True)
-
-    ext = os.path.splitext(input_path)[-1].lower()
-    if ext != ".wav":
+    if os.path.splitext(input_path)[-1].lower() != ".wav":
         raise ValueError("รองรับเฉพาะไฟล์ WAV (.wav)")
 
     try:
-        # โหลดไฟล์เสียงต้นฉบับ และเก็บจำนวน sample ไว้ใช้เทียบกับผลลัพธ์
         audio_tensor, rate = torchaudio.load(input_path)
         input_frames = int(audio_tensor.shape[-1])
-        # ตรวจสอบความพร้อมของโมเดล Open-Unmix ภายในเครื่อง (Local Offline Mode)
-        local_model_path = os.path.join("backend", "models", "umxl")
-        required_files = ["separator.json"] + [f"{t}.json" for t in ["vocals", "drums", "bass", "other"]]
-        has_local_model = False
-        
-        if os.path.isdir(local_model_path):
-            # ตรวจจับไฟล์สเปค JSON ทั้งหมด
-            has_json = all(os.path.isfile(os.path.join(local_model_path, f)) for f in required_files)
-            # ตรวจจับไฟล์โมเดล .pth
-            has_pth = all(len(glob.glob(os.path.join(local_model_path, f"{t}*.pth"))) > 0 for t in ["vocals", "drums", "bass", "other"])
-            if has_json and has_pth:
-                has_local_model = True
+        separator = get_openunmix_separator()
 
-        max_attempts = 4
-        last_error: Exception | None = None
-        separator = None
-
-        if has_local_model:
-            try:
-                print(f"[INFO] ตรวจพบโมเดล Open-Unmix ในเครื่อง ({local_model_path}) กำลังรันแบบ Local Offline Mode...")
-                separator = openunmix_utils.load_separator(
-                    model_str_or_path=local_model_path,
-                    targets=["vocals", "drums", "bass", "other"],
-                    niter=1,
-                    residual=False,
-                    wiener_win_len=300,
-                    device=str(DEVICE),
-                    pretrained=True,
-                    filterbank="torch",
-                )
-            except Exception as e:
-                print(f"[WARN] ไม่สามารถเปิดใช้งานโมเดลท้องถิ่นได้: {e} จะสลับไปพยายามดาวน์โหลดแทน...")
-                has_local_model = False
-
-        if separator is None:
-            # หากไม่มีโมเดลในเครื่อง หรือโหลดไม่ผ่าน ให้พยายามดาวน์โหลดจากเน็ตตามกระบวนการเดิม
-            print("[INFO] ไม่พบโมเดลในเครื่องหรือโมเดลชำรุด กำลังเชื่อมต่ออินเทอร์เน็ตเพื่อดาวน์โหลดผ่าน PyTorch Hub...")
-            for attempt in range(1, max_attempts + 1):
-                try:
-                    separator = openunmix_utils.load_separator(
-                        model_str_or_path="umxl",
-                        targets=["vocals", "drums", "bass", "other"],
-                        niter=1,
-                        residual=False,
-                        wiener_win_len=300,
-                        device=str(DEVICE),
-                        pretrained=True,
-                        filterbank="torch",
-                    )
-                    break
-                except Exception as load_err:
-                    last_error = load_err
-                    msg = str(load_err)
-                    transient = any(
-                        token in msg
-                        for token in ("503", "502", "504", "timed out", "timeout", "Temporarily")
-                    )
-                    print(f"[WARN] load_separator ครั้งที่ {attempt}/{max_attempts} ล้มเหลว: {load_err}")
-                    _cleanup_partial_checkpoints()
-                    if attempt == max_attempts or not transient:
-                        break
-                    time.sleep(2 ** attempt)
-
-        if separator is None:
-            raise RuntimeError(
-                "ดาวน์โหลดโมเดล Open-Unmix จาก zenodo ไม่สำเร็จ "
-                "(เซิร์ฟเวอร์อาจขัดข้องชั่วคราว) โปรดลองใหม่อีกครั้งภายหลัง"
-            ) from last_error
         # ใช้โมเดลแบบ inference อย่างเดียว และย้ายไปยัง CPU/GPU ที่เลือกไว้
         separator.freeze()
         separator = separator.to(DEVICE)

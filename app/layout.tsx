@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Toaster } from "sonner";
 import AuthProvider from "./components/SessionProvider";
 import "./globals.css";
 
@@ -16,7 +17,9 @@ export default function RootLayout({
     <html lang="th" className="dark">
       <body className="bg-[#0A0A0A] text-[#F3F3F3] antialiased">
         <AuthProvider>{children}</AuthProvider>
+        <Toaster position="bottom-right" richColors />
       </body>
     </html>
   );
 }
+
