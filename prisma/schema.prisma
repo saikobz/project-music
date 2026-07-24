@@ -1,0 +1,44 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id               String        @id @default(cuid())
+  name             String?
+  email            String        @unique
+  image            String?
+  omiseCustomerId  String?
+  subscription     Subscription?
+  usageQuotas      UsageQuota[]
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+}
+
+model Subscription {
+  id                 String             @id @default(cuid())
+  userId             String             @unique
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tier               String             @default("FREE") // FREE, BASIC, PRO
+  status             String             @default("ACTIVE") // ACTIVE, PAST_DUE, EXPIRED
+  paymentMethod      String?            // CREDIT_CARD, PROMPTPAY
+  omiseScheduleId    String?
+  currentPeriodStart DateTime           @default(now())
+  currentPeriodEnd   DateTime?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+}
+
+model UsageQuota {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  monthlyQuota Int      // FREE=1, BASIC=15, PRO=-1
+  usedCount    Int      @default(0)
+  periodStart  DateTime
+  periodEnd    DateTime
+}
