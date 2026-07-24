@@ -49,8 +49,11 @@ export function Footer() {
         </div>
 
         <div className="border-t border-[#181818] pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#555555]">
-          <p>© {new Date().getFullYear()} HarmoniQ — AI Audio Stem &amp; Mastering Toolkit</p>
-          <p>Built with Next.js 15 · FastAPI · PyTorch · Omise</p>
+          <p>© {new Date().getFullYear()} HarmoniQ Inc. All rights reserved.</p>
+          <div className="flex items-center gap-2 text-[#666666]">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>All Systems Operational</span>
+          </div>
         </div>
       </div>
     </footer>
