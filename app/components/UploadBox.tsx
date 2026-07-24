@@ -6,6 +6,7 @@
 import React, { useRef, useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
+import { useSession } from "next-auth/react";
 import WaveformPlayer from "./WaveformPlayer";
 import MultiStemLivePlayer from "./MultiStemLivePlayer";
 import AudioAnalysis from "./AudioAnalysis";
@@ -100,6 +101,8 @@ interface UploadBoxProps {
 }
 
 function UploadBox({ onHeightChange }: UploadBoxProps) {
+  const { data: session } = useSession();
+  const userTier = (session?.user as any)?.tier || "FREE";
   // ===== กลุ่ม state สำหรับค่าที่ผู้ใช้เลือกในฟอร์ม =====
   // สถานะกลุ่มนี้กำหนดว่าจะเรียก backend action ไหนและใช้พารามิเตอร์อะไร
   // สถานะของไฟล์และตัวเลือกการประมวลผล
@@ -339,12 +342,11 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
     const startTime = Date.now();
 
     try {
-      let response;
+      let response: any;
       let suffix = "";
       let successMsg = "ประมวลผลเสร็จแล้ว";
+      const reqHeaders = { "X-User-Tier": userTier };
 
-      // งานแยก stem จะได้ทั้ง file id และ URL สำหรับดาวน์โหลด ZIP
-      // แตก flow ตาม action เพื่อให้ UI ตัวเดียวรองรับหลาย endpoint
       if (action === "separate") {
         const params = new URLSearchParams();
         if (isTrimming) {
@@ -352,7 +354,10 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
           params.set("trim_end", trimEnd);
         }
         params.set("export_format", exportFormat);
-        response = await axios.post(`${API_BASE}/separate?${params.toString()}`, formData, { signal });
+        response = await axios.post(`${API_BASE}/separate?${params.toString()}`, formData, {
+          signal,
+          headers: reqHeaders,
+        });
         const { file_id, zip_url } = response.data;
         setFileId(file_id);
         setZipUrl(zip_url);
@@ -360,7 +365,6 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
         setStatusText("กำลังเตรียมไฟล์สเตม...");
       }
 
-      // action อื่น ๆ จะคืนไฟล์ WAV เดี่ยวกลับมาในรูป blob สำหรับสร้างลิงก์ดาวน์โหลด
       if (action === "eq-ai") {
         const params = new URLSearchParams({
           genre,
@@ -375,6 +379,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
         response = await axios.post(`${API_BASE}/apply-eq-ai?${params.toString()}`, formData, {
           responseType: "blob",
           signal,
+          headers: reqHeaders,
         });
         const url = window.URL.createObjectURL(new Blob([response.data]));
         setDownloadUrl(url);
@@ -405,6 +410,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
         response = await axios.post(`${API_BASE}/apply-compressor?${params.toString()}`, formData, {
           responseType: "blob",
           signal,
+          headers: reqHeaders,
         });
         const url = window.URL.createObjectURL(new Blob([response.data]));
         setDownloadUrl(url);
@@ -421,8 +427,9 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
         }
         params.set("export_format", actualFormat);
         response = await axios.post(`${API_BASE}/pitch-shift?${params.toString()}`, formData, {
-          responseType: "blob", //"blob" หมายถึง บอก axios ว่า response ที่ backend ส่งกลับมาเป็น “ข้อมูลไฟล์ดิบ” ไม่ใช่ JSON หรือ text
+          responseType: "blob",
           signal,
+          headers: reqHeaders,
         });
         const url = window.URL.createObjectURL(new Blob([response.data]));
         setDownloadUrl(url);
@@ -440,13 +447,13 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
         setExportFormat(actualFormat);
       }
 
-      // การวิเคราะห์ถูกแยกรันอีกครั้ง เพื่อให้การ์ดสรุปแสดงข้อมูลของไฟล์ต้นฉบับได้
-      // ไม่ว่าผู้ใช้จะเลือก action ไหนก็ตาม
-      // วิเคราะห์ tempo / key / pitch หลังงานหลักเสร็จ โดยใช้ไฟล์ต้นฉบับก้อนเดียวกัน
       const analyzeData = new FormData();
       analyzeData.append("file", file);
       try {
-        const analyzeResp = await axios.post(`${API_BASE}/analyze`, analyzeData, { signal });
+        const analyzeResp = await axios.post(`${API_BASE}/analyze`, analyzeData, {
+          signal,
+          headers: reqHeaders,
+        });
         setAnalysis(analyzeResp.data);
       } catch (err) {
         if (axios.isCancel(err)) {
@@ -470,20 +477,30 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
         console.log("Request canceled by user or refresh");
         return;
       }
-      // รวมรูปแบบ error หลายแบบให้เหลือข้อความที่ผู้ใช้เข้าใจได้ง่ายบนหน้าเว็บ
       let message = "เกิดข้อผิดพลาดระหว่างประมวลผล กรุณาลองใหม่";
-      if (err?.response?.data?.detail) {
-        message = err.response.data.detail;
+
+      if (err?.response?.data) {
+        if (err.response.data instanceof Blob) {
+          try {
+            const text = await err.response.data.text();
+            const parsed = JSON.parse(text);
+            message = parsed.detail || parsed.message || text;
+          } catch {
+            message = err.message || `คำขอไม่สำเร็จ (${err.response.status})`;
+          }
+        } else if (typeof err.response.data === "string") {
+          message = err.response.data;
+        } else if (err.response.data.detail) {
+          message = err.response.data.detail;
+        } else if (err.response.data.message) {
+          message = err.response.data.message;
+        }
       } else if (err.code === "ERR_NETWORK") {
         message = "ติดต่อ backend ไม่ได้ (ตรวจสอบการรันเซิร์ฟเวอร์หรือ CORS)";
-      } else if (err.response?.status) {
-        const status = err.response.status;
-        if (status >= 500) {
-          message = `เซิร์ฟเวอร์มีปัญหา (${status})`;
-        } else {
-          message = `คำขอไม่สำเร็จ (${status})`;
-        }
+      } else if (err.message) {
+        message = err.message;
       }
+
       setErrorMessage(message);
       toast.error(message);
       setStatusText(null);

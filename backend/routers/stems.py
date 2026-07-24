@@ -7,13 +7,14 @@ import zipfile
 import logging
 import soundfile as sf
 import numpy as np
-from fastapi import APIRouter, UploadFile, File, Query, HTTPException
+from fastapi import APIRouter, UploadFile, File, Query, Header, Request, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 
 from backend.services.storage import save_upload, convert_to_mp3, processing_semaphore, UPLOAD_DIR
 from backend.services.job_manager import job_manager
 from backend.process_audio import separate_audio
 from backend.auto_mastering import polish_vocal_file, apply_lufs_mastering
+from backend.utils.auth_guard import check_and_increment_quota
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["stems"])
@@ -21,12 +22,15 @@ router = APIRouter(tags=["stems"])
 
 @router.post("/separate")
 async def separate(
+    request: Request,
     file: UploadFile = File(...),
     trim_start: float | None = Query(None),
     trim_end: float | None = Query(None),
-    export_format: str = Query("wav", pattern="^(wav|mp3)$")
+    export_format: str = Query("wav", pattern="^(wav|mp3)$"),
+    x_user_tier: str = Header("FREE")
 ):
     """เอนด์พอยต์แยกแทร็กเสียง (Drums, Bass, Vocal, Other)"""
+    check_and_increment_quota(request=request, user_tier=x_user_tier)
     try:
         file_id, input_path = await save_upload(file, trim_start=trim_start, trim_end=trim_end)
 

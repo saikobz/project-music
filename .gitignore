@@ -68,6 +68,7 @@ prisma/*.db-journal
 *.sqlite
 *.sqlite3
 *.sqlite-journal
+backend/guest_quota.json
 
 # audio files (prevent committing large media)
 *.wav

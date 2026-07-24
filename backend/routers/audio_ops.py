@@ -4,12 +4,13 @@
 import os
 import asyncio
 import logging
-from fastapi import APIRouter, UploadFile, File, Query, HTTPException
+from fastapi import APIRouter, UploadFile, File, Query, Header, Request, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 
 from backend.services.storage import save_upload, convert_to_mp3, processing_semaphore, UPLOAD_DIR
 from backend.process_audio import analyze_audio, pitch_shift_audio
 from backend.eq_compressor import apply_compression
+from backend.utils.auth_guard import check_and_increment_quota
 from backend.auto_eq_inference import (
     apply_auto_eq_file,
     AutoEQModelLoadError,
@@ -26,6 +27,7 @@ router = APIRouter(tags=["audio_ops"])
 
 @router.post("/apply-eq-ai")
 async def apply_eq_ai(
+    request: Request,
     file: UploadFile = File(...),
     genre: str = Query("pop", description="แนวเพลง เช่น pop, rock, trap, country, soul"),
     model_id: str = Query(
@@ -40,9 +42,11 @@ async def apply_eq_ai(
     ),
     trim_start: float | None = Query(None),
     trim_end: float | None = Query(None),
-    export_format: str = Query("wav", pattern="^(wav|mp3)$")
+    export_format: str = Query("wav", pattern="^(wav|mp3)$"),
+    x_user_tier: str = Header("FREE")
 ):
     """เอนด์พอยต์ปรับแต่ง EQ อัตโนมัติด้วย AI"""
+    check_and_increment_quota(request=request, user_tier=x_user_tier, model_type=model_id)
     try:
         file_id, input_path = await save_upload(file, trim_start=trim_start, trim_end=trim_end)
         output_filename = f"{file_id}_eq_ai_{model_id}_{genre}.wav"
@@ -90,6 +94,7 @@ async def apply_eq_ai(
 
 @router.post("/apply-compressor")
 async def apply_compressor(
+    request: Request,
     file: UploadFile = File(...),
     strength: str = Query("medium", pattern="^(soft|medium|hard)$"),
     genre: str = Query("general", description="general, pop, rock, trap, country, soul"),
@@ -103,9 +108,11 @@ async def apply_compressor(
     output_ceiling: float | None = Query(None, ge=-20.0, le=0.0, description="dBFS"),
     trim_start: float | None = Query(None),
     trim_end: float | None = Query(None),
-    export_format: str = Query("wav", pattern="^(wav|mp3)$")
+    export_format: str = Query("wav", pattern="^(wav|mp3)$"),
+    x_user_tier: str = Header("FREE")
 ):
     """เอนด์พอยต์ปรับแต่ง Compressor เสียง"""
+    check_and_increment_quota(request=request, user_tier=x_user_tier)
     try:
         _, input_path = await save_upload(file, trim_start=trim_start, trim_end=trim_end)
         os.makedirs("compressed", exist_ok=True)
@@ -148,13 +155,16 @@ async def apply_compressor(
 
 @router.post("/pitch-shift")
 async def pitch_shift(
+    request: Request,
     file: UploadFile = File(...), 
     steps: float = 0,
     trim_start: float | None = Query(None),
     trim_end: float | None = Query(None),
-    export_format: str = Query("wav", pattern="^(wav|mp3)$")
+    export_format: str = Query("wav", pattern="^(wav|mp3)$"),
+    x_user_tier: str = Header("FREE")
 ):
     """เอนด์พอยต์ปรับ Pitch ของไฟล์เสียง"""
+    check_and_increment_quota(request=request, user_tier=x_user_tier, pitch_shift_semitones=int(steps))
     try:
         file_id, input_path = await save_upload(file, trim_start=trim_start, trim_end=trim_end)
         output_filename = f"{file_id}_pitch.wav"

@@ -95,7 +95,7 @@ py -3.10 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 pip install -r backend/requirements.txt
-uvicorn backend.main:app --reload --port 8000
+uvicorn backend.main:app --reload --reload-dir backend --port 8000
 ```
 
 **2. รัน Frontend** (เทอร์มินัลใหม่)

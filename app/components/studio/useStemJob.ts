@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import { toast } from "sonner";
+import { useSession } from "next-auth/react";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
 const MAX_SIZE_BYTES = 100 * 1024 * 1024; // 100MB
@@ -12,6 +13,8 @@ export interface UseStemJobOptions {
 }
 
 export function useStemJob(options?: UseStemJobOptions) {
+  const { data: session } = useSession();
+  const userTier = (session?.user as any)?.tier || "FREE";
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [action, setAction] = useState("separate");
@@ -240,20 +243,20 @@ export function useStemJob(options?: UseStemJobOptions) {
     abortControllerRef.current = controller;
 
     try {
+      const requestOptions = {
+        params,
+        signal: controller.signal,
+        headers: { "X-User-Tier": userTier },
+      };
+
       if (action === "analyze") {
-        const response = await axios.post(`${API_BASE}${endpoint}`, formData, {
-          params,
-          signal: controller.signal,
-        });
+        const response = await axios.post(`${API_BASE}${endpoint}`, formData, requestOptions);
         setAnalysis(response.data);
         stopProgressSimulation(100);
         setSuccessMessage("วิเคราะห์ไฟล์เสียงสำเร็จ!");
         toast.success("วิเคราะห์ไฟล์เสียงสำเร็จ!");
       } else if (action === "separate") {
-        const response = await axios.post(`${API_BASE}${endpoint}`, formData, {
-          params,
-          signal: controller.signal,
-        });
+        const response = await axios.post(`${API_BASE}${endpoint}`, formData, requestOptions);
         const data = response.data;
         if (data.status === "success") {
           setFileId(data.file_id);
@@ -264,9 +267,8 @@ export function useStemJob(options?: UseStemJobOptions) {
         }
       } else {
         const response = await axios.post(`${API_BASE}${endpoint}`, formData, {
-          params,
+          ...requestOptions,
           responseType: "blob",
-          signal: controller.signal,
         });
         const blob = new Blob([response.data], {
           type: exportFormat === "mp3" ? "audio/mpeg" : "audio/wav",
@@ -288,11 +290,27 @@ export function useStemJob(options?: UseStemJobOptions) {
     } catch (err: any) {
       stopProgressSimulation(0);
       let errMsg = "เกิดข้อผิดพลาดในการประมวลผล";
-      if (err.response?.data?.detail) {
-        errMsg = err.response.data.detail;
+
+      if (err.response?.data) {
+        if (err.response.data instanceof Blob) {
+          try {
+            const text = await err.response.data.text();
+            const parsed = JSON.parse(text);
+            errMsg = parsed.detail || parsed.message || text;
+          } catch {
+            errMsg = err.message || "เกิดข้อผิดพลาดจากเซิร์ฟเวอร์";
+          }
+        } else if (typeof err.response.data === "string") {
+          errMsg = err.response.data;
+        } else if (err.response.data.detail) {
+          errMsg = err.response.data.detail;
+        } else if (err.response.data.message) {
+          errMsg = err.response.data.message;
+        }
       } else if (err.message) {
         errMsg = err.message;
       }
+
       setErrorMessage(errMsg);
       toast.error(errMsg);
     } finally {
