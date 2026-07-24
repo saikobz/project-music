@@ -19,7 +19,7 @@ export async function POST(req: Request) {
       const charge = await omise.charges.create({
         amount,
         currency: "thb",
-        source: { type: "promptpay" },
+        source: { type: "promptpay" } as any,
         metadata: { userId: session.user.id, tier },
       });
 
@@ -46,11 +46,18 @@ export async function POST(req: Request) {
         });
       }
 
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() + 1);
+      const endDate = new Date();
+      endDate.setFullYear(endDate.getFullYear() + 1);
+
       const schedule = await omise.schedules.create({
         every: 1,
         period: "month",
-        charge: { customer: customerId, amount, currency: "thb" },
-      });
+        start_date: startDate.toISOString().split("T")[0],
+        end_date: endDate.toISOString().split("T")[0],
+        charge: { customer: customerId, amount } as any,
+      } as any);
 
       await prisma.subscription.upsert({
         where: { userId: session.user.id },

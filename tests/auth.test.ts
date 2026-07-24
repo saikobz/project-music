@@ -18,8 +18,9 @@ describe("NextAuth Session Callback", () => {
         trigger: "update",
       });
 
-      expect(session.user.tier).toBe("PRO");
-      expect(session.user.omiseCustomerId).toBe("cust_123");
+      const user = session?.user as any;
+      expect(user?.tier).toBe("PRO");
+      expect(user?.omiseCustomerId).toBe("cust_123");
     }
   });
 });
