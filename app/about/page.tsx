@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
 
@@ -51,49 +52,18 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* Contact Form */}
-        <section className="space-y-5">
-          <h2 className="text-2xl font-bold">ติดต่อเรา</h2>
-          <form className="space-y-4 rounded-xl border border-[#1E1E1E] bg-[#0E0E0E] p-6">
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-[#555555] uppercase tracking-wider mb-1.5">
-                  ชื่อ
-                </label>
-                <input
-                  type="text"
-                  placeholder="ชื่อของคุณ"
-                  className="w-full rounded-lg bg-[#080808] border border-[#1E1E1E] px-3 py-2.5 text-sm text-[#E0E0E0] placeholder-[#333333] focus:border-[#64748B]/60 focus:outline-none transition"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-[#555555] uppercase tracking-wider mb-1.5">
-                  อีเมล
-                </label>
-                <input
-                  type="email"
-                  placeholder="email@example.com"
-                  className="w-full rounded-lg bg-[#080808] border border-[#1E1E1E] px-3 py-2.5 text-sm text-[#E0E0E0] placeholder-[#333333] focus:border-[#64748B]/60 focus:outline-none transition"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-[#555555] uppercase tracking-wider mb-1.5">
-                ข้อความ
-              </label>
-              <textarea
-                rows={4}
-                placeholder="พิมพ์ข้อความหรือรายงานปัญหาที่พบ..."
-                className="w-full rounded-lg bg-[#080808] border border-[#1E1E1E] px-3 py-2.5 text-sm text-[#E0E0E0] placeholder-[#333333] focus:border-[#64748B]/60 focus:outline-none transition resize-none"
-              />
-            </div>
-            <button
-              type="submit"
-              className="w-full rounded-lg py-3 text-sm font-bold tracking-widest uppercase bg-gradient-to-r from-[#334155] to-[#64748B] text-white hover:from-[#475569] hover:to-[#94A3B8] transition-all duration-200 cursor-pointer"
-            >
-              ส่งข้อความ
-            </button>
-          </form>
+        {/* Support Link CTA */}
+        <section className="rounded-2xl border border-[#1E1E1E] bg-[#0E0E0E] p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div>
+            <h3 className="text-lg font-bold">มีข้อสงสัยหรือต้องการติดต่อทีมงาน?</h3>
+            <p className="text-xs text-[#8E8E8E] mt-1">สามารถส่งข้อความหรือรายงานปัญหาการใช้งานได้ที่ศูนย์ช่วยเหลือ</p>
+          </div>
+          <Link
+            href="/support"
+            className="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs rounded-xl transition shrink-0"
+          >
+            ไปยังศูนย์ช่วยเหลือ &amp; ติดต่อ
+          </Link>
         </section>
       </main>
       <Footer />
