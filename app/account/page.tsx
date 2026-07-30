@@ -7,6 +7,7 @@ import { Footer } from "../components/Footer";
 import ProfileSection from "./ProfileSection";
 import PasswordSection from "./PasswordSection";
 import ConnectedAccountsSection from "./ConnectedAccountsSection";
+import PreferencesSection from "./PreferencesSection";
 
 type AccountTab = "profile" | "password" | "accounts" | "preferences";
 
@@ -133,7 +134,10 @@ export default function AccountPage() {
           )}
           {activeTab === "accounts" && <ConnectedAccountsSection />}
           {activeTab === "preferences" && (
-            <p className="text-[#8E8E8E] text-sm">Preferences section coming in next task.</p>
+            <PreferencesSection
+              preferences={data.preferences || { theme: "DARK", language: "TH", emailNotifications: true }}
+              onUpdated={(prefs) => setData((prev: any) => ({ ...prev, preferences: prefs }))}
+            />
           )}
         </div>
       </main>
