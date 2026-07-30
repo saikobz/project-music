@@ -23,6 +23,7 @@ export default function HistoryPage() {
   const [recordsLoading, setRecordsLoading] = useState(true);
   const [playingId, setPlayingId] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  useEffect(() => () => audioRef.current?.pause(), []);
 
   useEffect(() => {
     fetch("/api/account")
@@ -182,7 +183,8 @@ export default function HistoryPage() {
                 </thead>
                 <tbody className="divide-y divide-[#1F1F1F]">
                   {records.map((record) => {
-                    const stemsList: string[] = record.stems ? JSON.parse(record.stems) : [];
+                    let stemsList: string[] = [];
+                    try { stemsList = record.stems ? JSON.parse(record.stems) : []; } catch {}
                     const isSeparate = record.action === "separate";
 
                     return (
