@@ -1,41 +1,28 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { Navbar } from "../../components/Navbar";
 import { Footer } from "../../components/Footer";
 import { Music, Download, Trash2, Clock, Disc, ArrowRight, Play, Pause } from "lucide-react";
+import { API_BASE_URL } from "@/lib/config";
 
-interface HistoryItem {
+interface HistoryRecord {
   id: string;
-  title: string;
-  date: string;
-  duration: string;
-  stems: string[];
+  action: string;
+  originalFilename: string;
+  fileId: string | null;
+  stems: string | null;
+  createdAt: string;
 }
 
 export default function HistoryPage() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [records, setRecords] = useState<HistoryRecord[]>([]);
+  const [recordsLoading, setRecordsLoading] = useState(true);
   const [playingId, setPlayingId] = useState<string | null>(null);
-
-  // Mock initial history items for demonstration
-  const [historyItems, setHistoryItems] = useState<HistoryItem[]>([
-    {
-      id: "trk-1",
-      title: "Summer_Vibes_Master_44k.wav",
-      date: "2026-07-24",
-      duration: "03:45",
-      stems: ["Vocals", "Drums", "Bass", "Other"]
-    },
-    {
-      id: "trk-2",
-      title: "Acoustic_Guitar_Session_02.wav",
-      date: "2026-07-22",
-      duration: "02:18",
-      stems: ["Vocals", "Guitar", "Other"]
-    }
-  ]);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     fetch("/api/account")
@@ -47,16 +34,59 @@ export default function HistoryPage() {
       .catch(() => setLoading(false));
   }, []);
 
-  const togglePlay = (id: string) => {
-    if (playingId === id) {
+  useEffect(() => {
+    if (!data || data.error) {
+      setRecordsLoading(false);
+      return;
+    }
+    fetch("/api/history")
+      .then((res) => res.json())
+      .then((d) => setRecords(d.records || []))
+      .catch(() => setRecords([]))
+      .finally(() => setRecordsLoading(false));
+  }, [data]);
+
+  const togglePlay = (fileId: string) => {
+    if (playingId === fileId) {
+      audioRef.current?.pause();
       setPlayingId(null);
     } else {
-      setPlayingId(id);
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      const url = `${API_BASE_URL}/separated/${fileId}/vocals.wav`;
+      const audio = new Audio(url);
+      audio.onended = () => setPlayingId(null);
+      audio.play().catch(() => {
+        setPlayingId(null);
+      });
+      audioRef.current = audio;
+      setPlayingId(fileId);
     }
   };
 
-  const handleDelete = (id: string) => {
-    setHistoryItems((prev) => prev.filter((item) => item.id !== id));
+  const handleDelete = async (id: string) => {
+    const res = await fetch(`/api/history/${id}`, { method: "DELETE" });
+    if (res.ok) {
+      setRecords((prev) => prev.filter((r) => r.id !== id));
+    }
+  };
+
+  const handleDownload = (fileId: string) => {
+    const a = document.createElement("a");
+    a.href = `${API_BASE_URL}/download/${fileId}`;
+    a.download = "separated.zip";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
+  const actionLabels: Record<string, string> = {
+    separate: "Stem Separation",
+    "apply-eq-ai": "Auto-EQ",
+    "apply-compressor": "Compressor",
+    "pitch-shift": "Pitch Shift",
+    analyze: "Audio Analysis",
   };
 
   if (loading) {
@@ -120,7 +150,11 @@ export default function HistoryPage() {
           </Link>
         </header>
 
-        {historyItems.length === 0 ? (
+        {recordsLoading ? (
+          <div className="bg-[#111111] border border-[#222222] rounded-2xl p-12 text-center">
+            <div className="text-[#8E8E8E] text-sm">Loading history...</div>
+          </div>
+        ) : records.length === 0 ? (
           <div className="bg-[#111111] border border-[#222222] rounded-2xl p-12 text-center space-y-4">
             <Music className="w-12 h-12 text-[#444] mx-auto" />
             <h3 className="text-lg font-semibold">ยังไม่มีประวัติการแยกแทร็กเสียง</h3>
@@ -142,59 +176,76 @@ export default function HistoryPage() {
                   <tr>
                     <th className="py-3.5 px-4">ชื่อไฟล์เพลง</th>
                     <th className="py-3.5 px-4">วันที่แยกแทร็ก</th>
-                    <th className="py-3.5 px-4">สเต็มที่มี</th>
+                    <th className="py-3.5 px-4">รายละเอียด</th>
                     <th className="py-3.5 px-4 text-right">การจัดการ</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#1F1F1F]">
-                  {historyItems.map((item) => (
-                    <tr key={item.id} className="hover:bg-[#161616] transition-colors">
-                      <td className="py-4 px-4">
-                        <div className="flex items-center gap-3">
-                          <button
-                            onClick={() => togglePlay(item.id)}
-                            className="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center hover:bg-purple-500 hover:text-white transition"
-                          >
-                            {playingId === item.id ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
-                          </button>
-                          <div>
-                            <p className="font-semibold text-white truncate max-w-xs">{item.title}</p>
-                            <span className="text-[11px] text-[#777]">{item.duration}</span>
+                  {records.map((record) => {
+                    const stemsList: string[] = record.stems ? JSON.parse(record.stems) : [];
+                    const isSeparate = record.action === "separate";
+
+                    return (
+                      <tr key={record.id} className="hover:bg-[#161616] transition-colors">
+                        <td className="py-4 px-4">
+                          <div className="flex items-center gap-3">
+                            {isSeparate && record.fileId && (
+                              <button
+                                onClick={() => togglePlay(record.fileId!)}
+                                className="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center hover:bg-purple-500 hover:text-white transition"
+                              >
+                                {playingId === record.fileId ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
+                              </button>
+                            )}
+                            <div>
+                              <p className="font-semibold text-white truncate max-w-xs">{record.originalFilename}</p>
+                              <span className="text-[11px] text-purple-400">{actionLabels[record.action] || record.action}</span>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-4 text-[#A0A0A0] text-xs">{item.date}</td>
-                      <td className="py-4 px-4">
-                        <div className="flex flex-wrap gap-1">
-                          {item.stems.map((stem) => (
-                            <span
-                              key={stem}
-                              className="px-2 py-0.5 rounded-md bg-[#202020] border border-[#303030] text-[11px] text-purple-300"
+                        </td>
+                        <td className="py-4 px-4 text-[#A0A0A0] text-xs">
+                          {new Date(record.createdAt).toLocaleDateString("th-TH", {
+                            year: "numeric", month: "short", day: "numeric",
+                          })}
+                        </td>
+                        <td className="py-4 px-4">
+                          {isSeparate && stemsList.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {stemsList.map((stem) => (
+                                <span
+                                  key={stem}
+                                  className="px-2 py-0.5 rounded-md bg-[#202020] border border-[#303030] text-[11px] text-purple-300"
+                                >
+                                  {stem}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-[11px] text-[#555]">—</span>
+                          )}
+                        </td>
+                        <td className="py-4 px-4 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            {isSeparate && record.fileId && (
+                              <button
+                                onClick={() => handleDownload(record.fileId!)}
+                                className="p-2 rounded-lg bg-[#202020] hover:bg-[#303030] text-white transition text-xs flex items-center gap-1.5"
+                              >
+                                <Download className="w-4 h-4 text-purple-400" />
+                                <span className="hidden sm:inline">ดาวน์โหลด</span>
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleDelete(record.id)}
+                              className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition"
                             >
-                              {stem}
-                            </span>
-                          ))}
-                        </div>
-                      </td>
-                      <td className="py-4 px-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => alert(`กำลังดาวน์โหลดไฟล์สเต็มของ ${item.title}`)}
-                            className="p-2 rounded-lg bg-[#202020] hover:bg-[#303030] text-white transition text-xs flex items-center gap-1.5"
-                          >
-                            <Download className="w-4 h-4 text-purple-400" />
-                            <span className="hidden sm:inline">ดาวน์โหลด</span>
-                          </button>
-                          <button
-                            onClick={() => handleDelete(item.id)}
-                            className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
