@@ -200,6 +200,25 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
     }
   };
 
+  const saveHistory = (actionName: string, fileId?: string, stems?: string[]) => {
+    if (!session) { console.log("saveHistory: skipped (not logged in)"); return; }
+    const actionMap: Record<string, string> = {
+      "eq-ai": "apply-eq-ai",
+      compressor: "apply-compressor",
+      pitch: "pitch-shift",
+    };
+    fetch("/api/history", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: actionMap[actionName] || actionName,
+        originalFilename: file?.name || "unknown.wav",
+        ...(fileId && { fileId }),
+        ...(stems && { stems }),
+      }),
+    }).catch((err) => console.error("saveHistory failed:", err));
+  };
+
   React.useEffect(() => {
     if (onHeightChange) {
       const expanded = action !== "separate" || !!file || loading || !!zipUrl || !!downloadUrl || !!analysis;
@@ -363,6 +382,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
         setZipUrl(zip_url);
         successMsg = "แยกเสียงเสร็จแล้ว ดาวน์โหลด ZIP หรือลองเล่นทีละสเตมได้เลย";
         setStatusText("กำลังเตรียมไฟล์สเตม...");
+        saveHistory("separate", file_id, ["Vocals", "Drums", "Bass", "Other"]);
       }
 
       if (action === "eq-ai") {
@@ -386,6 +406,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
         suffix = `_eq_ai_${autoEqModel}_${genre}_${deltaClampDb}db`;
         successMsg = `Auto-EQ (${selectedAutoEqModel.label}) ประมวลผลเสร็จสิ้น`;
         setStatusText(`Running Auto-EQ with ${selectedAutoEqModel.label}...`);
+        saveHistory("eq-ai");
       }
 
       if (action === "compressor") {
@@ -417,6 +438,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
         suffix = `_compressed_${strength}`;
         successMsg = "ประมวลผล Compressor เสร็จแล้ว";
         setStatusText("กำลังสร้างไฟล์ Compressor...");
+        saveHistory("compressor");
       }
 
       if (action === "pitch") {
@@ -436,6 +458,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
         suffix = `_pitch_${pitchSteps}`;
         successMsg = "ประมวลผล Pitch Shift เสร็จแล้ว";
         setStatusText("กำลังสร้างไฟล์ Pitch Shift...");
+        saveHistory("pitch");
       }
 
       if (file && suffix) {
