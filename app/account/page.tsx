@@ -6,6 +6,7 @@ import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
 import ProfileSection from "./ProfileSection";
 import PasswordSection from "./PasswordSection";
+import ConnectedAccountsSection from "./ConnectedAccountsSection";
 
 type AccountTab = "profile" | "password" | "accounts" | "preferences";
 
@@ -130,9 +131,7 @@ export default function AccountPage() {
           {activeTab === "password" && (
             <PasswordSection hasPassword={data.user.hasPassword} />
           )}
-          {activeTab === "accounts" && (
-            <p className="text-[#8E8E8E] text-sm">Connected accounts section coming in next task.</p>
-          )}
+          {activeTab === "accounts" && <ConnectedAccountsSection />}
           {activeTab === "preferences" && (
             <p className="text-[#8E8E8E] text-sm">Preferences section coming in next task.</p>
           )}

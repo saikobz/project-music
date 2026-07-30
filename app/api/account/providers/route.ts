@@ -38,3 +38,26 @@ export async function GET() {
 
   return NextResponse.json({ providers });
 }
+
+export async function DELETE(req: Request) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { provider } = await req.json();
+  if (!provider) {
+    return NextResponse.json({ error: "Provider is required" }, { status: 400 });
+  }
+
+  const account = await prisma.account.findFirst({
+    where: { userId: session.user.id, provider },
+  });
+  if (!account) {
+    return NextResponse.json({ error: "Account not found" }, { status: 404 });
+  }
+
+  await prisma.account.delete({ where: { id: account.id } });
+
+  return NextResponse.json({ success: true });
+}
