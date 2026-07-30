@@ -37,6 +37,11 @@ export async function GET() {
       image: user.image,
       createdAt: user.createdAt,
     },
+    preferences: {
+      theme: user.theme,
+      language: user.language,
+      emailNotifications: user.emailNotifications,
+    },
     subscription: user.subscription || { tier: "FREE", status: "ACTIVE" },
     quota: currentQuota,
   });
