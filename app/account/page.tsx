@@ -1,14 +1,27 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { User, KeyRound, Link2, Settings } from "lucide-react";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
+import ProfileSection from "./ProfileSection";
+
+type AccountTab = "profile" | "password" | "accounts" | "preferences";
+
+const TABS: { id: AccountTab; label: string; icon: React.ReactNode }[] = [
+  { id: "profile", label: "Profile", icon: <User className="w-4 h-4" /> },
+  { id: "password", label: "Password", icon: <KeyRound className="w-4 h-4" /> },
+  { id: "accounts", label: "Connected Accounts", icon: <Link2 className="w-4 h-4" /> },
+  { id: "preferences", label: "Preferences", icon: <Settings className="w-4 h-4" /> },
+];
 
 export default function AccountPage() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<AccountTab>("profile");
 
-  useEffect(() => {
+  const fetchAccount = useCallback(() => {
+    setLoading(true);
     fetch("/api/account")
       .then((res) => res.json())
       .then((d) => {
@@ -17,6 +30,15 @@ export default function AccountPage() {
       })
       .catch(() => setLoading(false));
   }, []);
+
+  useEffect(() => { fetchAccount(); }, [fetchAccount]);
+
+  const handleProfileUpdated = (updates: { name: string | null; email: string; image: string | null }) => {
+    setData((prev: any) => ({
+      ...prev,
+      user: { ...prev.user, ...updates },
+    }));
+  };
 
   if (loading) {
     return (
@@ -53,56 +75,66 @@ export default function AccountPage() {
     <div className="min-h-screen bg-[#0A0A0A] text-[#F3F3F3] flex flex-col justify-between">
       <Navbar />
 
-      <main className="flex-grow mx-auto w-full max-w-3xl px-4 py-12 space-y-8">
+      <main className="flex-grow mx-auto w-full max-w-4xl px-4 py-12 space-y-8">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight">Account Dashboard</h1>
-          <p className="text-[#8E8E8E] text-sm mt-1">Manage your profile, active subscription, and usage quotas.</p>
+          <h1 className="text-3xl font-extrabold tracking-tight">Account Settings</h1>
+          <p className="text-[#8E8E8E] text-sm mt-1">Manage your profile, connected accounts, and preferences.</p>
         </div>
 
-        {/* Profile Card */}
-        <div className="bg-[#111111] border border-[#222222] rounded-2xl p-6 flex items-center gap-4">
-          {user.image ? (
-            <img src={user.image} alt={user.name} className="w-16 h-16 rounded-full" />
-          ) : (
-            <div className="w-16 h-16 rounded-full bg-[#222222] flex items-center justify-center text-xl font-bold text-[#F3F3F3]">
-              {user.name ? user.name[0].toUpperCase() : "U"}
-            </div>
-          )}
-          <div>
-            <h2 className="text-lg font-bold">{user.name || "HarmoniQ User"}</h2>
-            <p className="text-sm text-[#8E8E8E]">{user.email}</p>
-          </div>
+        {/* Tab Bar */}
+        <div className="flex gap-1 border-b border-[#222] pb-0 overflow-x-auto">
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium rounded-t-lg transition cursor-pointer whitespace-nowrap ${
+                activeTab === tab.id
+                  ? "bg-[#111] text-[#34D399] border border-b-0 border-[#222] -mb-[1px]"
+                  : "text-[#888] hover:text-white hover:bg-[#111]"
+              }`}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
         </div>
 
-        {/* Subscription & Quota Card */}
-        <div className="bg-[#111111] border border-[#222222] rounded-2xl p-6 space-y-6">
-          <div className="flex items-center justify-between border-b border-[#222222] pb-4">
+        {/* Subscription & Quota Card (always visible) */}
+        <div className="bg-[#111111] border border-[#222222] rounded-2xl p-6 space-y-4">
+          <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-semibold text-[#8E8E8E] uppercase tracking-wider">Current Subscription</p>
               <h3 className="text-xl font-extrabold text-[#34D399] mt-0.5">{subscription.tier} PLAN</h3>
             </div>
-            <Link
-              href="/pricing"
-              className="px-4 py-2 bg-[#34D399] hover:bg-[#2cb984] text-[#0A0A0A] text-xs font-bold rounded-lg transition"
-            >
+            <Link href="/pricing" className="px-4 py-2 bg-[#34D399] hover:bg-[#2cb984] text-[#0A0A0A] text-xs font-bold rounded-lg transition">
               Change Plan
             </Link>
           </div>
-
-          {/* Quota Progress */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-[#CCCCCC]">Monthly Song Processing Quota</span>
-              <span className="font-bold text-[#34D399]">
-                {isUnlimited ? "Unlimited" : `${used} / ${max} songs used`}
-              </span>
-            </div>
-            {!isUnlimited && (
-              <div className="w-full bg-[#222222] rounded-full h-2.5 overflow-hidden">
-                <div className="bg-[#34D399] h-2.5 rounded-full transition-all duration-300" style={{ width: `${percent}%` }}></div>
-              </div>
-            )}
+          <div className="flex justify-between text-sm">
+            <span className="text-[#CCCCCC]">Monthly Song Processing Quota</span>
+            <span className="font-bold text-[#34D399]">{isUnlimited ? "Unlimited" : `${used} / ${max} songs used`}</span>
           </div>
+          {!isUnlimited && (
+            <div className="w-full bg-[#222222] rounded-full h-2.5 overflow-hidden">
+              <div className="bg-[#34D399] h-2.5 rounded-full transition-all duration-300" style={{ width: `${percent}%` }}></div>
+            </div>
+          )}
+        </div>
+
+        {/* Tab Content */}
+        <div className="bg-[#111111] border border-[#222222] rounded-2xl p-6">
+          {activeTab === "profile" && (
+            <ProfileSection user={user} onUpdated={handleProfileUpdated} />
+          )}
+          {activeTab === "password" && (
+            <p className="text-[#8E8E8E] text-sm">Password section coming in next task.</p>
+          )}
+          {activeTab === "accounts" && (
+            <p className="text-[#8E8E8E] text-sm">Connected accounts section coming in next task.</p>
+          )}
+          {activeTab === "preferences" && (
+            <p className="text-[#8E8E8E] text-sm">Preferences section coming in next task.</p>
+          )}
         </div>
       </main>
 
