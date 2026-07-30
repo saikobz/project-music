@@ -23,6 +23,7 @@ model User {
   sessions           Session[]
   projectRecords     ProjectRecord[]
   usageQuotas        UsageQuota[]
+  paymentRecords     PaymentRecord[]
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
 }
@@ -83,6 +84,18 @@ model UsageQuota {
   usedCount    Int      @default(0)
   periodStart  DateTime
   periodEnd    DateTime
+}
+
+model PaymentRecord {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  omiseChargeId String   @unique
+  amount        Int
+  currency      String   @default("thb")
+  status        String
+  paidAt        DateTime @default(now())
+  createdAt     DateTime @default(now())
 }
 
 model ProjectRecord {
