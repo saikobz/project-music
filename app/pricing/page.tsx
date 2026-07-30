@@ -1,11 +1,16 @@
 "use client";
 import { useState } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
 import CheckoutModal from "../components/CheckoutModal";
 
 export default function PricingPage() {
   const [selectedTier, setSelectedTier] = useState<"BASIC" | "PRO" | null>(null);
+  const { data: session } = useSession();
+  const currentTier = session?.user?.tier;
+  const router = useRouter();
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-[#F3F3F3] flex flex-col justify-between">
@@ -35,9 +40,18 @@ export default function PricingPage() {
                 <li className="flex items-center gap-2 text-[#555555] line-through"><span>✗</span> LUFS & Peak Auto Mastering</li>
               </ul>
             </div>
-            <button className="w-full py-2.5 bg-[#1A1A1A] text-[#666666] font-medium rounded-lg cursor-not-allowed">
-              แพ็กเกจปัจจุบัน
-            </button>
+            {!session ? (
+              <button
+                onClick={() => router.push("/auth/signin")}
+                className="w-full py-2.5 bg-[#34D399] hover:bg-[#2cb984] font-semibold text-[#0A0A0A] rounded-lg transition-colors cursor-pointer"
+              >
+                เริ่มต้นใช้งานฟรี
+              </button>
+            ) : currentTier === "FREE" ? (
+              <button className="w-full py-2.5 bg-[#1A1A1A] text-[#666666] font-medium rounded-lg cursor-not-allowed">
+                แพ็กเกจปัจจุบัน
+              </button>
+            ) : null}
           </div>
 
           {/* Basic Plan */}
@@ -57,12 +71,18 @@ export default function PricingPage() {
                 <li className="flex items-center gap-2 text-[#555555] line-through"><span>✗</span> LUFS & Peak Auto Mastering</li>
               </ul>
             </div>
-            <button
-              onClick={() => setSelectedTier("BASIC")}
-              className="w-full py-2.5 bg-[#34D399] hover:bg-[#2cb984] font-semibold text-[#0A0A0A] rounded-lg transition-colors cursor-pointer"
-            >
-              สมัครแพ็กเกจ Basic
-            </button>
+            {currentTier === "BASIC" ? (
+              <button className="w-full py-2.5 bg-[#1A1A1A] text-[#666666] font-medium rounded-lg cursor-not-allowed">
+                แพ็กเกจปัจจุบัน
+              </button>
+            ) : (
+              <button
+                onClick={() => setSelectedTier("BASIC")}
+                className="w-full py-2.5 bg-[#34D399] hover:bg-[#2cb984] font-semibold text-[#0A0A0A] rounded-lg transition-colors cursor-pointer"
+              >
+                สมัครแพ็กเกจ Basic
+              </button>
+            )}
           </div>
 
           {/* Pro Plan */}
@@ -79,12 +99,18 @@ export default function PricingPage() {
                 <li className="flex items-center gap-2"><span className="text-purple-400">✓</span> LUFS & Peak Auto Mastering แบบจัดเต็ม</li>
               </ul>
             </div>
-            <button
-              onClick={() => setSelectedTier("PRO")}
-              className="w-full py-2.5 bg-gradient-to-r from-purple-500 to-indigo-500 hover:opacity-90 font-semibold text-white rounded-lg transition-opacity cursor-pointer"
-            >
-              สมัครแพ็กเกจ Pro
-            </button>
+            {currentTier === "PRO" ? (
+              <button className="w-full py-2.5 bg-[#1A1A1A] text-[#666666] font-medium rounded-lg cursor-not-allowed">
+                แพ็กเกจปัจจุบัน
+              </button>
+            ) : (
+              <button
+                onClick={() => setSelectedTier("PRO")}
+                className="w-full py-2.5 bg-gradient-to-r from-purple-500 to-indigo-500 hover:opacity-90 font-semibold text-white rounded-lg transition-opacity cursor-pointer"
+              >
+                สมัครแพ็กเกจ Pro
+              </button>
+            )}
           </div>
         </div>
       </main>

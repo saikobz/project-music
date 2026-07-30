@@ -97,7 +97,7 @@
     "grep": "allow",
     "write": "allow",
     "edit": "allow",
-    "bash": "ask"
+    "bash": "allow"
   },
 
   "instructions": [

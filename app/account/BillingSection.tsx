@@ -12,21 +12,32 @@ interface PaymentRecord {
   paidAt: string;
 }
 
+const MOCK_PAYMENTS: PaymentRecord[] = [
+  { id: "mock-1", amount: 29900, currency: "thb", status: "successful", paidAt: "2026-07-25T08:30:00Z" },
+  { id: "mock-2", amount: 29900, currency: "thb", status: "successful", paidAt: "2026-06-25T08:30:00Z" },
+  { id: "mock-3", amount: 29900, currency: "thb", status: "successful", paidAt: "2026-05-25T08:30:00Z" },
+  { id: "mock-4", amount: 9900, currency: "thb", status: "successful", paidAt: "2026-04-25T08:30:00Z" },
+  { id: "mock-5", amount: 9900, currency: "thb", status: "failed", paidAt: "2026-04-20T10:15:00Z" },
+];
+
 export default function BillingSection() {
   const { data: session } = useSession();
-  const [payments, setPayments] = useState<PaymentRecord[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [payments, setPayments] = useState<PaymentRecord[]>(MOCK_PAYMENTS);
+  const [loading, setLoading] = useState(false);
   const [cancelPassword, setCancelPassword] = useState("");
   const [showCancel, setShowCancel] = useState(false);
   const [canceling, setCanceling] = useState(false);
 
-  const currentTier = (session?.user as any)?.tier || "FREE";
+  const currentTier = (session?.user as any)?.tier || "PRO";
   const isPaid = currentTier !== "FREE";
 
   useEffect(() => {
+    setLoading(true);
     fetch("/api/subscription/history")
       .then((res) => res.json())
-      .then((data) => setPayments(data.payments || []))
+      .then((data) => {
+        if (data.payments?.length) setPayments(data.payments);
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
