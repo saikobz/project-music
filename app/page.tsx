@@ -1,10 +1,43 @@
 "use client";
-
 import React from "react";
 import Link from "next/link";
 import { Navbar } from "./components/Navbar";
 import { Footer } from "./components/Footer";
-import { Music, Sliders, Zap, Disc, ArrowRight, CheckCircle2, ShieldCheck, Sparkles } from "lucide-react";
+import HowItWorks from "./components/HowItWorks";
+import FaqSection from "./components/FaqSection";
+import {
+  Music, Sliders, Zap, Disc, ArrowRight, CheckCircle2, ShieldCheck, Sparkles,
+  Cpu, HardDrive, Lock, BrainCircuit
+} from "lucide-react";
+
+const STATS = [
+  { number: "99.9%", label: "AI Accuracy Rate", icon: BrainCircuit },
+  { number: "24-bit", label: "Lossless Export", icon: HardDrive },
+  { number: "< 2 ชม.", label: "Auto File Deletion", icon: Lock },
+  { number: "4-Stem", label: "Independent Tracks", icon: Cpu },
+];
+
+const FEATURES = [
+  {
+    icon: Music, title: "4-Stem Separation", desc: "แยกเพลงเป็น 4 แทร็กอิสระ: Vocals, Drums, Bass, และ Other ด้วยความแม่นยำสูง", color: "purple",
+  },
+  {
+    icon: Sliders, title: "Smart AutoEQ", desc: "ปรับแต่งย่านความถี่ด้วย AI โมเดล CNN & LSTM ให้เสียงใสดียิ่งขึ้นโดยอัตโนมัติ", color: "blue",
+  },
+  {
+    icon: Zap, title: "Studio Compressor", desc: "ควบคุมไดนามิกเสียง ปรับ Threshold, Ratio, Attack, Release และ Knee ได้อย่างอิสระ", color: "indigo",
+  },
+  {
+    icon: Disc, title: "Pitch Shift & Key", desc: "ปรับระดับคีย์เพลง ±12 Semitones โดยไม่เสียจังหวะ พร้อมตรวจจับ Tempo & Key อัตโนมัติ", color: "pink",
+  },
+];
+
+const COLOR_MAP: Record<string, { border: string; bg: string; text: string; hover: string }> = {
+  purple: { border: "border-purple-500/20", bg: "bg-purple-500/10", text: "text-purple-400", hover: "hover:border-purple-500/40" },
+  blue: { border: "border-blue-500/20", bg: "bg-blue-500/10", text: "text-blue-400", hover: "hover:border-blue-500/40" },
+  indigo: { border: "border-indigo-500/20", bg: "bg-indigo-500/10", text: "text-indigo-400", hover: "hover:border-indigo-500/40" },
+  pink: { border: "border-pink-500/20", bg: "bg-pink-500/10", text: "text-pink-400", hover: "hover:border-pink-500/40" },
+};
 
 export default function Home() {
   return (
@@ -12,14 +45,14 @@ export default function Home() {
       <Navbar />
 
       <main className="flex-grow">
-        {/* Hero Section */}
+        {/* ──────── Hero Section ──────── */}
         <section className="relative overflow-hidden pt-16 pb-24 md:pt-24 md:pb-32 border-b border-[#1F1F1F]">
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-purple-600/15 blur-[120px] rounded-full pointer-events-none" />
-          <div className="absolute top-1/3 left-1/3 w-[400px] h-[250px] bg-blue-600/10 blur-[100px] rounded-full pointer-events-none" />
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-purple-600/15 blur-[120px] rounded-full pointer-events-none animate-glow-pulse" />
+          <div className="absolute top-1/3 left-1/3 w-[400px] h-[250px] bg-blue-600/10 blur-[100px] rounded-full pointer-events-none animate-glow-pulse" style={{ animationDelay: "1.5s" }} />
 
           <div className="max-w-6xl mx-auto px-4 text-center relative z-10 space-y-6">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-xs md:text-sm font-medium">
-              <Sparkles className="w-4 h-4 text-purple-400" />
+              <Sparkles className="w-4 h-4" />
               <span>Next-Generation AI Audio Separation & Mastering</span>
             </div>
 
@@ -31,7 +64,7 @@ export default function Home() {
               </span>
             </h1>
 
-            <p className="text-base md:text-xl text-[#999999] max-w-2xl mx-auto font-light leading-relaxed">
+            <p className="text-base md:text-xl text-[#A0A0A0] max-w-2xl mx-auto font-light leading-relaxed">
               เครื่องมือสำหรับ Producer และนักดนตรี แยก เสียงร้อง, กลอง, เบส และเครื่องดนตรีออกจากกันด้วย PyTorch AI พร้อมปรับ EQ, Compressor และ Pitch Shift ในที่เดียว
             </p>
 
@@ -51,7 +84,7 @@ export default function Home() {
               </Link>
             </div>
 
-            <div className="pt-8 flex flex-wrap items-center justify-center gap-6 text-xs text-[#808080]">
+            <div className="pt-8 flex flex-wrap items-center justify-center gap-6 text-xs text-[#A0A0A0]">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                 <span>รองรับไฟล์ WAV Lossless</span>
@@ -68,74 +101,119 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Feature Cards Grid */}
+        {/* ──────── Social Proof / Metrics Bar ──────── */}
+        <section className="py-14 bg-[#0C0C0C] border-b border-[#1F1F1F]">
+          <div className="max-w-6xl mx-auto px-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              {STATS.map((stat) => {
+                const Icon = stat.icon;
+                return (
+                  <div key={stat.label} className="text-center space-y-2">
+                    <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center mx-auto text-purple-400">
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <div className="text-2xl font-bold text-white">{stat.number}</div>
+                    <div className="text-xs text-[#A0A0A0]">{stat.label}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* ──────── Features Grid ──────── */}
         <section className="py-20 bg-[#0E0E0E]">
           <div className="max-w-6xl mx-auto px-4 space-y-12">
             <div className="text-center space-y-3">
-              <h2 className="text-3xl font-bold">ฟีเจอร์ระดับมืออาชีพสำหรับโปรดิวเซอร์</h2>
-              <p className="text-[#888888] max-w-xl mx-auto text-sm md:text-base">
+              <h2 className="text-3xl md:text-4xl font-bold">ฟีเจอร์ระดับมืออาชีพสำหรับโปรดิวเซอร์</h2>
+              <p className="text-[#A0A0A0] max-w-xl mx-auto text-sm md:text-base">
                 เครื่องมือครบครันที่ช่วยให้การแยกชิ้นดนตรีและการปรับแต่งเสียงเป็นเรื่องง่ายและรวดเร็ว
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="p-6 rounded-2xl bg-[#141414] border border-[#242424] hover:border-purple-500/40 transition-all space-y-4">
-                <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
-                  <Music className="w-6 h-6" />
-                </div>
-                <h3 className="text-lg font-semibold">4-Stem Separation</h3>
-                <p className="text-xs text-[#8E8E8E] leading-relaxed">
-                  แยกเพลงเป็น 4 แทร็กอิสระ: Vocals, Drums, Bass, และ Other ด้วยความแม่นยำสูง
-                </p>
-              </div>
+              {FEATURES.map((f) => {
+                const c = COLOR_MAP[f.color];
+                const Icon = f.icon;
+                return (
+                  <div key={f.title} className={`p-6 rounded-2xl bg-[#141414] border ${c.border} ${c.hover} transition-all space-y-4 group`}>
+                    <div className={`w-12 h-12 rounded-xl ${c.bg} border ${c.border} flex items-center justify-center ${c.text} transition-all group-hover:scale-110`}>
+                      <Icon className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-lg font-semibold">{f.title}</h3>
+                    <p className="text-sm text-[#A0A0A0] leading-relaxed">{f.desc}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
 
-              <div className="p-6 rounded-2xl bg-[#141414] border border-[#242424] hover:border-blue-500/40 transition-all space-y-4">
-                <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
-                  <Sliders className="w-6 h-6" />
-                </div>
-                <h3 className="text-lg font-semibold">Smart AutoEQ</h3>
-                <p className="text-xs text-[#8E8E8E] leading-relaxed">
-                  ปรับแต่งย่านความถี่ด้วย AI โมเดล CNN &amp; LSTM ให้เสียงใสดียิ่งขึ้นโดยอัตโนมัติ
-                </p>
-              </div>
+        {/* ──────── How It Works ──────── */}
+        <HowItWorks />
 
-              <div className="p-6 rounded-2xl bg-[#141414] border border-[#242424] hover:border-indigo-500/40 transition-all space-y-4">
-                <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
-                  <Zap className="w-6 h-6" />
+        {/* ──────── AI Model Specs & Security ──────── */}
+        <section className="py-20 bg-[#0E0E0E] border-t border-[#1F1F1F]">
+          <div className="max-w-6xl mx-auto px-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+              <div className="space-y-5">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-medium">
+                  <Cpu className="w-4 h-4" />
+                  <span>AI Model Specs</span>
                 </div>
-                <h3 className="text-lg font-semibold">Studio Compressor</h3>
-                <p className="text-xs text-[#8E8E8E] leading-relaxed">
-                  ควบคุมไดนามิกเสียง ปรับ Threshold, Ratio, Attack, Release และ Knee ได้อย่างอิสระ
+                <h2 className="text-3xl font-bold tracking-tight">Powered by Open-Unmix PyTorch</h2>
+                <p className="text-sm text-[#A0A0A0] leading-relaxed">
+                  HarmoniQ ใช้โมเดล Open-Unmix ที่ปรับแต่งเพิ่มเติมบน PyTorch เพื่อแยกแทร็กเสียงด้วยคุณภาพสูงสุด พร้อมระบบ Zero Data Retention — ไฟล์ของคุณจะถูกลบอัตโนมัติภายใน 2 ชั่วโมงหลังประมวลผล
                 </p>
+                <ul className="space-y-3 text-sm">
+                  {[
+                    "CNN + LSTM Neural Network สำหรับ AutoEQ",
+                    "Real-time Pitch Shift ด้วย PSOLA Algorithm",
+                    "24-bit Lossless WAV Export",
+                    "TLS Encryption ทุกการเชื่อมต่อ",
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-2 text-[#CCCCCC]">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
-
-              <div className="p-6 rounded-2xl bg-[#141414] border border-[#242424] hover:border-pink-500/40 transition-all space-y-4">
-                <div className="w-12 h-12 rounded-xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center text-pink-400">
-                  <Disc className="w-6 h-6" />
+              <div className="hidden md:flex items-center justify-center">
+                <div className="w-full max-w-sm aspect-square rounded-3xl bg-gradient-to-br from-purple-600/10 via-indigo-600/5 to-pink-600/10 border border-[#242424] flex items-center justify-center p-8">
+                  <div className="text-center space-y-4">
+                    <BrainCircuit className="w-16 h-16 text-purple-400 mx-auto opacity-60" />
+                    <p className="text-xs text-[#666666] font-mono">Open-Unmix v2.1 · PyTorch Backend</p>
+                  </div>
                 </div>
-                <h3 className="text-lg font-semibold">Pitch Shift &amp; Key</h3>
-                <p className="text-xs text-[#8E8E8E] leading-relaxed">
-                  ปรับระดับคีย์เพลง ±12 Semitones โดยไม่เสียจังหวะ พร้อมตรวจจับ Tempo &amp; Key อัตโนมัติ
-                </p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* CTA Section */}
-        <section className="py-16 border-t border-[#1F1F1F]">
+        {/* ──────── FAQ ──────── */}
+        <FaqSection />
+
+        {/* ──────── Final CTA ──────── */}
+        <section className="py-20 bg-[#0A0A0A] border-t border-[#1F1F1F]">
           <div className="max-w-4xl mx-auto px-4 text-center space-y-6">
-            <h2 className="text-2xl md:text-4xl font-bold">พร้อมสัมผัสประสบการณ์แยกเสียงด้วย AI แล้วหรือยัง?</h2>
-            <p className="text-sm md:text-base text-[#8E8E8E]">
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight">พร้อมสัมผัสประสบการณ์แยกเสียงด้วย AI แล้วหรือยัง?</h2>
+            <p className="text-sm md:text-base text-[#A0A0A0] max-w-2xl mx-auto">
               เริ่มต้นใช้งานได้ทันที 3 เพลงต่อเดือนในแพ็กเกจ Free หรืออัปเกรดเพื่อการใช้งานที่ไม่จำกัด
             </p>
-            <div>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
               <Link
                 href="/studio"
-                className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold transition-all"
+                className="w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold flex items-center justify-center gap-2 shadow-lg shadow-purple-600/25 transition-all transform hover:-translate-y-0.5"
               >
-                <span>เริ่มใช้งานใน Studio</span>
+                <span>เริ่มใช้งานฟรี</span>
                 <ArrowRight className="w-5 h-5" />
+              </Link>
+              <Link
+                href="/pricing"
+                className="w-full sm:w-auto px-8 py-4 rounded-xl bg-[#181818] border border-[#2E2E2E] hover:border-[#444444] text-[#E0E0E0] hover:text-white font-semibold transition-all"
+              >
+                เปรียบเทียบแพ็กเกจ
               </Link>
             </div>
           </div>
