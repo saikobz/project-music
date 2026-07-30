@@ -122,7 +122,10 @@ export default function AdvancedMultiTrackPlayer({ baseUrl, fileId }: Props) {
       const audioUrl = (stem === "vocals" && isVocalPolished) 
         ? `${baseUrl}/vocals_polished.wav`
         : `${baseUrl}/${stem}.wav`;
-      ws.load(audioUrl);
+      ws.load(audioUrl).catch((e: unknown) => {
+        if ((e as { name?: string })?.name === "AbortError") return;
+        console.error("WaveSurfer load error for", stem, e);
+      });
       ws.on("ready", () => {
         // เมื่อไฟล์พร้อมใช้งานแล้วค่อยเก็บ instance ลง ref
         waveSurferRefs.current[stem] = ws;

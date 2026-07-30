@@ -6,10 +6,12 @@ from fastapi import Request, HTTPException, status
 
 logger = logging.getLogger("backend.auth_guard")
 
+# ไฟล์ JSON สำหรับเก็บจำนวนการใช้งานของผู้ใช้ที่ไม่ได้ล็อกอิน (Guest) โดยใช้ IP Address
 QUOTA_FILE = os.path.join(tempfile.gettempdir(), "harmoniq_guest_quota.json")
 
 
 def _load_guest_quota() -> dict[str, int]:
+    """อ่านข้อมูลโควตาของผู้ใช้ Guest จากไฟล์ JSON"""
     if os.path.exists(QUOTA_FILE):
         try:
             with open(QUOTA_FILE, "r", encoding="utf-8") as f:
@@ -20,29 +22,31 @@ def _load_guest_quota() -> dict[str, int]:
 
 
 def _save_guest_quota(data: dict[str, int]) -> None:
+    """บันทึกข้อมูลโควตาของผู้ใช้ Guest ลงไฟล์ JSON"""
     try:
         with open(QUOTA_FILE, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
     except Exception as e:
-        logger.error(f"Error saving quota file: {e}")
+        logger.error(f"ไม่สามารถบันทึกไฟล์โควตาได้: {e}")
 
 
 def validate_tier_and_quota(user_tier: str, used_quota: int, model_type: str = "LSTM", pitch_shift_semitones: int = 0):
     """
-    Validates user tier permissions and usage quotas for music separation, AutoEQ, Compressor, and Pitch Shifting.
-    Python 3.10 compatible.
+    ตรวจสอบสิทธิ์การเข้าใช้งานและโควตาตามระดับสมาชิก
+    รองรับการแยก Stem, Auto-EQ, Compressor และ Pitch Shifting
+    เข้ากันได้กับ Python 3.10
     """
     tier_upper = (user_tier or "FREE").upper()
     model_upper = (model_type or "LSTM").upper()
 
-    # 1. Model Lock Check: CNN Model is locked for Free Tier users
+    # 1. ตรวจสอบการล็อกโมเดล: CNN สงวนสิทธิ์เฉพาะผู้ใช้ที่อัปเกรดแล้วเท่านั้น
     if model_upper == "CNN" and tier_upper == "FREE":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="โมเดล AutoEQ แบบ CNN สงวนสิทธิ์เฉพาะผู้ใช้สมาชิกระดับ Basic หรือ Pro เท่านั้น กรุณาอัปเกรดแพ็กเกจเพื่อปลดล็อก"
         )
 
-    # 2. Pitch Shift Range Check
+    # 2. ตรวจสอบช่วง Pitch Shift ตามระดับสมาชิก
     max_pitch_shifts = {
         "FREE": 2,
         "BASIC": 6,
@@ -55,7 +59,7 @@ def validate_tier_and_quota(user_tier: str, used_quota: int, model_type: str = "
             detail=f"การปรับ Pitch {pitch_shift_semitones} เซมิโทน เกินโควตาของแพ็กเกจ {tier_upper} (สูงสุด ±{max_allowed} เซมิโทน) กรุณาอัปเกรดแพ็กเกจเพื่อขยายขีดจำกัด"
         )
 
-    # 3. Quota Check (Free=3, Basic=15, Pro=-1 Unlimited)
+    # 3. ตรวจสอบโควตาการใช้งาน: Free=3, Basic=15, Pro=-1 (ไม่จำกัด)
     tier_limits = {
         "FREE": 3,
         "BASIC": 15,
@@ -72,8 +76,8 @@ def validate_tier_and_quota(user_tier: str, used_quota: int, model_type: str = "
 
 def check_and_increment_quota(request: Request, user_tier: str, model_type: str = "LSTM", pitch_shift_semitones: int = 0):
     """
-    ตรวจสิทธิ์และนับจำนวนโควตาตาม IP Address สำหรับผู้ใช้ยศ FREE ( Guest )
-    และบันทึกลงไฟล์ harmoniq_guest_quota.json ใน Temp dir
+    ตรวจสอบสิทธิ์และนับจำนวนโควตาตาม IP Address สำหรับผู้ใช้ระดับ FREE (Guest)
+    และบันทึกลงไฟล์ harmoniq_guest_quota.json ใน Temp directory
     """
     tier_upper = (user_tier or "FREE").upper()
     client_ip = request.client.host if request.client else "127.0.0.1"

@@ -59,9 +59,6 @@ async def separate(
                     arcname = os.path.relpath(file_path, output_dir)
                     zipf.write(file_path, arcname)
 
-        if os.path.exists(input_path):
-            os.remove(input_path)
-
         return JSONResponse(
             content={
                 "status": "success",
@@ -75,6 +72,9 @@ async def separate(
     except Exception as e:
         logger.exception("Stem separation error")
         return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
+    finally:
+        if "input_path" in locals() and os.path.exists(input_path):
+            os.remove(input_path)
 
 
 @router.get("/download/{file_id}")
