@@ -1,6 +1,7 @@
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider          = "sqlite"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = "file:./dev-shadow.db"
 }
 
 generator client {
@@ -8,38 +9,77 @@ generator client {
 }
 
 model User {
-  id               String        @id @default(cuid())
-  name             String?
-  email            String        @unique
-  password         String?       // Hashed password for Credentials provider
-  image            String?
-  omiseCustomerId  String?
-  subscription     Subscription?
-  projectRecords   ProjectRecord[]
-  usageQuotas      UsageQuota[]
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  id                 String          @id @default(cuid())
+  name               String?
+  email              String          @unique
+  password           String? // Hashed password for Credentials provider
+  image              String?
+  omiseCustomerId    String?
+  theme              String          @default("DARK")
+  language           String          @default("TH")
+  emailNotifications Boolean         @default(true)
+  subscription       Subscription?
+  accounts           Account[]
+  sessions           Session[]
+  projectRecords     ProjectRecord[]
+  usageQuotas        UsageQuota[]
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
 }
 
 model Subscription {
-  id                 String             @id @default(cuid())
-  userId             String             @unique
-  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tier               String             @default("FREE") // FREE, BASIC, PRO
-  status             String             @default("ACTIVE") // ACTIVE, PAST_DUE, EXPIRED
-  paymentMethod      String?            // CREDIT_CARD, PROMPTPAY
+  id                 String    @id @default(cuid())
+  userId             String    @unique
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tier               String    @default("FREE") // FREE, BASIC, PRO
+  status             String    @default("ACTIVE") // ACTIVE, PAST_DUE, EXPIRED
+  paymentMethod      String? // CREDIT_CARD, PROMPTPAY
   omiseScheduleId    String?
-  currentPeriodStart DateTime           @default(now())
+  currentPeriodStart DateTime  @default(now())
   currentPeriodEnd   DateTime?
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 }
 
 model UsageQuota {
   id           String   @id @default(cuid())
   userId       String
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  monthlyQuota Int      // FREE=3, BASIC=15, PRO=-1
+  monthlyQuota Int // FREE=3, BASIC=15, PRO=-1
   usedCount    Int      @default(0)
   periodStart  DateTime
   periodEnd    DateTime
