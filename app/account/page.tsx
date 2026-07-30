@@ -1,21 +1,23 @@
 "use client";
 import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import { User, KeyRound, Link2, Settings } from "lucide-react";
+import { User, KeyRound, Link2, Settings, Trash2 } from "lucide-react";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
 import ProfileSection from "./ProfileSection";
 import PasswordSection from "./PasswordSection";
 import ConnectedAccountsSection from "./ConnectedAccountsSection";
 import PreferencesSection from "./PreferencesSection";
+import DataSection from "./DataSection";
 
-type AccountTab = "profile" | "password" | "accounts" | "preferences";
+type AccountTab = "profile" | "password" | "accounts" | "preferences" | "data";
 
 const TABS: { id: AccountTab; label: string; icon: React.ReactNode }[] = [
   { id: "profile", label: "Profile", icon: <User className="w-4 h-4" /> },
   { id: "password", label: "Password", icon: <KeyRound className="w-4 h-4" /> },
   { id: "accounts", label: "Connected Accounts", icon: <Link2 className="w-4 h-4" /> },
   { id: "preferences", label: "Preferences", icon: <Settings className="w-4 h-4" /> },
+  { id: "data", label: "Data", icon: <Trash2 className="w-4 h-4" /> },
 ];
 
 export default function AccountPage() {
@@ -139,6 +141,7 @@ export default function AccountPage() {
               onUpdated={(prefs) => setData((prev: any) => ({ ...prev, preferences: prefs }))}
             />
           )}
+          {activeTab === "data" && <DataSection hasPassword={data.user.hasPassword} />}
         </div>
       </main>
 
