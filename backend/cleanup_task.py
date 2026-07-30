@@ -4,12 +4,14 @@ import asyncio
 import shutil
 import logging
 
+from backend.config import ALL_CLEANUP_DIRS, DEFAULT_CLEANUP_TTL_SECONDS, CLEANUP_INTERVAL_SECONDS
+
 logger = logging.getLogger(__name__)
 
-# โฟลเดอร์ที่ต้องตรวจสอบเพื่อลบไฟล์เก่า
-CLEANUP_DIRS = ["uploads", "separated", "eq_applied"]
+# โฟลเดอร์ทั้งหมดที่ต้องตรวจสอบลบไฟล์เก่า (ดึงมาจาก backend.config)
+CLEANUP_DIRS = ALL_CLEANUP_DIRS
 
-async def periodic_cleanup(interval_seconds: int = 300, ttl_seconds: int = 1200):
+async def periodic_cleanup(interval_seconds: int = CLEANUP_INTERVAL_SECONDS, ttl_seconds: int = DEFAULT_CLEANUP_TTL_SECONDS):
     """
     งานเบื้องหลังสำหรับกวาดลบไฟล์/โฟลเดอร์ที่เก่าเกินเวลาที่กำหนด (ttl_seconds)
     จะรันวนลูปทุกๆ interval_seconds

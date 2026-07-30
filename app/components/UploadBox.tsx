@@ -15,11 +15,11 @@ import { CompressorSettings } from "./settings/CompressorSettings";
 import { PitchShiftSettings } from "./settings/PitchShiftSettings";
 import ExportMasterModal from "./ExportMasterModal";
 import SingleExportModal from "./SingleExportModal";
-// ที่อยู่ของ backend และข้อจำกัดขนาดไฟล์ฝั่งหน้าเว็บ
+import { API_BASE_URL, MAX_UPLOAD_BYTES } from "@/lib/config";
 
 // ค่าตั้งต้นของ API และข้อจำกัดการอัปโหลด
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
-const MAX_SIZE_BYTES = 100 * 1024 * 1024; // 100MB
+const API_BASE = API_BASE_URL;
+const MAX_SIZE_BYTES = MAX_UPLOAD_BYTES;
 const AUTO_EQ_DELTA_CLAMP_MIN = 0;
 const AUTO_EQ_DELTA_CLAMP_MAX = 6;
 const AUTO_EQ_DELTA_CLAMP_DEFAULT = 2;

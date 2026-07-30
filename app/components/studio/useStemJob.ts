@@ -4,9 +4,10 @@ import { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
+import { API_BASE_URL, MAX_UPLOAD_BYTES } from "@/lib/config";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
-const MAX_SIZE_BYTES = 100 * 1024 * 1024; // 100MB
+const API_BASE = API_BASE_URL;
+const MAX_SIZE_BYTES = MAX_UPLOAD_BYTES;
 
 export interface UseStemJobOptions {
   onHeightChange?: (expanded: boolean) => void;

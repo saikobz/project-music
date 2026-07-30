@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
+import { API_BASE_URL } from "@/lib/config";
 
 export const metadata: Metadata = {
   title: "API & Pricing — HarmoniQ",
@@ -43,7 +44,7 @@ const PLANS = [
 const API_EXAMPLES = [
   {
     lang: "cURL",
-    code: `curl -X POST http://localhost:8000/separate \\
+    code: `curl -X POST ${API_BASE_URL}/separate \\
   -F "file=@/path/to/song.wav" \\
   -F "export_format=wav"`,
   },
@@ -53,7 +54,7 @@ const API_EXAMPLES = [
 
 with open("song.wav", "rb") as f:
     response = requests.post(
-        "http://localhost:8000/separate",
+        "${API_BASE_URL}/separate",
         files={"file": f},
         params={"export_format": "wav"}
     )

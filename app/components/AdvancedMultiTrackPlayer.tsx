@@ -1,9 +1,10 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import WaveSurfer from "wavesurfer.js";
+import { API_BASE_URL, DEFAULT_STEMS } from "@/lib/config";
 
 // backend แยกเพลงออกมาเป็น 4 stem ชื่อคงที่เสมอ
-const stems = ["vocals", "drums", "bass", "other"] as const;
+const stems = DEFAULT_STEMS;
 type StemType = (typeof stems)[number];
 
 // ระดับเสียงตั้งต้นของแต่ละแทร็ก เพื่อให้เริ่มฟังได้ทันทีโดยไม่ดังสุด
@@ -260,7 +261,7 @@ export default function AdvancedMultiTrackPlayer({ baseUrl, fileId }: Props) {
     // ถ้ายังไม่เคย polish ให้เรียก API
     setIsPolishing(true);
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+      const apiBase = API_BASE_URL;
       const res = await fetch(`${apiBase}/api/process/vocal-polish?file_id=${fileId}`, {
         method: 'POST'
       });

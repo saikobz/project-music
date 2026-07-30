@@ -10,15 +10,14 @@ from uuid import uuid4
 from typing import Tuple
 from fastapi import UploadFile, HTTPException
 
+from backend.config import MAX_UPLOAD_BYTES, DIR_UPLOADS, MAX_CONCURRENT_TASKS
+
 logger = logging.getLogger(__name__)
 
-# จำกัดขนาดไฟล์อัปโหลดสูงสุด 100MB
-MAX_UPLOAD_BYTES = 100 * 1024 * 1024
-UPLOAD_DIR = "uploads"
+UPLOAD_DIR = DIR_UPLOADS
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # Semaphore สำหรับจำกัด Concurrency การประมวลผล AI/DSP
-MAX_CONCURRENT_TASKS = 2
 processing_semaphore = asyncio.Semaphore(MAX_CONCURRENT_TASKS)
 
 

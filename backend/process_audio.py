@@ -14,6 +14,7 @@ import torchaudio
 import numpy as np
 import librosa
 import soundfile as sf
+from backend.config import STEM_TARGETS, DIR_SEPARATED
 
 # เลือกใช้ GPU อัตโนมัติถ้ามี
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -56,17 +57,17 @@ def get_openunmix_separator():
     """โหลดและแคช OpenUnmix separator โมเดลไว้ใน RAM ด้วย lru_cache เพื่อใช้ซ้ำ"""
     from openunmix import utils as openunmix_utils
     local_model_path = os.path.join("backend", "models", "umxl")
-    required_files = ["separator.json"] + [f"{t}.json" for t in ["vocals", "drums", "bass", "other"]]
+    required_files = ["separator.json"] + [f"{t}.json" for t in STEM_TARGETS]
 
     if os.path.isdir(local_model_path):
         has_json = all(os.path.isfile(os.path.join(local_model_path, f)) for f in required_files)
-        has_pth = all(len(glob.glob(os.path.join(local_model_path, f"{t}*.pth"))) > 0 for t in ["vocals", "drums", "bass", "other"])
+        has_pth = all(len(glob.glob(os.path.join(local_model_path, f"{t}*.pth"))) > 0 for t in STEM_TARGETS)
         if has_json and has_pth:
             try:
                 print(f"[INFO] โหลดและแคชโมเดล Open-Unmix ท้องถิ่น ({local_model_path})...")
                 return openunmix_utils.load_separator(
                     model_str_or_path=local_model_path,
-                    targets=["vocals", "drums", "bass", "other"],
+                    targets=list(STEM_TARGETS),
                     niter=1, residual=False, wiener_win_len=300,
                     device=str(DEVICE), pretrained=True, filterbank="torch",
                 )
@@ -76,13 +77,13 @@ def get_openunmix_separator():
     print("[INFO] โหลดและแคชโมเดล Open-Unmix (umxl) จาก PyTorch Hub...")
     return openunmix_utils.load_separator(
         model_str_or_path="umxl",
-        targets=["vocals", "drums", "bass", "other"],
+        targets=list(STEM_TARGETS),
         niter=1, residual=False, wiener_win_len=300,
         device=str(DEVICE), pretrained=True, filterbank="torch",
     )
 
 
-def separate_audio(input_path: str, output_dir: str = "separated") -> str:
+def separate_audio(input_path: str, output_dir: str = DIR_SEPARATED) -> str:
     try:
         from openunmix.predict import separate
     except ImportError as exc:
@@ -113,7 +114,7 @@ def separate_audio(input_path: str, output_dir: str = "separated") -> str:
         estimates = separate(
             audio=audio_tensor.to(DEVICE),
             rate=rate,
-            targets=["vocals", "drums", "bass", "other"],
+            targets=list(STEM_TARGETS),
             separator=separator,
             device=str(DEVICE),
         )
