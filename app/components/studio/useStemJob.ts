@@ -106,6 +106,10 @@ export function useStemJob(options?: UseStemJobOptions) {
   };
 
   const saveHistory = (action: string, fileId?: string, stems?: string[]) => {
+    if (!session) {
+      console.log("saveHistory: skipped (user not logged in)");
+      return;
+    }
     fetch("/api/history", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -115,8 +119,8 @@ export function useStemJob(options?: UseStemJobOptions) {
         ...(fileId && { fileId }),
         ...(stems && { stems }),
       }),
-    }).catch(() => {
-      /* silent — don't interrupt user flow */
+    }).catch((err) => {
+      console.error("saveHistory failed:", err);
     });
   };
 
