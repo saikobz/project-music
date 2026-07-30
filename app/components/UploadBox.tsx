@@ -798,7 +798,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                     >
                       {/* shimmer overlay เมื่อ processing */}
                       {loading && (
-                        <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-[shimmer_1.5s_linear_infinite]" style={{backgroundSize: "200% 100%"}} />
+                        <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-[shimmer_1.5s_linear_infinite] bg-[length:200%_100%]" />
                       )}
                       <span className="relative flex items-center justify-center gap-2">
                         {loading ? (

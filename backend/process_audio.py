@@ -151,6 +151,12 @@ def separate_audio(input_path: str, output_dir: str = DIR_SEPARATED) -> str:
             )
 
         print("แยกเสียงเสร็จแล้ว:", output_dir)
+
+        # ปลดปล่อยหน่วยความจำ: ล้าง Tensor และ CUDA cache หลังเสร็จการ inference
+        del audio_tensor, estimates
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
         return output_dir
 
     except Exception as e:

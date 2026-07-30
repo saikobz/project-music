@@ -440,4 +440,10 @@ def apply_auto_eq_file(
 
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
     sf.write(output_path, processed, sr)
+
+    # ปลดปล่อยหน่วยความจำ: ล้างโมเดลและ Tensor หลัง inference
+    del model, waveform, processed
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
     return output_path
