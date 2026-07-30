@@ -5,6 +5,7 @@ import { User, KeyRound, Link2, Settings } from "lucide-react";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
 import ProfileSection from "./ProfileSection";
+import PasswordSection from "./PasswordSection";
 
 type AccountTab = "profile" | "password" | "accounts" | "preferences";
 
@@ -127,7 +128,7 @@ export default function AccountPage() {
             <ProfileSection user={user} onUpdated={handleProfileUpdated} />
           )}
           {activeTab === "password" && (
-            <p className="text-[#8E8E8E] text-sm">Password section coming in next task.</p>
+            <PasswordSection hasPassword={!!data.user.password} />
           )}
           {activeTab === "accounts" && (
             <p className="text-[#8E8E8E] text-sm">Connected accounts section coming in next task.</p>
