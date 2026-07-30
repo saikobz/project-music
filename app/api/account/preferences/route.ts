@@ -20,6 +20,9 @@ export async function PUT(req: Request) {
   if (language !== undefined && !VALID_LANGUAGES.includes(language)) {
     return NextResponse.json({ error: "Invalid language value" }, { status: 400 });
   }
+  if (emailNotifications !== undefined && typeof emailNotifications !== "boolean") {
+    return NextResponse.json({ error: "emailNotifications must be a boolean" }, { status: 400 });
+  }
 
   const user = await prisma.user.update({
     where: { id: session.user.id },

@@ -34,6 +34,7 @@ import { GET as GetProviders } from "../app/api/account/providers/route";
 import { DELETE as DeleteProviders } from "../app/api/account/providers/route";
 import { PUT as PutPreferences } from "../app/api/account/preferences/route";
 import { getServerSession } from "next-auth";
+const { prisma } = require("@/lib/prisma");
 
 describe("Account API Endpoint", () => {
   it("should return 401 if user is unauthenticated", async () => {
@@ -127,5 +128,52 @@ describe("Account API — PUT /api/account/preferences", () => {
     });
     const res = await PutPreferences(req);
     expect(res.status).toBe(401);
+  });
+
+  it("should return 400 if invalid theme value", async () => {
+    (getServerSession as jest.Mock).mockResolvedValueOnce({ user: { id: "user-1", email: "test@test.com" } });
+    const req = new Request("http://localhost/api/account/preferences", {
+      method: "PUT",
+      body: JSON.stringify({ theme: "BLUE" }),
+    });
+    const res = await PutPreferences(req);
+    expect(res.status).toBe(400);
+  });
+});
+
+describe("Account API — Positive path tests", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("PUT /api/account/profile — should update name and return 200", async () => {
+    (getServerSession as jest.Mock).mockResolvedValueOnce({ user: { id: "user-1", email: "test@test.com" } });
+    prisma.user.findUnique.mockResolvedValueOnce(null);
+    prisma.user.update.mockResolvedValueOnce({ name: "New Name", email: "test@test.com", image: null });
+    const req = new Request("http://localhost/api/account/profile", {
+      method: "PUT",
+      body: JSON.stringify({ name: "New Name" }),
+    });
+    const res = await PutProfile(req);
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(body.user.name).toBe("New Name");
+  });
+
+  it("PUT /api/account/preferences — should save theme and return 200", async () => {
+    (getServerSession as jest.Mock).mockResolvedValueOnce({ user: { id: "user-1", email: "test@test.com" } });
+    prisma.user.update.mockResolvedValueOnce({
+      theme: "LIGHT",
+      language: "TH",
+      emailNotifications: true,
+    });
+    const req = new Request("http://localhost/api/account/preferences", {
+      method: "PUT",
+      body: JSON.stringify({ theme: "LIGHT" }),
+    });
+    const res = await PutPreferences(req);
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(body.preferences.theme).toBe("LIGHT");
   });
 });
