@@ -105,6 +105,21 @@ export function useStemJob(options?: UseStemJobOptions) {
     return true;
   };
 
+  const saveHistory = (action: string, fileId?: string, stems?: string[]) => {
+    fetch("/api/history", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action,
+        originalFilename: file?.name || "unknown.wav",
+        ...(fileId && { fileId }),
+        ...(stems && { stems }),
+      }),
+    }).catch(() => {
+      /* silent — don't interrupt user flow */
+    });
+  };
+
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
@@ -256,6 +271,7 @@ export function useStemJob(options?: UseStemJobOptions) {
         stopProgressSimulation(100);
         setSuccessMessage("วิเคราะห์ไฟล์เสียงสำเร็จ!");
         toast.success("วิเคราะห์ไฟล์เสียงสำเร็จ!");
+        saveHistory("analyze");
       } else if (action === "separate") {
         const response = await axios.post(`${API_BASE}${endpoint}`, formData, requestOptions);
         const data = response.data;
@@ -265,6 +281,7 @@ export function useStemJob(options?: UseStemJobOptions) {
           stopProgressSimulation(100);
           setSuccessMessage("แยกเสียงสำเร็จ! สามารถดาวน์โหลดและมิกซ์เสียงได้ทันที");
           toast.success("แยกเสียงสำเร็จ!");
+          saveHistory("separate", data.file_id, ["Vocals", "Drums", "Bass", "Other"]);
         }
       } else {
         const response = await axios.post(`${API_BASE}${endpoint}`, formData, {
@@ -287,6 +304,7 @@ export function useStemJob(options?: UseStemJobOptions) {
         stopProgressSimulation(100);
         setSuccessMessage("ประมวลผลเสียงสำเร็จ!");
         toast.success("ประมวลผลเสียงสำเร็จ!");
+        saveHistory(action);
       }
     } catch (err: any) {
       stopProgressSimulation(0);
