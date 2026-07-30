@@ -38,21 +38,14 @@ export default function ConnectedAccountsSection() {
       .finally(() => setLoading(false));
   }, []);
 
-  const handleLink = async (providerId: string) => {
-    if (providerId === "credentials") return;
-    try {
-      await signIn(providerId, { redirect: false });
-      const res = await fetch("/api/account/providers");
-      const data = await res.json();
-      setProviders(data.providers || []);
-      toast.success(`Connected to ${providerId}`);
-    } catch {
-      toast.error("Failed to connect account");
-    }
+  const handleLink = (providerId: string) => {
+    // OAuth providers always redirect, so no post-signIn code needed
+    signIn(providerId, { redirect: false });
   };
 
   const handleUnlink = async (providerId: string) => {
     if (providerId === "credentials") return;
+    if (!window.confirm(`Disconnect ${providerId}? You may lose access if you have no other login method.`)) return;
     try {
       const res = await fetch(`/api/account/providers`, {
         method: "DELETE",
