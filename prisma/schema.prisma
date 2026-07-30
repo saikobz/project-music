@@ -15,6 +15,7 @@ model User {
   image            String?
   omiseCustomerId  String?
   subscription     Subscription?
+  projectRecords   ProjectRecord[]
   usageQuotas      UsageQuota[]
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
@@ -42,4 +43,15 @@ model UsageQuota {
   usedCount    Int      @default(0)
   periodStart  DateTime
   periodEnd    DateTime
+}
+
+model ProjectRecord {
+  id               String   @id @default(cuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action           String
+  originalFilename String
+  fileId           String?
+  stems            String?
+  createdAt        DateTime @default(now())
 }
