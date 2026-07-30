@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import bcrypt from "bcryptjs";
+import { omise } from "@/lib/omise";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -46,4 +48,43 @@ export async function GET() {
     subscription: user.subscription || { tier: "FREE", status: "ACTIVE" },
     quota: currentQuota,
   });
+}
+
+export async function DELETE(req: Request) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { password } = await req.json();
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    include: { subscription: true },
+  });
+  if (!user) {
+    return NextResponse.json({ error: "User not found" }, { status: 404 });
+  }
+
+  if (user.password) {
+    if (!password) {
+      return NextResponse.json({ error: "Password is required to delete account" }, { status: 400 });
+    }
+    const isValid = await bcrypt.compare(password, user.password);
+    if (!isValid) {
+      return NextResponse.json({ error: "Incorrect password" }, { status: 401 });
+    }
+  }
+
+  if (user.subscription?.omiseScheduleId) {
+    try {
+      await omise.schedules.destroy(user.subscription.omiseScheduleId);
+    } catch {
+      // Schedule may already be destroyed — continue
+    }
+  }
+
+  await prisma.user.delete({ where: { id: session.user.id } });
+
+  return NextResponse.json({ success: true });
 }
