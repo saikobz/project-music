@@ -1,0 +1,118 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "anthropic/claude-sonnet-4-5",
+  "default_agent": "build",
+  "subagent_depth": 1,
+  "autoupdate": false,
+
+  "agent": {
+    "backend-dev": {
+      "description": "HarmoniQ backend specialist — FastAPI, PyTorch, librosa, Pedalboard",
+      "mode": "subagent",
+      "prompt": "คุณคือนักพัฒนา Backend ของ HarmoniQ ทำงานกับ Python 3.10, FastAPI, PyTorch และ audio processing libraries เท่านั้น\nกฎ:\n- เขียน Docstrings และ Comments เป็นภาษาไทย (ตาม AGENTS.md)\n- ห้ามใช้ Python 3.11+ features เช่น ExceptionGroup, typing.Self\n- Input file: WAV ≤100MB เท่านั้น\n- ต้อง cleanup temp files ใน uploads/, separated/, eq_applied/, compressed/ ทุกครั้ง\n- ปิด soundfile objects และ clear PyTorch cache\n- รัน `python -m unittest discover -s backend/tests` หลังจากแก้ไข",
+      "model": "anthropic/claude-sonnet-4-5",
+      "tools": {
+        "write": true,
+        "edit": true,
+        "bash": true,
+        "read": true,
+        "glob": true,
+        "grep": true
+      }
+    },
+    "frontend-dev": {
+      "description": "HarmoniQ frontend specialist — Next.js 15, React 19, Tailwind CSS 4, WaveSurfer.js",
+      "mode": "subagent",
+      "prompt": "คุณคือนักพัฒนา Frontend ของ HarmoniQ\nกฎ:\n- ใช้ Next.js App Router, pages อยู่ใน app/\n- Components อยู่ใน app/components/\n- ใช้ Tailwind CSS 4 เท่านั้น ห้าม inline styles\n- รักษา Premium aesthetics, responsive design\n- ใช้ WaveSurfer.js สำหรับ audio — ต้อง cleanup instance ทุกครั้ง\n- Browser env vars ต้องมี prefix NEXT_PUBLIC_\n- ใช้ `npm run type-check` หรือ `npx tsc --noEmit` (ห้าม npm run build ตอน dev)\n- รัน `npx jest` สำหรับทดสอบ",
+      "tools": {
+        "write": true,
+        "edit": true,
+        "bash": true,
+        "read": true,
+        "glob": true,
+        "grep": true
+      }
+    },
+    "reviewer": {
+      "description": "HarmoniQ code reviewer — checks backend + frontend quality",
+      "mode": "subagent",
+      "prompt": "คุณคือ senior code reviewer ของ HarmoniQ ตรวจสอบ:\n- Security: exposed secrets, missing auth\n- Performance: memory leaks จาก audio processing, WaveSurfer cleanup\n- Python 3.10 compatibility\n- Thai comment/documentation consistency\n- การ cleanup temp files ที่ถูกต้อง\n- Tailwind CSS 4 patterns\n- TypeScript strict mode compliance\nแนะนำการแก้ไข แต่ห้ามแก้ไขไฟล์เอง",
+      "tools": {
+        "write": false,
+        "edit": false,
+        "bash": false,
+        "read": true,
+        "glob": true,
+        "grep": true
+      }
+    },
+    "test-writer": {
+      "description": "HarmoniQ test writer — Jest + pytest",
+      "mode": "subagent",
+      "prompt": "คุณเขียน tests สำหรับ HarmoniQ:\n- Frontend: Jest + ts-jest ใน tests/ directory\n- Backend: pytest + unittest ใน backend/tests/\n- Cover edge cases สำหรับ audio processing, auth, API endpoints\n- ใช้ patterns จาก tests ที่มีอยู่แล้วใน codebase\n- อย่า mock AI models เว้นแต่จำเป็น\n- รัน tests หลังจากเขียนเพื่อ verify",
+      "model": "anthropic/claude-haiku-4-5",
+      "tools": {
+        "write": true,
+        "edit": true,
+        "bash": true,
+        "read": true,
+        "glob": true,
+        "grep": true
+      }
+    }
+  },
+
+  "command": {
+    "dev": {
+      "template": "Start both HarmoniQ development servers:\n\n1. Terminal 1 (Frontend):\n```bash\nnpm run dev\n```\n\n2. Terminal 2 (Backend):\n```bash\npython -m uvicorn backend.main:app --reload --port 8000\n```\n\nWait for both to start, then confirm URLs:\n- Frontend: http://localhost:3000\n- Backend: http://localhost:8000/health",
+      "description": "Start frontend (Next.js) + backend (FastAPI) dev servers",
+      "model": "anthropic/claude-haiku-4-5"
+    },
+    "test-all": {
+      "template": "Run ALL HarmoniQ tests:\n\n1. Frontend tests:\n```bash\nnpx jest --no-coverage\n```\n\n2. Backend tests:\n```bash\npython -m unittest discover -s backend/tests -v\n```\n\nIf any test fails, investigate and suggest fixes.",
+      "description": "Run frontend (Jest) + backend (pytest) tests",
+      "model": "anthropic/claude-haiku-4-5"
+    },
+    "typecheck": {
+      "template": "TypeScript type checking:\n```bash\nnpx tsc --noEmit\n```\nFix any type errors found.",
+      "description": "TypeScript type checking (safe alternative to npm run build)"
+    },
+    "lint": {
+      "template": "Run linters:\n\nFrontend:\n```bash\nnpm run lint\n```\n\nBackend:\n```bash\npython -m ruff check backend/\n```\n\nFix all reported issues.",
+      "description": "Run frontend (next lint) + backend (ruff) linters"
+    },
+    "db": {
+      "template": "Regenerate Prisma client and sync database:\n```bash\nnpx prisma generate\n```\n\nIf schema changed:\n```bash\nnpx prisma db push\n```",
+      "description": "Regenerate Prisma client + sync DB schema"
+    },
+    "clean": {
+      "template": "Clean up generated audio files and caches:\n```bash\nRemove-Item -Recurse -Force \"uploads/*\", \"separated/*\", \"eq_applied/*\", \"compressed/*\" -ErrorAction SilentlyContinue\n```",
+      "description": "Clean temp audio files and caches"
+    }
+  },
+
+  "permission": {
+    "read": "allow",
+    "glob": "allow",
+    "grep": "allow",
+    "write": "allow",
+    "edit": "allow",
+    "bash": "ask"
+  },
+
+  "instructions": [
+    "AGENTS.md"
+  ],
+
+  "lsp": true,
+  "formatter": {
+    "prettier": {
+      "disabled": false,
+      "extensions": [".ts", ".tsx", ".js", ".jsx", ".json", ".css", ".md"]
+    },
+    "ruff": {
+      "command": ["python", "-m", "ruff", "format", "$FILE"],
+      "extensions": [".py"]
+    }
+  }
+}
