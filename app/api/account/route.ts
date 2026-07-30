@@ -56,7 +56,13 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { password } = await req.json();
+  let password: string | undefined;
+  try {
+    const body = await req.json();
+    password = body.password;
+  } catch {
+    // Body may be empty or malformed — proceed
+  }
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
