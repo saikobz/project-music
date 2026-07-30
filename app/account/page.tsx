@@ -128,7 +128,7 @@ export default function AccountPage() {
             <ProfileSection user={user} onUpdated={handleProfileUpdated} />
           )}
           {activeTab === "password" && (
-            <PasswordSection hasPassword={!!data.user.password} />
+            <PasswordSection hasPassword={data.user.hasPassword} />
           )}
           {activeTab === "accounts" && (
             <p className="text-[#8E8E8E] text-sm">Connected accounts section coming in next task.</p>

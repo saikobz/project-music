@@ -36,6 +36,7 @@ export async function GET() {
       email: user.email,
       image: user.image,
       createdAt: user.createdAt,
+      hasPassword: !!user.password,
     },
     preferences: {
       theme: user.theme,
