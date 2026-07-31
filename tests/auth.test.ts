@@ -1,3 +1,7 @@
+jest.mock("@auth/prisma-adapter", () => ({
+  PrismaAdapter: jest.fn(),
+}));
+
 import { authOptions } from "../lib/auth";
 
 describe("NextAuth Session Callback", () => {

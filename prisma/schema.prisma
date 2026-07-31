@@ -14,6 +14,7 @@ model User {
   email              String          @unique
   password           String? // Hashed password for Credentials provider
   image              String?
+  emailVerified      DateTime?
   omiseCustomerId    String?
   theme              String          @default("DARK")
   language           String          @default("TH")

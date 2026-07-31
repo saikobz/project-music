@@ -1,4 +1,5 @@
 import { NextAuthOptions } from "next-auth";
+import { PrismaAdapter } from "@auth/prisma-adapter";
 import GoogleProvider from "next-auth/providers/google";
 import FacebookProvider from "next-auth/providers/facebook";
 import LineProvider from "next-auth/providers/line";
@@ -7,6 +8,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 
 export const authOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
   pages: {
     signIn: "/auth/signin",
@@ -47,10 +49,30 @@ export const authOptions: NextAuthOptions = {
     FacebookProvider({
       clientId: process.env.FACEBOOK_CLIENT_ID || "",
       clientSecret: process.env.FACEBOOK_CLIENT_SECRET || "",
+      authorization: {
+        params: { scope: "public_profile" },
+      },
+      profile(profile) {
+        return {
+          id: profile.id,
+          name: profile.name,
+          email: profile.email || `fb_${profile.id}@facebook.local`,
+          image: profile.picture?.data?.url || null,
+        };
+      },
     }),
     LineProvider({
       clientId: process.env.LINE_CLIENT_ID || "",
       clientSecret: process.env.LINE_CLIENT_SECRET || "",
+      profile(profile) {
+        return {
+          id: profile.sub,
+          name: profile.name,
+          // LINE จะส่ง email ก็ต่อเมื่อได้รับอนุญาตจากผู้ใช้ จึงใช้ fallback เป็น id ที่ได้จาก LINE
+          email: profile.email || `line_${profile.sub}@line.local`,
+          image: profile.picture,
+        };
+      },
     }),
   ],
   callbacks: {
