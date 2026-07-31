@@ -55,7 +55,6 @@ export function useStemJob(options?: UseStemJobOptions) {
   const [statusText, setStatusText] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
 
-  const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const hasResults = Boolean(fileId || downloadUrl || analysis);
@@ -139,19 +138,11 @@ export function useStemJob(options?: UseStemJobOptions) {
   };
 
   const startProgressSimulation = () => {
-    setProgress(5);
-    if (progressTimerRef.current) clearInterval(progressTimerRef.current);
-    progressTimerRef.current = setInterval(() => {
-      setProgress((prev) => (prev < 90 ? prev + Math.floor(Math.random() * 5) + 2 : prev));
-    }, 500);
+    setProgress(0);
   };
 
-  const stopProgressSimulation = (finalProgress = 100) => {
-    if (progressTimerRef.current) {
-      clearInterval(progressTimerRef.current);
-      progressTimerRef.current = null;
-    }
-    setProgress(finalProgress);
+  const stopProgressSimulation = (_finalProgress?: number) => {
+    setProgress(0);
   };
 
   const handleExport = async (exportType: string, format: string, targetLufs: number, selectedStems: string[]) => {
