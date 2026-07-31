@@ -43,16 +43,16 @@ export const authOptions: NextAuthOptions = {
       },
     }),
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID || "google_placeholder",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "google_placeholder",
+      clientId: process.env.GOOGLE_CLIENT_ID || "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
     }),
     FacebookProvider({
-      clientId: process.env.FACEBOOK_CLIENT_ID || "facebook_placeholder",
-      clientSecret: process.env.FACEBOOK_CLIENT_SECRET || "facebook_placeholder",
+      clientId: process.env.FACEBOOK_CLIENT_ID || "",
+      clientSecret: process.env.FACEBOOK_CLIENT_SECRET || "",
     }),
     LineProvider({
-      clientId: process.env.LINE_CLIENT_ID || "line_placeholder",
-      clientSecret: process.env.LINE_CLIENT_SECRET || "line_placeholder",
+      clientId: process.env.LINE_CLIENT_ID || "",
+      clientSecret: process.env.LINE_CLIENT_SECRET || "",
     }),
   ],
   callbacks: {
