@@ -347,7 +347,24 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
       let response: any;
       let suffix = "";
       let successMsg = "ประมวลผลเสร็จแล้ว";
-      const reqHeaders = { "X-User-Tier": userTier };
+      const userId = (session?.user as any)?.id;
+      const reqHeaders: Record<string, string> = { "X-User-Tier": userTier };
+      if (userId) {
+        // ส่ง user id ให้ backend เพื่อแยกการนับโควตาของผู้ใช้ที่ Login แล้วออกจาก Guest (IP)
+        reqHeaders["X-User-Id"] = userId;
+      }
+
+      // สำหรับผู้ใช้ที่ Login แล้ว: ตรวจสอบและนับโควตาจาก Database ก่อนส่งงานไปประมวลผล
+      if (userId) {
+        const quotaRes = await fetch("/api/quota/consume", { method: "POST" });
+        if (quotaRes.status === 403) {
+          const quotaErr = await quotaRes.json().catch(() => null);
+          throw new Error(quotaErr?.error || "โควตาประมวลผลฟรีเต็มแล้ว กรุณาสมัครสมาชิกเพื่อใช้งานต่อ");
+        }
+        if (!quotaRes.ok) {
+          console.error(`Quota check failed (${quotaRes.status}), continuing without tracking`);
+        }
+      }
 
       if (action === "separate") {
         const params = new URLSearchParams();

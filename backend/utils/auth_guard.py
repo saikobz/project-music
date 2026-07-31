@@ -2,6 +2,7 @@ import os
 import json
 import tempfile
 import logging
+from datetime import date
 from fastapi import Request, HTTPException, status
 
 logger = logging.getLogger("backend.auth_guard")
@@ -10,18 +11,36 @@ logger = logging.getLogger("backend.auth_guard")
 QUOTA_FILE = os.path.join(tempfile.gettempdir(), "harmoniq_guest_quota.json")
 
 
-def _load_guest_quota() -> dict[str, int]:
-    """อ่านข้อมูลโควตาของผู้ใช้ Guest จากไฟล์ JSON"""
+def _load_guest_quota() -> dict[str, dict]:
+    """
+    อ่านข้อมูลโควตาของผู้ใช้ Guest จากไฟล์ JSON
+    พร้อมรีเซ็ตโควตาที่หมดอายุรายวัน (อิงวันที่ในระบบ) และรองรับการย้าย format เก่า {"ip": count}
+    """
     if os.path.exists(QUOTA_FILE):
         try:
             with open(QUOTA_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
+                raw = json.load(f)
+            if not isinstance(raw, dict):
+                return {}
+            today = date.today().isoformat()
+            data = {}
+            for ip, value in raw.items():
+                if isinstance(value, int):
+                    # รองรับ format เก่า {"ip": count} -> แปลงเป็น format ใหม่ {"ip": {"count": n, "date": "..."}}
+                    data[ip] = {"count": value, "date": today}
+                elif isinstance(value, dict):
+                    entry = dict(value)
+                    if entry.get("date") != today:
+                        # โควตาหมดอายุรายวัน -> รีเซ็ตเป็น 0
+                        entry = {"count": 0, "date": today}
+                    data[ip] = entry
+            return data
         except Exception:
             pass
     return {}
 
 
-def _save_guest_quota(data: dict[str, int]) -> None:
+def _save_guest_quota(data: dict[str, dict]) -> None:
     """บันทึกข้อมูลโควตาของผู้ใช้ Guest ลงไฟล์ JSON"""
     try:
         with open(QUOTA_FILE, "w", encoding="utf-8") as f:
@@ -74,22 +93,31 @@ def validate_tier_and_quota(user_tier: str, used_quota: int, model_type: str = "
         )
 
 
-def check_and_increment_quota(request: Request, user_tier: str, model_type: str = "LSTM", pitch_shift_semitones: int = 0):
+def check_and_increment_quota(request: Request, user_tier: str, user_id: str | None = None, model_type: str = "LSTM", pitch_shift_semitones: int = 0):
     """
-    ตรวจสอบสิทธิ์และนับจำนวนโควตาตาม IP Address สำหรับผู้ใช้ระดับ FREE (Guest)
-    และบันทึกลงไฟล์ harmoniq_guest_quota.json ใน Temp directory
+    ตรวจสอบสิทธิ์และนับจำนวนโควตา
+    - ผู้ใช้ที่ Login แล้ว (มี user_id): ข้ามการนับโควตาตาม IP (โควตาจัดการผ่าน Database ฝั่ง Frontend)
+    - ผู้ใช้ Guest (ไม่มี user_id): นับตาม IP Address ในไฟล์ JSON และรีเซ็ตอัตโนมัติทุกวัน
     """
     tier_upper = (user_tier or "FREE").upper()
+
+    # ผู้ใช้ที่ Login แล้วจะไม่ถูกนับโควตาฝั่ง Backend เพื่อไม่ให้ IP quota ของ Guest มาตัดสิทธิ์
+    if user_id:
+        validate_tier_and_quota(user_tier=tier_upper, used_quota=0, model_type=model_type, pitch_shift_semitones=pitch_shift_semitones)
+        return
+
     client_ip = request.client.host if request.client else "127.0.0.1"
 
     guest_data = _load_guest_quota()
-    used_count = guest_data.get(client_ip, 0) if tier_upper == "FREE" else 0
+    entry = guest_data.get(client_ip) or {}
+    used_count = int(entry.get("count", 0))
 
     logger.info(f"[AUTH GUARD] IP: {client_ip} | Tier: {tier_upper} | Used: {used_count}/3")
 
     validate_tier_and_quota(user_tier=tier_upper, used_quota=used_count, model_type=model_type, pitch_shift_semitones=pitch_shift_semitones)
 
     if tier_upper == "FREE":
-        guest_data[client_ip] = used_count + 1
+        entry["count"] = used_count + 1
+        entry["date"] = date.today().isoformat()
+        guest_data[client_ip] = entry
         _save_guest_quota(guest_data)
-

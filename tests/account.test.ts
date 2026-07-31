@@ -1,7 +1,3 @@
-jest.mock("@auth/prisma-adapter", () => ({
-  PrismaAdapter: jest.fn(),
-}));
-
 jest.mock("@/lib/prisma", () => ({
   prisma: {
     user: {

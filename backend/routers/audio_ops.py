@@ -43,10 +43,11 @@ async def apply_eq_ai(
     trim_start: float | None = Query(None),
     trim_end: float | None = Query(None),
     export_format: str = Query("wav", pattern="^(wav|mp3)$"),
-    x_user_tier: str = Header("FREE")
+    x_user_tier: str = Header("FREE"),
+    x_user_id: str = Header(None)
 ):
     """เอนด์พอยต์ปรับแต่ง EQ อัตโนมัติด้วย AI"""
-    check_and_increment_quota(request=request, user_tier=x_user_tier, model_type=model_id)
+    check_and_increment_quota(request=request, user_tier=x_user_tier, user_id=x_user_id, model_type=model_id)
     try:
         file_id, input_path = await save_upload(file, trim_start=trim_start, trim_end=trim_end)
         output_filename = f"{file_id}_eq_ai_{model_id}_{genre}.wav"
@@ -109,10 +110,11 @@ async def apply_compressor(
     trim_start: float | None = Query(None),
     trim_end: float | None = Query(None),
     export_format: str = Query("wav", pattern="^(wav|mp3)$"),
-    x_user_tier: str = Header("FREE")
+    x_user_tier: str = Header("FREE"),
+    x_user_id: str = Header(None)
 ):
     """เอนด์พอยต์ปรับแต่ง Compressor เสียง"""
-    check_and_increment_quota(request=request, user_tier=x_user_tier)
+    check_and_increment_quota(request=request, user_tier=x_user_tier, user_id=x_user_id)
     try:
         _, input_path = await save_upload(file, trim_start=trim_start, trim_end=trim_end)
         os.makedirs("compressed", exist_ok=True)
@@ -161,10 +163,11 @@ async def pitch_shift(
     trim_start: float | None = Query(None),
     trim_end: float | None = Query(None),
     export_format: str = Query("wav", pattern="^(wav|mp3)$"),
-    x_user_tier: str = Header("FREE")
+    x_user_tier: str = Header("FREE"),
+    x_user_id: str = Header(None)
 ):
     """เอนด์พอยต์ปรับ Pitch ของไฟล์เสียง"""
-    check_and_increment_quota(request=request, user_tier=x_user_tier, pitch_shift_semitones=int(steps))
+    check_and_increment_quota(request=request, user_tier=x_user_tier, user_id=x_user_id, pitch_shift_semitones=int(steps))
     try:
         file_id, input_path = await save_upload(file, trim_start=trim_start, trim_end=trim_end)
         output_filename = f"{file_id}_pitch.wav"

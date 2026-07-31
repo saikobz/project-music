@@ -27,10 +27,11 @@ async def separate(
     trim_start: float | None = Query(None),
     trim_end: float | None = Query(None),
     export_format: str = Query("wav", pattern="^(wav|mp3)$"),
-    x_user_tier: str = Header("FREE")
+    x_user_tier: str = Header("FREE"),
+    x_user_id: str = Header(None)
 ):
     """เอนด์พอยต์แยกแทร็กเสียง (Drums, Bass, Vocal, Other)"""
-    check_and_increment_quota(request=request, user_tier=x_user_tier)
+    check_and_increment_quota(request=request, user_tier=x_user_tier, user_id=x_user_id)
     try:
         file_id, input_path = await save_upload(file, trim_start=trim_start, trim_end=trim_end)
 

@@ -4,11 +4,9 @@ import FacebookProvider from "next-auth/providers/facebook";
 import LineProvider from "next-auth/providers/line";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
-import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma) as any,
   session: { strategy: "jwt" },
   pages: {
     signIn: "/auth/signin",
@@ -56,6 +54,35 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
+    async signIn({ user, account }) {
+      // สร้าง Subscription และ UsageQuota (FREE 3 เพลง) ให้ผู้ใช้ที่สมัครผ่าน OAuth
+      // ถ้ายังไม่มี record อยู่ก่อน (ผู้ใช้ที่สมัครผ่าน Credentials จะถูกสร้างไว้แล้วใน register route)
+      if (account && account.provider !== "credentials" && user?.id) {
+        try {
+          const existing = await prisma.user.findUnique({
+            where: { id: user.id },
+            include: { subscription: true },
+          });
+          if (existing && !existing.subscription) {
+            await prisma.subscription.create({
+              data: { userId: existing.id, tier: "FREE", status: "ACTIVE" },
+            });
+            await prisma.usageQuota.create({
+              data: {
+                userId: existing.id,
+                monthlyQuota: 3,
+                usedCount: 0,
+                periodStart: new Date(),
+                periodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+              },
+            });
+          }
+        } catch (err) {
+          console.error("Failed to initialize quota for OAuth user:", err);
+        }
+      }
+      return true;
+    },
     async jwt({ token, user }) {
       if (user) {
         const dbUser = await prisma.user.findUnique({
