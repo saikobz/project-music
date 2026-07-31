@@ -75,7 +75,7 @@ export default function PricingPage() {
               <button className="w-full py-2.5 bg-[#1A1A1A] text-[#666666] font-medium rounded-lg cursor-not-allowed">
                 แพ็กเกจปัจจุบัน
               </button>
-            ) : (
+            ) : currentTier === "PRO" ? null : (
               <button
                 onClick={() => setSelectedTier("BASIC")}
                 className="w-full py-2.5 bg-[#34D399] hover:bg-[#2cb984] font-semibold text-[#0A0A0A] rounded-lg transition-colors cursor-pointer"

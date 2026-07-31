@@ -3,22 +3,20 @@
 // - เรียก backend ตาม action ที่ผู้ใช้เลือก เช่น แยก stem, Auto-EQ, Compressor และ Pitch Shift
 // - จัดการสถานะของ UI เช่น error, ผลวิเคราะห์, ลิงก์ดาวน์โหลด และตัวเล่นผลลัพธ์
 "use client";
-import React, { useRef, useState } from "react";
-import axios from "axios";
+import React, { useState } from "react";
 import { toast } from "sonner";
-import { useSession } from "next-auth/react";
 import WaveformPlayer from "./WaveformPlayer";
 import MultiStemLivePlayer from "./MultiStemLivePlayer";
 import AudioAnalysis from "./AudioAnalysis";
 import { AutoEqSettings } from "./settings/AutoEqSettings";
-import { CompressorSettings } from "./settings/CompressorSettings";
+import { CompressorSettings, DEFAULT_COMPRESSOR_PARAMS, type CompressorParams } from "./settings/CompressorSettings";
 import { PitchShiftSettings } from "./settings/PitchShiftSettings";
 import ExportMasterModal from "./ExportMasterModal";
 import SingleExportModal from "./SingleExportModal";
-import { API_BASE_URL, MAX_UPLOAD_BYTES } from "@/lib/config";
+import { MAX_UPLOAD_BYTES, type AudioAction } from "@/lib/config";
+import { useAudioProcessor } from "@/lib/hooks/useAudioProcessor";
 
 // ค่าตั้งต้นของ API และข้อจำกัดการอัปโหลด
-const API_BASE = API_BASE_URL;
 const MAX_SIZE_BYTES = MAX_UPLOAD_BYTES;
 const AUTO_EQ_DELTA_CLAMP_MIN = 0;
 const AUTO_EQ_DELTA_CLAMP_MAX = 6;
@@ -101,26 +99,16 @@ interface UploadBoxProps {
 }
 
 function UploadBox({ onHeightChange }: UploadBoxProps) {
-  const { data: session } = useSession();
-  const userTier = (session?.user as any)?.tier || "FREE";
   // ===== กลุ่ม state สำหรับค่าที่ผู้ใช้เลือกในฟอร์ม =====
-  // สถานะกลุ่มนี้กำหนดว่าจะเรียก backend action ไหนและใช้พารามิเตอร์อะไร
-  // สถานะของไฟล์และตัวเลือกการประมวลผล
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [action, setAction] = useState("separate");
-  const [strength, setStrength] = useState("medium");
+  const [action, setAction] = useState<AudioAction>("separate");
+  const [compParams, setCompParams] = useState<CompressorParams>(DEFAULT_COMPRESSOR_PARAMS);
+  const patchCompParams = (patch: Partial<CompressorParams>) =>
+    setCompParams((prev) => ({ ...prev, ...patch }));
   const [genre, setGenre] = useState("pop");
   const [autoEqModel, setAutoEqModel] = useState(AUTO_EQ_MODEL_DEFAULT);
   const [deltaClampDb, setDeltaClampDb] = useState(String(AUTO_EQ_DELTA_CLAMP_DEFAULT));
-  const [compThreshold, setCompThreshold] = useState("");
-  const [compRatio, setCompRatio] = useState("");
-  const [compAttack, setCompAttack] = useState("");
-  const [compRelease, setCompRelease] = useState("");
-  const [compKnee, setCompKnee] = useState("6");
-  const [compMakeupGain, setCompMakeupGain] = useState("0");
-  const [compDryWet, setCompDryWet] = useState("100");
-  const [compOutputCeiling, setCompOutputCeiling] = useState("");
   const [pitchSteps, setPitchSteps] = useState(0);
 
   const [isTrimming, setIsTrimming] = useState(false);
@@ -128,94 +116,49 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
   const [trimEnd, setTrimEnd] = useState("30");
   const [exportFormat, setExportFormat] = useState("wav");
 
-  // สถานะผลลัพธ์จาก backend ใช้กับการดาวน์โหลด การเล่นไฟล์ และเวลาที่ใช้ประมวลผล
-  // สถานะผลลัพธ์สำหรับดาวน์โหลดและผลวิเคราะห์
-  // ===== กลุ่ม state สำหรับผลลัพธ์ที่ backend ส่งกลับมา =====
-  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
-  const [downloadFileName, setDownloadFileName] = useState<string | null>(null);
-  const [processingTime, setProcessingTime] = useState<string | null>(null);
-  const [fileId, setFileId] = useState<string | null>(null);
-  const [zipUrl, setZipUrl] = useState<string | null>(null);
-
-  // สถานะสำหรับ Export Modal และ Mastering
-  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
-  const [isSingleExportModalOpen, setIsSingleExportModalOpen] = useState(false);
-
-  // สถานะของ UI ล้วน ๆ เช่น banner ข้อความ และผลวิเคราะห์
-  // สถานะข้อความและการตอบสนองของ UI
-  // ===== กลุ่ม state สำหรับสถานะของหน้า =====
-  const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [analysis, setAnalysis] = useState<{ tempo: number; key: string; pitch: string | null } | null>(null);
-  const [statusText, setStatusText] = useState<string | null>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
-
-  const handleExport = async (exportType: string, format: string, targetLufs: number, selectedStems: string[]) => {
-    if (!fileId) return;
-    setIsExporting(true);
-    try {
-      const queryParams = new URLSearchParams();
-      queryParams.append("file_id", fileId);
-      queryParams.append("export_type", exportType);
-      queryParams.append("export_format", format);
-      queryParams.append("target_lufs", targetLufs.toString());
-      selectedStems.forEach((stem) => queryParams.append("stems", stem));
-
-      const res = await fetch(`${API_BASE}/api/process/export?${queryParams.toString()}`, {
-        method: 'POST'
-      });
-      if (!res.ok) {
-        throw new Error(`เซิร์ฟเวอร์ส่งข้อผิดพลาด (${res.status})`);
-      }
-      const data = await res.json();
-      if (data.status === "success") {
-        const url = data.file_url.startsWith("http") ? data.file_url : `${API_BASE}${data.file_url}`;
-        const fileRes = await fetch(url);
-        if (!fileRes.ok) {
-          throw new Error("ดาวน์โหลดไฟล์เสียงที่ประมวลผลแล้วไม่สำเร็จ");
-        }
-        const blob = await fileRes.blob();
-        const downloadUrlLocal = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = downloadUrlLocal;
-        link.download = data.filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(downloadUrlLocal);
-        setIsExportModalOpen(false);
-        toast.success("ส่งออกไฟล์เสียงและเริ่มดาวน์โหลดสำเร็จ");
-      } else {
-        throw new Error(data.message || "เกิดข้อผิดพลาดในการส่งออกไฟล์");
-      }
-    } catch (err: any) {
-      console.error("Export failed:", err);
-      toast.error(err.message || "การส่งออกไฟล์ล้มเหลว กรุณาลองใหม่อีกครั้ง");
-    } finally {
-      setIsExporting(false);
-    }
-  };
-
-  const saveHistory = (actionName: string, fileId?: string, stems?: string[]) => {
-    if (!session) { console.log("saveHistory: skipped (not logged in)"); return; }
-    const actionMap: Record<string, string> = {
-      "eq-ai": "apply-eq-ai",
-      compressor: "apply-compressor",
-      pitch: "pitch-shift",
-    };
-    fetch("/api/history", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: actionMap[actionName] || actionName,
-        originalFilename: file?.name || "unknown.wav",
-        ...(fileId && { fileId }),
-        ...(stems && { stems }),
-      }),
-    }).catch((err) => console.error("saveHistory failed:", err));
-  };
+  // C7: business logic ทั้งหมด (upload/process/export/quota/history) อยู่ใน hook นี้
+  const {
+    loading,
+    errorMessage,
+    successMessage,
+    statusText,
+    analysis,
+    downloadUrl,
+    downloadFileName,
+    processingTime,
+    fileId,
+    zipUrl,
+    isExportModalOpen,
+    setIsExportModalOpen,
+    isExporting,
+    isSingleExportModalOpen,
+    setIsSingleExportModalOpen,
+    setErrorMessage,
+    setSuccessMessage,
+    setAnalysis,
+    setDownloadFileName,
+    setFileId,
+    setZipUrl,
+    setProcessingTime,
+    clearDownloadUrl,
+    handleUpload,
+    handleExport,
+    handleSingleExport,
+    handleKaraokeDownload,
+  } = useAudioProcessor({
+    file,
+    action,
+    exportFormat,
+    setExportFormat,
+    isTrimming,
+    trimStart,
+    trimEnd,
+    genre,
+    autoEqModel,
+    deltaClampDb,
+    compParams,
+    pitchSteps,
+  });
 
   React.useEffect(() => {
     if (onHeightChange) {
@@ -225,36 +168,28 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
   }, [action, file, loading, zipUrl, downloadUrl, analysis, onHeightChange]);
 
   React.useEffect(() => {
+    // เตือนก่อนปิดหน้าเมื่อกำลังประมวลผล (abort จัดการโดย hook ตอน unmount)
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (loading) {
-        if (abortControllerRef.current) {
-          abortControllerRef.current.abort();
-        }
         e.preventDefault();
         e.returnValue = "";
       }
     };
-
     window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [loading]);
 
-  React.useEffect(() => {
-    return () => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    };
-  }, []);
-
   // ตัวตรวจสอบกลาง ใช้ร่วมกันทั้ง input file และ drag-and-drop
-  // ตัวช่วยสำหรับเลือกไฟล์และลากวาง
-  // ===== ตัวช่วยรับไฟล์จาก input และ drag-and-drop =====
   const handleFileSelect = (selected: File | null) => {
+    // ล้างผลลัพธ์ของไฟล์เก่าทั้งหมด เพื่อไม่ให้ค้างอยู่หน้าจอเมื่อเลือกไฟล์ใหม่ (M8)
     setErrorMessage(null);
     setSuccessMessage(null);
+    clearDownloadUrl();
+    setDownloadFileName(null);
+    setFileId(null);
+    setZipUrl(null);
+    setAnalysis(null);
+    setProcessingTime(null);
     setFile(null);
     if (!selected) return;
     const ext = selected.name.toLowerCase().split(".").pop();
@@ -307,252 +242,6 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
     setIsDragging(false);
   };
 
-  // โฟลว์หลักของการส่งงาน:
-  // 1. ล้างผลลัพธ์เก่า
-  // 2. เรียก endpoint ตาม action ที่เลือก
-  // 3. เก็บ URL หรือ id ที่ได้กลับมาเพื่อใช้แสดงผลด้านขวา
-  // 4. วิเคราะห์ไฟล์ต้นฉบับเพื่อหา tempo, key และ pitch
-  // โฟลว์หลักสำหรับประมวลผลทุก action
-  // ===== ฟังก์ชันหลัก: ส่งไฟล์ไป backend และอัปเดตผลลัพธ์บนหน้า =====
-  const handleUpload = async (overrideFormat?: string | React.MouseEvent | React.FormEvent) => {
-    if (!file) {
-      setErrorMessage("กรุณาเลือกไฟล์ WAV (≤100MB) ก่อนเริ่มประมวลผล");
-      return;
-    }
-    
-    const actualFormat = typeof overrideFormat === "string" ? overrideFormat : exportFormat;
-
-    setLoading(true);
-    setDownloadUrl(null);
-    setDownloadFileName(null);
-    setProcessingTime(null);
-    setFileId(null);
-    setZipUrl(null);
-    setErrorMessage(null);
-    setSuccessMessage(null);
-    setAnalysis(null);
-    setStatusText("กำลังอัปโหลดและประมวลผล...");
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    abortControllerRef.current = new AbortController();
-    const signal = abortControllerRef.current.signal;
-
-    const formData = new FormData();
-    formData.append("file", file);
-
-    const startTime = Date.now();
-
-    try {
-      let response: any;
-      let suffix = "";
-      let successMsg = "ประมวลผลเสร็จแล้ว";
-      const userId = (session?.user as any)?.id;
-      const reqHeaders: Record<string, string> = { "X-User-Tier": userTier };
-      if (userId) {
-        // ส่ง user id ให้ backend เพื่อแยกการนับโควตาของผู้ใช้ที่ Login แล้วออกจาก Guest (IP)
-        reqHeaders["X-User-Id"] = userId;
-      }
-
-      // สำหรับผู้ใช้ที่ Login แล้ว: ตรวจสอบและนับโควตาจาก Database ก่อนส่งงานไปประมวลผล
-      if (userId) {
-        const quotaRes = await fetch("/api/quota/consume", { method: "POST" });
-        if (quotaRes.status === 403) {
-          const quotaErr = await quotaRes.json().catch(() => null);
-          throw new Error(quotaErr?.error || "โควตาประมวลผลฟรีเต็มแล้ว กรุณาสมัครสมาชิกเพื่อใช้งานต่อ");
-        }
-        if (!quotaRes.ok) {
-          console.error(`Quota check failed (${quotaRes.status}), continuing without tracking`);
-        }
-      }
-
-      if (action === "separate") {
-        const params = new URLSearchParams();
-        if (isTrimming) {
-          params.set("trim_start", trimStart);
-          params.set("trim_end", trimEnd);
-        }
-        params.set("export_format", exportFormat);
-        response = await axios.post(`${API_BASE}/separate?${params.toString()}`, formData, {
-          signal,
-          headers: reqHeaders,
-        });
-        const { file_id, zip_url } = response.data;
-        setFileId(file_id);
-        setZipUrl(zip_url);
-        successMsg = "แยกเสียงเสร็จแล้ว ดาวน์โหลด ZIP หรือลองเล่นทีละสเตมได้เลย";
-        setStatusText("กำลังเตรียมไฟล์สเตม...");
-        saveHistory("separate", file_id, ["Vocals", "Drums", "Bass", "Other"]);
-      }
-
-      if (action === "eq-ai") {
-        const params = new URLSearchParams({
-          genre,
-          model_id: autoEqModel,
-          delta_clamp_db: deltaClampDb || String(AUTO_EQ_DELTA_CLAMP_DEFAULT),
-        });
-        if (isTrimming) {
-          params.set("trim_start", trimStart);
-          params.set("trim_end", trimEnd);
-        }
-        params.set("export_format", actualFormat);
-        response = await axios.post(`${API_BASE}/apply-eq-ai?${params.toString()}`, formData, {
-          responseType: "blob",
-          signal,
-          headers: reqHeaders,
-        });
-        const url = window.URL.createObjectURL(new Blob([response.data]));
-        setDownloadUrl(url);
-        suffix = `_eq_ai_${autoEqModel}_${genre}_${deltaClampDb}db`;
-        successMsg = `Auto-EQ (${selectedAutoEqModel.label}) ประมวลผลเสร็จสิ้น`;
-        setStatusText(`Running Auto-EQ with ${selectedAutoEqModel.label}...`);
-        saveHistory("eq-ai");
-      }
-
-      if (action === "compressor") {
-        const params = new URLSearchParams({
-          strength,
-          genre,
-          knee: compKnee || "6",
-          makeup_gain: compMakeupGain || "0",
-          dry_wet: compDryWet || "100",
-        });
-        if (compThreshold) params.set("threshold", compThreshold);
-        if (compRatio) params.set("ratio", compRatio);
-        if (compAttack) params.set("attack", compAttack);
-        if (compRelease) params.set("release", compRelease);
-        if (compOutputCeiling) params.set("output_ceiling", compOutputCeiling);
-        if (isTrimming) {
-          params.set("trim_start", trimStart);
-          params.set("trim_end", trimEnd);
-        }
-        params.set("export_format", actualFormat);
-
-        response = await axios.post(`${API_BASE}/apply-compressor?${params.toString()}`, formData, {
-          responseType: "blob",
-          signal,
-          headers: reqHeaders,
-        });
-        const url = window.URL.createObjectURL(new Blob([response.data]));
-        setDownloadUrl(url);
-        suffix = `_compressed_${strength}`;
-        successMsg = "ประมวลผล Compressor เสร็จแล้ว";
-        setStatusText("กำลังสร้างไฟล์ Compressor...");
-        saveHistory("compressor");
-      }
-
-      if (action === "pitch") {
-        const params = new URLSearchParams({ steps: String(pitchSteps) });
-        if (isTrimming) {
-          params.set("trim_start", trimStart);
-          params.set("trim_end", trimEnd);
-        }
-        params.set("export_format", actualFormat);
-        response = await axios.post(`${API_BASE}/pitch-shift?${params.toString()}`, formData, {
-          responseType: "blob",
-          signal,
-          headers: reqHeaders,
-        });
-        const url = window.URL.createObjectURL(new Blob([response.data]));
-        setDownloadUrl(url);
-        suffix = `_pitch_${pitchSteps}`;
-        successMsg = "ประมวลผล Pitch Shift เสร็จแล้ว";
-        setStatusText("กำลังสร้างไฟล์ Pitch Shift...");
-        saveHistory("pitch");
-      }
-
-      if (file && suffix) {
-        const baseName = file.name.replace(/\.[^/.]+$/, "");
-        setDownloadFileName(`${baseName}${suffix}.${actualFormat}`);
-      }
-
-      if (overrideFormat) {
-        setExportFormat(actualFormat);
-      }
-
-      const analyzeData = new FormData();
-      analyzeData.append("file", file);
-      try {
-        const analyzeResp = await axios.post(`${API_BASE}/analyze`, analyzeData, {
-          signal,
-          headers: reqHeaders,
-        });
-        setAnalysis(analyzeResp.data);
-      } catch (err) {
-        if (axios.isCancel(err)) {
-          console.log("Analyze request canceled");
-        } else {
-          console.error("Analyze error", err);
-        }
-      }
-
-      const endTime = Date.now();
-      const duration = Math.floor((endTime - startTime) / 1000);
-      const minutes = Math.floor(duration / 60);
-      const seconds = duration % 60;
-      setProcessingTime(`${minutes} นาที ${seconds} วินาที`);
-      setStatusText("เสร็จแล้ว! ดาวน์โหลดหรือเล่นไฟล์ได้เลย");
-      setSuccessMessage(successMsg);
-      toast.success(successMsg);
-    } catch (err: any) {
-      if (axios.isCancel(err)) {
-        console.log("Request canceled by user or refresh");
-        return;
-      }
-      let message = "เกิดข้อผิดพลาดระหว่างประมวลผล กรุณาลองใหม่";
-
-      if (err?.response?.data) {
-        if (err.response.data instanceof Blob) {
-          try {
-            const text = await err.response.data.text();
-            const parsed = JSON.parse(text);
-            message = parsed.detail || parsed.message || text;
-          } catch {
-            message = err.message || `คำขอไม่สำเร็จ (${err.response.status})`;
-          }
-        } else if (typeof err.response.data === "string") {
-          message = err.response.data;
-        } else if (err.response.data.detail) {
-          message = err.response.data.detail;
-        } else if (err.response.data.message) {
-          message = err.response.data.message;
-        }
-      } else if (err.code === "ERR_NETWORK") {
-        message = "ติดต่อ backend ไม่ได้ (ตรวจสอบการรันเซิร์ฟเวอร์หรือ CORS)";
-      } else if (err.message) {
-        message = err.message;
-      }
-
-      setErrorMessage(message);
-      toast.error(message);
-      setStatusText(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSingleExport = async (format: string) => {
-    if (format === exportFormat && downloadUrl && downloadFileName) {
-      // If same format, just download the existing blob
-      const a = document.createElement("a");
-      a.href = downloadUrl;
-      a.download = downloadFileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setIsSingleExportModalOpen(false);
-    } else {
-      // If different format, we must re-process the file
-      setIsExporting(true);
-      await handleUpload(format);
-      setIsExporting(false);
-      setIsSingleExportModalOpen(false);
-      // Let the user manually click download again once done, or we could trigger it automatically 
-      // but the UX is fine to just close the modal and they see the new waveform.
-      // Alternatively, we can auto-trigger it if we had the new URL here, but state updates are async.
-    }
-  };
-
   return (
     <div className={`p-6 text-[#F3F3F3] transition-all duration-500 ${!file ? "flex flex-col items-center justify-center min-h-[50vh]" : "grid gap-6 lg:grid-cols-12"}`}>
       {!file ? (
@@ -569,7 +258,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
           >
             <input
               type="file"
-              accept="audio/wav"
+              accept="audio/wav,audio/x-wav,.wav"
               className="hidden"
               onChange={(e) => handleFileSelect(e.target.files?.[0] || null)}
             />
@@ -715,24 +404,8 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                 {action === "compressor" && (
                   <div className="rounded-lg border border-[#E5A93D]/20 bg-[#E5A93D]/5 p-3">
                     <CompressorSettings
-                      strength={strength}
-                      setStrength={setStrength}
-                      compThreshold={compThreshold}
-                      setCompThreshold={setCompThreshold}
-                      compRatio={compRatio}
-                      setCompRatio={setCompRatio}
-                      compAttack={compAttack}
-                      setCompAttack={setCompAttack}
-                      compRelease={compRelease}
-                      setCompRelease={setCompRelease}
-                      compKnee={compKnee}
-                      setCompKnee={setCompKnee}
-                      compMakeupGain={compMakeupGain}
-                      setCompMakeupGain={setCompMakeupGain}
-                      compDryWet={compDryWet}
-                      setCompDryWet={setCompDryWet}
-                      compOutputCeiling={compOutputCeiling}
-                      setCompOutputCeiling={setCompOutputCeiling}
+                      params={compParams}
+                      onChange={patchCompParams}
                       loading={loading}
                     />
                   </div>
@@ -793,19 +466,19 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                 {/* ── Execute Button ── */}
                 {(() => {
                   // สีและ shadow ของปุ่มเปลี่ยนตาม module ที่เลือก
-                  type ActionKey = "separate" | "eq-ai" | "compressor" | "pitch";
-                  const moduleStyles: Record<ActionKey, { base: string; glow: string; label: string }> = {
+                  const moduleStyles: Record<AudioAction, { base: string; glow: string; label: string }> = {
                     separate:   { base: "from-[#7C3AED] to-[#A78BFA]", glow: "rgba(167,139,250,0.35)", label: "Run Stem Separation" },
                     "eq-ai":    { base: "from-[#0891B2] to-[#22D3EE]", glow: "rgba(34,211,238,0.35)",  label: "Apply Auto EQ" },
                     compressor: { base: "from-[#B45309] to-[#E5A93D]", glow: "rgba(229,169,61,0.35)",  label: "Apply Compressor" },
                     pitch:      { base: "from-[#059669] to-[#34D399]", glow: "rgba(52,211,153,0.35)",  label: "Shift Pitch" },
                   };
-                  const moduleStyle = moduleStyles[action as ActionKey] ?? moduleStyles.compressor;
+                  const moduleStyle = moduleStyles[action] ?? moduleStyles.compressor;
                   const isDisabled = loading || (action === "eq-ai" && !isEqDeltaClampValid);
                   return (
                     <button
                       onClick={handleUpload}
                       disabled={isDisabled}
+                      data-testid="process-button"
                       className={`relative w-full rounded-lg py-3.5 text-sm font-bold tracking-widest uppercase overflow-hidden transition-all duration-300 ${
                         isDisabled
                           ? "bg-[#1A1A1A] text-[#333333] cursor-not-allowed border border-[#222222]"
@@ -930,16 +603,15 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                       </button>
                     )}
                     {fileId && (
-                      <a
-                        href={`${API_BASE}/karaoke/${fileId}?export_format=${exportFormat}`}
-                        download={`karaoke.${exportFormat}`}
+                      <button
+                        onClick={handleKaraokeDownload}
                         className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#2A2A2A] bg-[#121212] px-4 py-3.5 font-semibold text-white shadow-[0_4px_15px_rgba(0,0,0,0.2)] transition-all hover:border-[#E5A93D]/50 hover:text-[#E5A93D] hover:bg-[#1A1A1A]"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 opacity-70" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.938l3-8V5a1 1 0 00-1-1H4a1 1 0 00-1 1v1.938l3 8V17a3 3 0 006 0v-2.062z" clipRule="evenodd" />
                         </svg>
                         Download Karaoke
-                      </a>
+                      </button>
                     )}
                   </div>
                 )}
@@ -970,7 +642,10 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
               isExporting={isExporting}
             />
 
+            {/* M11: key บังคับ remount ทุกครั้งที่เปิด modal หรือ format เปลี่ยน
+                (กัน SingleExportModal แสดง radio format ค้างจากครั้งก่อน) */}
             <SingleExportModal
+              key={`${exportFormat}-${isSingleExportModalOpen}`}
               isOpen={isSingleExportModalOpen}
               onClose={() => setIsSingleExportModalOpen(false)}
               onExport={handleSingleExport}

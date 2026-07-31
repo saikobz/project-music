@@ -190,6 +190,10 @@ def apply_compression(
 
     # สร้างชื่อไฟล์ปลายทางจากชื่อเดิมและ genre ที่ใช้ปรับ
     filename = os.path.basename(input_path)
+    if genre not in COMP_GENRE_PRESETS:
+        raise ValueError(
+            f"Invalid genre '{genre}'. Supported genres: {', '.join(COMP_GENRE_PRESETS)}."
+        )
     output_path = os.path.join(output_dir, f"{os.path.splitext(filename)[0]}_{genre}_compressed.wav")
 
     # โหลด waveform และ sample rate จากไฟล์ต้นฉบับ

@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { CreditCard, Ban, Clock, CheckCircle, XCircle } from "lucide-react";
@@ -13,6 +14,7 @@ interface PaymentRecord {
 }
 
 export default function BillingSection() {
+  const router = useRouter();
   const { data: session } = useSession();
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [loading, setLoading] = useState(false);
@@ -22,6 +24,16 @@ export default function BillingSection() {
 
   const currentTier = (session?.user as any)?.tier || "PRO";
   const isPaid = currentTier !== "FREE";
+  const hasPassword = (session?.user as { hasPassword?: boolean })?.hasPassword ?? true;
+
+  const handleCancelClick = () => {
+    if (!hasPassword) {
+      // M19+: OAuth-only ต้อง re-auth ผ่าน provider ก่อนยกเลิก (ไปหน้า confirm-delete)
+      router.push("/account/confirm-delete?action=cancel");
+      return;
+    }
+    setShowCancel(true);
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -92,7 +104,7 @@ export default function BillingSection() {
               </div>
               {!showCancel ? (
                 <button
-                  onClick={() => setShowCancel(true)}
+                  onClick={handleCancelClick}
                   className="flex items-center gap-2 px-4 py-2 bg-red-500/10 text-red-400 text-xs font-semibold rounded-lg hover:bg-red-500/20 transition cursor-pointer shrink-0"
                 >
                   <Ban className="w-4 h-4" />

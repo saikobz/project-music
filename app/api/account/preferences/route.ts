@@ -1,16 +1,13 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 const VALID_THEMES = ["DARK", "LIGHT"];
 const VALID_LANGUAGES = ["TH", "EN"];
 
 export async function PUT(req: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { session, response: authResponse } = await requireSession();
+  if (authResponse) return authResponse;
 
   const { theme, language, emailNotifications } = await req.json();
 

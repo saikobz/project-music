@@ -20,36 +20,6 @@ from backend.config import STEM_TARGETS, DIR_SEPARATED
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def _cleanup_partial_checkpoints() -> None:
-    # torch.hub ดาวน์โหลดเป็นไฟล์ temp แล้วค่อย rename; ถ้าโดนขัดจังหวะ
-    # อาจมีไฟล์ค้างใน cache ทำให้ครั้งต่อไปโหลดเจอไฟล์เสีย ต้องล้างทิ้งก่อน retry
-    cache_dir = os.path.join(torch.hub.get_dir(), "checkpoints")
-    if not os.path.isdir(cache_dir):
-        return
-    
-    # 1. ลบไฟล์ชั่วคราวทั่วไป
-    for pattern in ("*.partial", "*.tmp", "tmp*"):
-        for path in glob.glob(os.path.join(cache_dir, pattern)):
-            try:
-                os.remove(path)
-            except OSError:
-                pass
-
-    # 2. ตรวจสอบและลบไฟล์โมเดล Open-Unmix (.pth) ที่มีขนาดไม่สมบูรณ์ (ขนาดปกติจะอยู่ที่ประมาณ 108MB)
-    umx_filenames = ("vocals-bccbd9aa.pth", "drums-69e0ebd4.pth", "bass-85cca050.pth", "other-b8bc42e6.pth")
-    for filename in umx_filenames:
-        path = os.path.join(cache_dir, filename)
-        if os.path.isfile(path):
-            try:
-                file_size = os.path.getsize(path)
-                # หากขนาดไฟล์น้อยกว่า 108,000,000 bytes แสดงว่าดาวน์โหลดไม่สมบูรณ์
-                if file_size < 108000000:
-                    print(f"[CLEANUP] พบไฟล์โมเดลเสียหายและจะทำการลบ: {filename} (ขนาดไฟล์ {file_size} bytes)")
-                    os.remove(path)
-            except Exception as e:
-                print(f"[CLEANUP] ไม่สามารถตรวจสอบหรือลบ {filename} ได้: {e}")
-
-
 from functools import lru_cache
 
 @lru_cache(maxsize=1)

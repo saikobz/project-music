@@ -7,14 +7,27 @@ from fastapi.testclient import TestClient
 
 import backend.main as main
 from backend.auto_eq_inference import AutoEQModelLoadError
+from backend.routers import audio_ops
+from backend.services.storage import UPLOAD_DIR
 
 
 class TestApplyEqAiEndpoint(unittest.TestCase):
     def setUp(self) -> None:
         self.client = TestClient(main.app)
         self.temp_dir = tempfile.TemporaryDirectory()
+        # ปิดการเช็คและนับโควตา เพื่อให้เทสไม่ชน quota ตาม IP
+        self._quota_patch = patch.object(
+            audio_ops, "validate_request_quota", new=lambda *args, **kwargs: None
+        )
+        self._increment_patch = patch.object(
+            audio_ops, "increment_guest_quota", new=lambda *args, **kwargs: None
+        )
+        self._quota_patch.start()
+        self._increment_patch.start()
 
     def tearDown(self) -> None:
+        self._quota_patch.stop()
+        self._increment_patch.stop()
         self.temp_dir.cleanup()
 
     def test_apply_eq_ai_returns_503_when_model_unavailable(self) -> None:
@@ -22,7 +35,7 @@ class TestApplyEqAiEndpoint(unittest.TestCase):
         with open(input_path, "wb") as file:
             file.write(b"dummy")
 
-        async def fake_save_upload(file, upload_dir=main.UPLOAD_DIR):
+        async def fake_save_upload(file, upload_dir=UPLOAD_DIR, trim_start=None, trim_end=None):
             return "test-id", input_path
 
         captured: dict[str, float | str] = {}
@@ -35,8 +48,8 @@ class TestApplyEqAiEndpoint(unittest.TestCase):
             captured["model_id"] = model_id
             raise AutoEQModelLoadError("model mismatch")
 
-        with patch.object(main, "save_upload", new=fake_save_upload), patch.object(
-            main, "apply_auto_eq_file", side_effect=fake_apply_auto_eq_file
+        with patch.object(audio_ops, "save_upload", new=fake_save_upload), patch.object(
+            audio_ops, "apply_auto_eq_file", side_effect=fake_apply_auto_eq_file
         ):
             response = self.client.post(
                 "/apply-eq-ai?genre=trap&model_id=lstm-last&delta_clamp_db=3.5",
@@ -59,7 +72,7 @@ class TestApplyEqAiEndpoint(unittest.TestCase):
         with open(input_path, "wb") as file:
             file.write(b"dummy")
 
-        async def fake_save_upload(file, upload_dir=main.UPLOAD_DIR):
+        async def fake_save_upload(file, upload_dir=UPLOAD_DIR, trim_start=None, trim_end=None):
             return "test-id", input_path
 
         captured: dict[str, float | str] = {}
@@ -78,8 +91,8 @@ class TestApplyEqAiEndpoint(unittest.TestCase):
                 file.write(b"RIFF0000WAVEfmt ")
             return output_path
 
-        with patch.object(main, "save_upload", new=fake_save_upload), patch.object(
-            main, "apply_auto_eq_file", side_effect=fake_apply_auto_eq_file
+        with patch.object(audio_ops, "save_upload", new=fake_save_upload), patch.object(
+            audio_ops, "apply_auto_eq_file", side_effect=fake_apply_auto_eq_file
         ):
             response = self.client.post(
                 "/apply-eq-ai?genre=trap&model_id=cnn-v1&delta_clamp_db=4.5",

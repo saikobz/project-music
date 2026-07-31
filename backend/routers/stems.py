@@ -14,10 +14,52 @@ from backend.services.storage import save_upload, convert_to_mp3, processing_sem
 from backend.services.job_manager import job_manager
 from backend.process_audio import separate_audio
 from backend.auto_mastering import polish_vocal_file, apply_lufs_mastering
-from backend.utils.auth_guard import check_and_increment_quota
+from backend.utils.auth_guard import validate_request_quota, increment_guest_quota
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["stems"])
+
+
+def mixdown_stems(file_paths: list[str]) -> tuple[np.ndarray, int]:
+    """รวมไฟล์เสียงหลายไฟล์เป็น mixdown ตัวเดียว (ใช้ร่วมกัน karaoke และ export mix — C2)
+
+    - จัดการ mono/stereo ที่ปนกันโดยขยายเป็น stereo ให้อัตโนมัติ
+    - ป้องกัน peak เกิน 1.0 (normalize)
+    """
+    mix = None
+    samplerate = None
+
+    for path in file_paths:
+        data, sr = sf.read(path)
+        if samplerate is None:
+            samplerate = sr
+        # ถ้าช่องสัญญาณไม่ตรงกัน ให้ขยายฝั่ง mono เป็น stereo (2 ช่อง)
+        if mix is not None and data.ndim != mix.ndim:
+            if data.ndim == 1:
+                data = np.stack([data, data], axis=1)
+            else:
+                mix = np.stack([mix, mix], axis=1)
+        if mix is None:
+            mix = np.zeros_like(data)
+
+        min_len = min(len(mix), len(data))
+        mix[:min_len] += data[:min_len]
+
+    if mix is None or samplerate is None:
+        raise ValueError("ไม่มีไฟล์เสียงให้มิกซ์")
+
+    max_val = np.max(np.abs(mix))
+    if max_val > 1.0:
+        mix = mix / max_val
+
+    return mix.astype(np.float32), samplerate
+
+
+def create_zip_archive(zip_path: str, entries: list[tuple[str, str]]) -> None:
+    """สร้างไฟล์ zip จากรายการ (source_path, arcname) — ใช้ร่วมกัน /separate และ export (C3)"""
+    with zipfile.ZipFile(zip_path, "w") as zipf:
+        for file_path, arcname in entries:
+            zipf.write(file_path, arcname)
 
 
 @router.post("/separate")
@@ -31,9 +73,12 @@ async def separate(
     x_user_id: str = Header(None)
 ):
     """เอนด์พอยต์แยกแทร็กเสียง (Drums, Bass, Vocal, Other)"""
-    check_and_increment_quota(request=request, user_tier=x_user_tier, user_id=x_user_id)
+    # ตรวจสิทธิ์ก่อนเริ่มงาน (B6: ไฟล์ไม่ผ่าน validate จะไม่เสียโควตา)
+    validate_request_quota(request=request, user_tier=x_user_tier, user_id=x_user_id)
     try:
         file_id, input_path = await save_upload(file, trim_start=trim_start, trim_end=trim_end)
+        # ผ่านการตรวจสอบไฟล์แล้ว -> ถึงค่อยนับโควตา (เฉพาะ Guest)
+        increment_guest_quota(request, user_id=x_user_id)
 
         output_dir = os.path.join("separated", file_id)
         os.makedirs(output_dir, exist_ok=True)
@@ -49,16 +94,18 @@ async def separate(
                 for name in files:
                     if name.lower().endswith(".wav"):
                         wav_path = os.path.join(root, name)
-                        await asyncio.to_thread(convert_to_mp3, wav_path)
+                        # เก็บ WAV ต้นฉบับไว้ เพื่อให้ player/karaoke/vocal-polish ยังใช้งานได้
+                        await asyncio.to_thread(convert_to_mp3, wav_path, remove_source=False)
 
         zip_filename = f"{file_id}_separated.zip"
         zip_path = os.path.join(UPLOAD_DIR, zip_filename)
-        with zipfile.ZipFile(zip_path, "w") as zipf:
-            for root, _, files in os.walk(output_dir):
-                for name in files:
-                    file_path = os.path.join(root, name)
-                    arcname = os.path.relpath(file_path, output_dir)
-                    zipf.write(file_path, arcname)
+        # สร้าง zip แบบ async (B10: เดิม block event loop กับไฟล์หลายร้อย MB)
+        entries = []
+        for root, _, files in os.walk(output_dir):
+            for name in files:
+                file_path = os.path.join(root, name)
+                entries.append((file_path, os.path.relpath(file_path, output_dir)))
+        await asyncio.to_thread(create_zip_archive, zip_path, entries)
 
         return JSONResponse(
             content={
@@ -68,11 +115,6 @@ async def separate(
             }
         )
 
-    except HTTPException as http_exc:
-        raise http_exc
-    except Exception as e:
-        logger.exception("Stem separation error")
-        return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
     finally:
         if "input_path" in locals() and os.path.exists(input_path):
             os.remove(input_path)
@@ -139,29 +181,16 @@ async def get_karaoke(
         return JSONResponse(status_code=404, content={"status": "error", "message": "ไม่พบข้อมูลการแยกเสียงสำหรับ file id นี้"})
 
     targets = ["drums.wav", "bass.wav", "other.wav"]
-    mix = None
-    samplerate = None
 
     try:
-        for target in targets:
-            path = os.path.join(folder, target)
-            if os.path.exists(path):
-                data, sr = sf.read(path)
-                if samplerate is None:
-                    samplerate = sr
-                if mix is None:
-                    mix = np.zeros_like(data)
-                
-                min_len = min(len(mix), len(data))
-                mix[:min_len] += data[:min_len]
-
-        if mix is None:
+        existing_paths = [
+            os.path.join(folder, target) for target in targets
+            if os.path.exists(os.path.join(folder, target))
+        ]
+        if not existing_paths:
             return JSONResponse(status_code=404, content={"status": "error", "message": "ไม่พบไฟล์ stem เสียงดนตรีเพื่อทำคาราโอเกะ"})
 
-        max_val = np.max(np.abs(mix))
-        if max_val > 1.0:
-            mix = mix / max_val
-
+        mix, samplerate = mixdown_stems(existing_paths)
         sf.write(karaoke_path, mix, samplerate)
 
         if export_format == "mp3":
@@ -169,9 +198,9 @@ async def get_karaoke(
             return FileResponse(karaoke_path, media_type="audio/mpeg", filename="karaoke.mp3")
 
         return FileResponse(karaoke_path, media_type="audio/wav", filename="karaoke.wav")
-    except Exception as e:
-        logger.error(f"Error creating karaoke mixdown: {e}")
-        return JSONResponse(status_code=500, content={"status": "error", "message": f"การรวมไฟล์คาราโอเกะล้มเหลว: {str(e)}"})
+    except ValueError:
+        # mixdown_stems ไม่พบไฟล์ -> 404 (C6: exception อื่นปล่อยให้ global handler จัดการ)
+        return JSONResponse(status_code=404, content={"status": "error", "message": "ไม่พบไฟล์ stem เสียงดนตรีเพื่อทำคาราโอเกะ"})
 
 
 @router.post("/api/process/vocal-polish")
@@ -230,41 +259,27 @@ async def process_export(
             raise HTTPException(status_code=400, detail="กรุณาเลือกอย่างน้อย 1 แทร็กเพื่อ Export")
             
         if export_type == "mix":
-            mix = None
-            samplerate = None
-            
-            for path, _ in selected_stem_files:
-                data, sr = sf.read(path)
-                if samplerate is None:
-                    samplerate = sr
-                if mix is None:
-                    mix = np.zeros_like(data)
-                min_len = min(len(mix), len(data))
-                mix[:min_len] += data[:min_len]
-                
-            if mix is not None:
-                max_val = np.max(np.abs(mix))
-                if max_val > 1.0:
-                    mix = mix / max_val
-                
-                mixed_path = os.path.join(folder, "mixed_custom.wav")
-                sf.write(mixed_path, mix, samplerate)
-                
-                output_filename = f"custom_mix_{target_lufs}.wav"
-                output_path = os.path.join(folder, output_filename)
-                
-                async with processing_semaphore:
-                    await asyncio.to_thread(apply_lufs_mastering, mixed_path, output_path, target_lufs)
-                
-                if export_format == "mp3":
-                    output_path = await asyncio.to_thread(convert_to_mp3, output_path)
-                    output_filename = os.path.basename(output_path)
-                    
-                export_files.append((output_path, output_filename))
+            mix, samplerate = mixdown_stems([path for path, _ in selected_stem_files])
+
+            mixed_path = os.path.join(folder, "mixed_custom.wav")
+            sf.write(mixed_path, mix, samplerate)
+
+            output_filename = f"custom_mix_{target_lufs}.wav"
+            output_path = os.path.join(folder, output_filename)
+
+            async with processing_semaphore:
+                await asyncio.to_thread(apply_lufs_mastering, mixed_path, output_path, target_lufs)
+
+            if export_format == "mp3":
+                output_path = await asyncio.to_thread(convert_to_mp3, output_path)
+                output_filename = os.path.basename(output_path)
+
+            export_files.append((output_path, output_filename))
         else:
             for path, arcname in selected_stem_files:
                 if export_format == "mp3":
-                    path = await asyncio.to_thread(convert_to_mp3, path)
+                    # เก็บ WAV ต้นฉบับไว้ เพื่อไม่ให้ stem หายก่อน TTL และ export ซ้ำได้
+                    path = await asyncio.to_thread(convert_to_mp3, path, remove_source=False)
                     arcname = arcname.replace(".wav", ".mp3")
                 export_files.append((path, arcname))
                 
@@ -280,13 +295,7 @@ async def process_export(
         else:
             zip_filename = f"export_stems_{export_format}.zip"
             zip_path = os.path.join(folder, zip_filename)
-            
-            def create_zip():
-                with zipfile.ZipFile(zip_path, "w") as zipf:
-                    for f_path, a_name in export_files:
-                        zipf.write(f_path, a_name)
-                        
-            await asyncio.to_thread(create_zip)
+            await asyncio.to_thread(create_zip_archive, zip_path, export_files)
             return {
                 "status": "success",
                 "type": "zip",

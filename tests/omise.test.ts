@@ -5,6 +5,10 @@ describe("Omise https.request compatibility", () => {
     const mockRequest = jest.fn();
     https.request = mockRequest as any;
 
+    // https เป็น node module ที่แชร์กันใน worker เดียว — ลบ marker ของ L5
+    // (ถ้า test file ก่อนหน้าเคยโหลด lib/omise จริง จะข้ามการ patch ทำให้ test นี้พัง)
+    delete (https as unknown as Record<string, unknown>)["__harmoniqHttpsPatched"];
+
     await import("../lib/omise");
 
     const cb = jest.fn();

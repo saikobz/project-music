@@ -1,14 +1,11 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { OAUTH_PROVIDERS } from "@/lib/config";
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { session, response: authResponse } = await requireSession();
+  if (authResponse) return authResponse;
 
   const configuredProviders = OAUTH_PROVIDERS.map((p) => ({ ...p }));
 
@@ -37,21 +34,32 @@ export async function GET() {
 }
 
 export async function DELETE(req: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { session, response: authResponse } = await requireSession();
+  if (authResponse) return authResponse;
 
   const { provider } = await req.json();
   if (!provider) {
     return NextResponse.json({ error: "Provider is required" }, { status: 400 });
   }
 
-  const account = await prisma.account.findFirst({
-    where: { userId: session.user.id, provider },
+  const accounts = await prisma.account.findMany({
+    where: { userId: session.user.id },
   });
+  const account = accounts.find((a) => a.provider === provider);
   if (!account) {
     return NextResponse.json({ error: "Account not found" }, { status: 404 });
+  }
+
+  // M20: กัน lockout ถาวร — ห้ามลบ provider ตัวสุดท้ายที่เหลืออยู่ถ้าไม่มีรหัสผ่านสำรอง
+  const user = await prisma.user.findUnique({ where: { id: session.user.id } });
+  const hasPassword = !!user?.password;
+  if (accounts.length === 1 && !hasPassword) {
+    return NextResponse.json(
+      {
+        error: "ไม่สามารถยกเลิกการเชื่อมต่อ Provider สุดท้ายได้ เนื่องจากบัญชีนี้ไม่มีรหัสผ่านสำรอง กรุณาตั้งรหัสผ่านก่อน",
+      },
+      { status: 400 }
+    );
   }
 
   await prisma.account.delete({ where: { id: account.id } });

@@ -6,14 +6,27 @@ from unittest.mock import patch
 from fastapi.testclient import TestClient
 
 import backend.main as main
+from backend.routers import audio_ops
+from backend.services.storage import UPLOAD_DIR
 
 
 class TestApplyCompressorEndpoint(unittest.TestCase):
     def setUp(self) -> None:
         self.client = TestClient(main.app)
         self.temp_dir = tempfile.TemporaryDirectory()
+        # ปิดการเช็คและนับโควตา เพื่อให้เทสไม่ชน quota ตาม IP
+        self._quota_patch = patch.object(
+            audio_ops, "validate_request_quota", new=lambda *args, **kwargs: None
+        )
+        self._increment_patch = patch.object(
+            audio_ops, "increment_guest_quota", new=lambda *args, **kwargs: None
+        )
+        self._quota_patch.start()
+        self._increment_patch.start()
 
     def tearDown(self) -> None:
+        self._quota_patch.stop()
+        self._increment_patch.stop()
         self.temp_dir.cleanup()
 
     def test_apply_compressor_passes_custom_params(self) -> None:
@@ -24,7 +37,7 @@ class TestApplyCompressorEndpoint(unittest.TestCase):
 
         captured: dict[str, object] = {}
 
-        async def fake_save_upload(file, upload_dir=main.UPLOAD_DIR):
+        async def fake_save_upload(file, upload_dir=UPLOAD_DIR, trim_start=None, trim_end=None):
             return "test-id", input_path
 
         def fake_apply_compression(input_file: str, strength: str, genre: str, output_dir: str, **kwargs) -> str:
@@ -37,8 +50,8 @@ class TestApplyCompressorEndpoint(unittest.TestCase):
                 file.write(b"RIFF0000WAVEfmt ")
             return output_path
 
-        with patch.object(main, "save_upload", new=fake_save_upload), patch.object(
-            main, "apply_compression", side_effect=fake_apply_compression
+        with patch.object(audio_ops, "save_upload", new=fake_save_upload), patch.object(
+            audio_ops, "apply_compression", side_effect=fake_apply_compression
         ):
             response = self.client.post(
                 "/apply-compressor?strength=hard&genre=rock&threshold=-18&ratio=3&attack=4&release=120&knee=7&makeup_gain=2&dry_wet=75&output_ceiling=-1",
@@ -67,14 +80,14 @@ class TestApplyCompressorEndpoint(unittest.TestCase):
         with open(input_path, "wb") as file:
             file.write(b"dummy")
 
-        async def fake_save_upload(file, upload_dir=main.UPLOAD_DIR):
+        async def fake_save_upload(file, upload_dir=UPLOAD_DIR, trim_start=None, trim_end=None):
             return "test-id", input_path
 
         def fake_apply_compression(*args, **kwargs) -> str:
             raise ValueError("invalid params")
 
-        with patch.object(main, "save_upload", new=fake_save_upload), patch.object(
-            main, "apply_compression", side_effect=fake_apply_compression
+        with patch.object(audio_ops, "save_upload", new=fake_save_upload), patch.object(
+            audio_ops, "apply_compression", side_effect=fake_apply_compression
         ):
             response = self.client.post(
                 "/apply-compressor?strength=medium&genre=pop",

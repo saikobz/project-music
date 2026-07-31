@@ -1,20 +1,18 @@
 import { NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireSession, verifyAccountAuth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { omise } from "@/lib/omise";
 
 export async function POST(req: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { session, response: authResponse } = await requireSession();
+  if (authResponse) return authResponse;
 
   let password: string | undefined;
+  let confirmEmail: string | undefined;
   try {
     const body = await req.json();
     password = body.password;
+    confirmEmail = body.confirmEmail;
   } catch {}
 
   const user = await prisma.user.findUnique({
@@ -29,14 +27,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "No active paid subscription" }, { status: 400 });
   }
 
-  if (user.password) {
-    if (!password) {
-      return NextResponse.json({ error: "Password is required" }, { status: 400 });
-    }
-    const isValid = await bcrypt.compare(password, user.password);
-    if (!isValid) {
-      return NextResponse.json({ error: "Incorrect password" }, { status: 401 });
-    }
+  // C10 + M19+: ตรวจยืนยันตัวตนก่อนยกเลิก
+  // (password สำหรับผู้ใช้ที่มี / re-auth ล่าสุดสำหรับ OAuth-only)
+  const authError = await verifyAccountAuth(
+    user,
+    password,
+    confirmEmail,
+    (session.user as { reauthAt?: number }).reauthAt
+  );
+  if (authError) {
+    return NextResponse.json({ error: authError.error }, { status: authError.status });
   }
 
   if (user.subscription.omiseScheduleId) {

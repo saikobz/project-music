@@ -85,6 +85,10 @@ model UsageQuota {
   usedCount    Int      @default(0)
   periodStart  DateTime
   periodEnd    DateTime
+
+  // กันการสร้าง period ซ้ำเมื่อมี request พร้อมกัน (F4)
+  @@unique([userId, periodStart])
+  @@index([userId])
 }
 
 model PaymentRecord {

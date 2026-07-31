@@ -5,8 +5,9 @@
 import os
 import asyncio
 import logging
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 
 from backend.cleanup_task import periodic_cleanup
@@ -54,6 +55,20 @@ app.add_middleware(
 # ลงทะเบียน Routers
 app.include_router(stems.router)
 app.include_router(audio_ops.router)
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    """C6: จัดการ exception ที่ไม่คาดคิดทั้งหมดไว้ที่จุดเดียว (เดิมซ้ำทุก router)
+
+    - log รายละเอียดฝั่ง server เท่านั้น
+    - คืนข้อความ generic (M17: กันรั่ว error detail ภายในออกไปที่ client)
+    """
+    logger.exception("Unhandled error on %s %s", request.method, request.url.path)
+    return JSONResponse(
+        status_code=500,
+        content={"status": "error", "message": "เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์"},
+    )
 
 
 @app.get("/health", tags=["health"])

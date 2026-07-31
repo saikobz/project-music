@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { toast } from "sonner";
 
 type Props = {
   isOpen: boolean;
@@ -34,7 +35,7 @@ export default function ExportMasterModal({ isOpen, onClose, onExport, isExporti
 
   const handleExport = () => {
     if (selectedStems.length === 0) {
-      alert("กรุณาเลือกอย่างน้อย 1 แทร็กเพื่อ Export");
+      toast.error("กรุณาเลือกอย่างน้อย 1 แทร็กเพื่อ Export");
       return;
     }
     onExport(exportType, exportFormat, targetLufs, selectedStems);

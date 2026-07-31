@@ -1,15 +1,12 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireSession, verifyAccountAuth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
 import { omise } from "@/lib/omise";
+import { getEffectiveTier, getMonthlyQuota } from "@/lib/subscription";
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session || !session.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { session, response: authResponse } = await requireSession();
+  if (authResponse) return authResponse;
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
@@ -26,9 +23,17 @@ export async function GET() {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
+  // ใช้ effective tier (อิงสถานะ ACTIVE + รอบไม่หมด) เพื่อไม่ให้แสดง quota ผิดหลังยกเลิก/หมดอายุ
+  const effectiveTier = getEffectiveTier(user.subscription);
   const currentQuota = user.usageQuotas[0] || {
-    monthlyQuota: user.subscription?.tier === "PRO" ? -1 : user.subscription?.tier === "BASIC" ? 15 : 3,
+    monthlyQuota: getMonthlyQuota(effectiveTier),
     usedCount: 0,
+  };
+
+  // L4: ไม่ส่ง omiseScheduleId (internal ID) กลับไปที่ client
+  const { omiseScheduleId: _omit, ...publicSubscription } = user.subscription || {
+    tier: "FREE",
+    status: "ACTIVE",
   };
 
   return NextResponse.json({
@@ -45,21 +50,21 @@ export async function GET() {
       language: user.language,
       emailNotifications: user.emailNotifications,
     },
-    subscription: user.subscription || { tier: "FREE", status: "ACTIVE" },
+    subscription: publicSubscription,
     quota: currentQuota,
   });
 }
 
 export async function DELETE(req: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { session, response: authResponse } = await requireSession();
+  if (authResponse) return authResponse;
 
   let password: string | undefined;
+  let confirmEmail: string | undefined;
   try {
     const body = await req.json();
     password = body.password;
+    confirmEmail = body.confirmEmail;
   } catch {
     // Body may be empty or malformed — proceed
   }
@@ -72,14 +77,16 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  if (user.password) {
-    if (!password) {
-      return NextResponse.json({ error: "Password is required to delete account" }, { status: 400 });
-    }
-    const isValid = await bcrypt.compare(password, user.password);
-    if (!isValid) {
-      return NextResponse.json({ error: "Incorrect password" }, { status: 401 });
-    }
+  // C10 + M19+: ตรวจยืนยันตัวตนก่อนลบ
+  // (password สำหรับผู้ใช้ที่มี / re-auth ล่าสุดสำหรับ OAuth-only)
+  const authError = await verifyAccountAuth(
+    user,
+    password,
+    confirmEmail,
+    (session.user as { reauthAt?: number }).reauthAt
+  );
+  if (authError) {
+    return NextResponse.json({ error: authError.error }, { status: authError.status });
   }
 
   if (user.subscription?.omiseScheduleId) {

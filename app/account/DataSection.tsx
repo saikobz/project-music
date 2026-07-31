@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { toast } from "sonner";
 import { Download, AlertTriangle, Trash2 } from "lucide-react";
@@ -9,9 +10,19 @@ interface DataSectionProps {
 }
 
 export default function DataSection({ hasPassword }: DataSectionProps) {
+  const router = useRouter();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
   const [deleting, setDeleting] = useState(false);
+
+  const handleDeleteClick = () => {
+    if (!hasPassword) {
+      // M19+: OAuth-only ต้อง re-auth ผ่าน provider ก่อนลบ (ไปหน้า confirm-delete)
+      router.push("/account/confirm-delete?action=delete");
+      return;
+    }
+    setShowDeleteModal(true);
+  };
 
   const handleExport = () => {
     const a = document.createElement("a");
@@ -81,7 +92,7 @@ export default function DataSection({ hasPassword }: DataSectionProps) {
           </div>
           {!showDeleteModal ? (
             <button
-              onClick={() => setShowDeleteModal(true)}
+              onClick={handleDeleteClick}
               className="flex items-center gap-2 px-4 py-2 bg-red-500/10 text-red-400 text-xs font-semibold rounded-lg hover:bg-red-500/20 transition cursor-pointer"
             >
               <Trash2 className="w-4 h-4" />

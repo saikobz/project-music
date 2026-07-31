@@ -1,6 +1,7 @@
 import os
 import json
 import tempfile
+import threading
 import logging
 from datetime import date
 from fastapi import Request, HTTPException, status
@@ -10,17 +11,27 @@ logger = logging.getLogger("backend.auth_guard")
 # ไฟล์ JSON สำหรับเก็บจำนวนการใช้งานของผู้ใช้ที่ไม่ได้ล็อกอิน (Guest) โดยใช้ IP Address
 QUOTA_FILE = os.path.join(tempfile.gettempdir(), "harmoniq_guest_quota.json")
 
+# ล็อกสำหรับอ่าน-แก้-เขียนไฟล์โควตา Guest แบบมีเธรดเดียว
+# (กัน race condition เมื่อมี request พร้อมกันหลายตัว read-modify-write ชนกัน)
+_guest_quota_lock = threading.Lock()
+
+
+def _get_client_ip(request: Request) -> str:
+    return request.client.host if request.client else "127.0.0.1"
+
 
 def _load_guest_quota() -> dict[str, dict]:
     """
     อ่านข้อมูลโควตาของผู้ใช้ Guest จากไฟล์ JSON
     พร้อมรีเซ็ตโควตาที่หมดอายุรายวัน (อิงวันที่ในระบบ) และรองรับการย้าย format เก่า {"ip": count}
+    ถ้าไฟล์เสียหายจะ log ไว้แทนที่จะเงียบๆ (B7)
     """
     if os.path.exists(QUOTA_FILE):
         try:
             with open(QUOTA_FILE, "r", encoding="utf-8") as f:
                 raw = json.load(f)
             if not isinstance(raw, dict):
+                logger.warning(f"ไฟล์โควตา Guest ผิดรูปแบบ (ไม่ใช่ dict): {QUOTA_FILE} เริ่มนับใหม่")
                 return {}
             today = date.today().isoformat()
             data = {}
@@ -35,16 +46,19 @@ def _load_guest_quota() -> dict[str, dict]:
                         entry = {"count": 0, "date": today}
                     data[ip] = entry
             return data
-        except Exception:
-            pass
+        except Exception as e:
+            logger.error(f"ไฟล์โควตา Guest เสียหาย อ่านไม่ได้: {e}")
     return {}
 
 
 def _save_guest_quota(data: dict[str, dict]) -> None:
-    """บันทึกข้อมูลโควตาของผู้ใช้ Guest ลงไฟล์ JSON"""
+    """บันทึกไฟล์โควตาแบบ atomic: เขียนไฟล์ tmp ก่อนแล้วค่อย os.replace
+    เพื่อไม่ให้ process ขาดกลางคันแล้วได้ไฟล์ JSON ครึ่งๆ กลางๆ (B7)"""
     try:
-        with open(QUOTA_FILE, "w", encoding="utf-8") as f:
+        tmp_path = QUOTA_FILE + ".tmp"
+        with open(tmp_path, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
+        os.replace(tmp_path, QUOTA_FILE)
     except Exception as e:
         logger.error(f"ไม่สามารถบันทึกไฟล์โควตาได้: {e}")
 
@@ -93,31 +107,43 @@ def validate_tier_and_quota(user_tier: str, used_quota: int, model_type: str = "
         )
 
 
-def check_and_increment_quota(request: Request, user_tier: str, user_id: str | None = None, model_type: str = "LSTM", pitch_shift_semitones: int = 0):
+def validate_request_quota(request: Request, user_tier: str = "FREE", user_id: str | None = None, model_type: str = "LSTM", pitch_shift_semitones: int = 0):
     """
-    ตรวจสอบสิทธิ์และนับจำนวนโควตา
-    - ผู้ใช้ที่ Login แล้ว (มี user_id): ข้ามการนับโควตาตาม IP (โควตาจัดการผ่าน Database ฝั่ง Frontend)
-    - ผู้ใช้ Guest (ไม่มี user_id): นับตาม IP Address ในไฟล์ JSON และรีเซ็ตอัตโนมัติทุกวัน
+    ตรวจสอบสิทธิ์โดยไม่หักโควตา (B6: เรียกก่อนเริ่มงาน เพื่อให้ไฟล์ที่ไม่ผ่าน validate ไม่เสียโควตา)
+    - ผู้ใช้ที่ Login แล้ว (user_id): ตรวจสิทธิ์ tier/โมเดล/pitch เท่านั้น (โควตานับฝั่ง Frontend ผ่าน DB)
+    - ผู้ใช้ Guest (ไม่มี user_id): บังคับ tier=FREE เสมอ (B1: ไม่ trust header X-User-Tier)
+      และตรวจจำนวนที่ใช้ตาม IP โดยไม่เพิ่มจำนวน
     """
     tier_upper = (user_tier or "FREE").upper()
 
-    # ผู้ใช้ที่ Login แล้วจะไม่ถูกนับโควตาฝั่ง Backend เพื่อไม่ให้ IP quota ของ Guest มาตัดสิทธิ์
     if user_id:
         validate_tier_and_quota(user_tier=tier_upper, used_quota=0, model_type=model_type, pitch_shift_semitones=pitch_shift_semitones)
         return
 
-    client_ip = request.client.host if request.client else "127.0.0.1"
+    client_ip = _get_client_ip(request)
+    with _guest_quota_lock:
+        guest_data = _load_guest_quota()
+        entry = guest_data.get(client_ip) or {}
+        used_count = int(entry.get("count", 0))
 
-    guest_data = _load_guest_quota()
-    entry = guest_data.get(client_ip) or {}
-    used_count = int(entry.get("count", 0))
+    logger.info(f"[AUTH GUARD] IP: {client_ip} | Tier: FREE (guest) | Used: {used_count}/3")
 
-    logger.info(f"[AUTH GUARD] IP: {client_ip} | Tier: {tier_upper} | Used: {used_count}/3")
+    validate_tier_and_quota(user_tier="FREE", used_quota=used_count, model_type=model_type, pitch_shift_semitones=pitch_shift_semitones)
 
-    validate_tier_and_quota(user_tier=tier_upper, used_quota=used_count, model_type=model_type, pitch_shift_semitones=pitch_shift_semitones)
 
-    if tier_upper == "FREE":
-        entry["count"] = used_count + 1
+def increment_guest_quota(request: Request, user_id: str | None = None) -> None:
+    """
+    นับโควตา Guest +1 หลังผ่านการตรวจสอบไฟล์ (save_upload) แล้วเท่านั้น (B6)
+    ผู้ใช้ที่ Login แล้ว (user_id) จะไม่ถูกนับตาม IP เพราะโควตานับผ่าน Database ฝั่ง Frontend
+    """
+    if user_id:
+        return
+
+    client_ip = _get_client_ip(request)
+    with _guest_quota_lock:
+        guest_data = _load_guest_quota()
+        entry = guest_data.get(client_ip) or {}
+        entry["count"] = int(entry.get("count", 0)) + 1
         entry["date"] = date.today().isoformat()
         guest_data[client_ip] = entry
         _save_guest_quota(guest_data)

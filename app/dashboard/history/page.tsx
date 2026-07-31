@@ -5,7 +5,9 @@ import Link from "next/link";
 import { Navbar } from "../../components/Navbar";
 import { Footer } from "../../components/Footer";
 import { Music, Download, Trash2, Clock, Disc, ArrowRight, Play, Pause } from "lucide-react";
+import { toast } from "sonner";
 import { API_BASE_URL } from "@/lib/config";
+import { downloadViaBlob } from "@/lib/download";
 
 interface HistoryRecord {
   id: string;
@@ -58,8 +60,14 @@ export default function HistoryPage() {
       const url = `${API_BASE_URL}/separated/${fileId}/vocals.wav`;
       const audio = new Audio(url);
       audio.onended = () => setPlayingId(null);
+      // M10: ไฟล์อาจถูกลบไปแล้วตาม TTL (~20 นาที) -> ต้องแจ้งผู้ใช้ ไม่ใช่เงียบ
+      audio.onerror = () => {
+        setPlayingId(null);
+        toast.error("ไฟล์เสียงหมดอายุแล้ว (ระบบลบไฟล์อัตโนมัติ) กรุณาประมวลผลใหม่");
+      };
       audio.play().catch(() => {
         setPlayingId(null);
+        toast.error("ไม่สามารถเล่นไฟล์ได้ (ไฟล์อาจหมดอายุแล้ว) กรุณาประมวลผลใหม่");
       });
       audioRef.current = audio;
       setPlayingId(fileId);
@@ -70,16 +78,17 @@ export default function HistoryPage() {
     const res = await fetch(`/api/history/${id}`, { method: "DELETE" });
     if (res.ok) {
       setRecords((prev) => prev.filter((r) => r.id !== id));
+    } else {
+      toast.error("ไม่สามารถลบรายการได้ กรุณาลองใหม่");
     }
   };
 
-  const handleDownload = (fileId: string) => {
-    const a = document.createElement("a");
-    a.href = `${API_BASE_URL}/download/${fileId}`;
-    a.download = "separated.zip";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+  const handleDownload = async (fileId: string) => {
+    // M9: ดาวน์โหลดผ่าน fetch -> blob (ลิงก์ข้าม origin + download attribute ไม่ทำงาน)
+    const ok = await downloadViaBlob(`${API_BASE_URL}/download/${fileId}`, "separated.zip");
+    if (!ok) {
+      toast.error("ไฟล์หมดอายุแล้ว (ระบบลบไฟล์อัตโนมัติ) กรุณาประมวลผลใหม่");
+    }
   };
 
   const actionLabels: Record<string, string> = {

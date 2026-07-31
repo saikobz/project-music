@@ -58,6 +58,8 @@ export default function AdvancedMultiTrackPlayer({ baseUrl, fileId }: Props) {
   });
   // จำว่า pointer กำลังลาก waveform ของ stem ไหนอยู่ เพื่อทำ drag seek ให้ต่อเนื่อง
   const draggingStemRef = useRef<StemType | null>(null);
+  // เก็บเวลาครั้งสุดท้ายที่อัปเดตตัวเลขเวลา (throttle audioprocess — M5)
+  const lastTimeUpdateRef = useRef(0);
 
   // บอกว่า player โดยรวมอยู่ในสถานะเล่นอยู่หรือหยุดอยู่
   const [isPlaying, setIsPlaying] = useState(false);
@@ -92,18 +94,51 @@ export default function AdvancedMultiTrackPlayer({ baseUrl, fileId }: Props) {
   // สถานะสำหรับ Solo (เก็บได้ทีละ 1 แทร็ก)
   const [soloedTrack, setSoloedTrack] = useState<StemType | null>(null);
 
+  // ref สำหรับ container ของ WaveSurfer แต่ละ stem (หลีกเลี่ยงการแตะ DOM ที่ React จัดการ)
+  const containerRefs = useRef<Record<StemType, HTMLDivElement | null>>({
+    vocals: null,
+    drums: null,
+    bass: null,
+    other: null,
+  });
+  // เก็บ state ล่าสุดไว้ใน ref เพื่อให้ handler ของ WaveSurfer อ่านค่าได้ไม่ stale
+  const latestStateRef = useRef({ mutedTracks, trackVolumes, soloedTrack });
+  latestStateRef.current = { mutedTracks, trackVolumes, soloedTrack };
+  // ตรวจว่าแต่ละ stem โหลดพร้อมเล่นแล้วหรือยัง (กันกด Play ก่อนพร้อม -> stems หลุด sync)
+  const [readyMap, setReadyMap] = useState<Record<StemType, boolean>>({
+    vocals: false,
+    drums: false,
+    bass: false,
+    other: false,
+  });
+  // ข้อความ error ของ Vocal Polish เพื่อให้ผู้ใช้เห็นว่าเหตุผลอะไรที่ปรับไม่ได้
+  const [polishError, setPolishError] = useState<string | null>(null);
+  const polishAbortRef = useRef<AbortController | null>(null);
+  // abort fetch ค้างไว้ตอน component ถูกถอด เพื่อไม่ให้ setState หลัง unmount
+  useEffect(() => () => polishAbortRef.current?.abort(), []);
+
+  // ตั้งค่า volume ของ ws ให้ตรงกับสถานะ solo/mute/volume ล่าสุด (ใช้ ref เพื่อกัน stale closure)
+  const syncVolume = (ws: WaveSurfer, stem: StemType) => {
+    const { mutedTracks: muted, trackVolumes: volumes, soloedTrack: soloed } = latestStateRef.current;
+    const shouldPlay = soloed !== null ? soloed === stem : !muted[stem];
+    ws.setVolume(shouldPlay ? volumes[stem] / 100 : 0);
+  };
+
   useEffect(() => {
     // สร้าง waveform player แยกสำหรับแต่ละ stem ทุกครั้งที่ base URL เปลี่ยน
+    // (รีเซ็ตสถานะพร้อมเล่นใหม่ทุกครั้งที่สร้างชุด player ใหม่)
+    setReadyMap({ vocals: false, drums: false, bass: false, other: false });
+
     stems.forEach((stem) => {
-      // หา container ของ waveform ตาม id ที่ผูกกับชื่อ stem
-      const container = document.getElementById(`waveform-${stem}`);
-      // ถ้ายังไม่มี DOM ของ stem นี้ ก็ข้ามไปก่อน
+      const container = containerRefs.current[stem];
       if (!container) return;
 
-      // ล้างคลื่นเสียงเก่าที่ render ค้างอยู่ใน div เดิม
-      container.innerHTML = "";
       // ทำลาย instance เดิมก่อน เพื่อป้องกัน player ซ้อนกันและ memory leak
-      waveSurferRefs.current[stem]?.destroy();
+      const previous = waveSurferRefs.current[stem];
+      if (previous) {
+        previous.destroy();
+        waveSurferRefs.current[stem] = null;
+      }
 
       // สร้าง WaveSurfer ตัวใหม่ของ stem นี้ พร้อมกำหนดหน้าตา waveform
       const ws = WaveSurfer.create({
@@ -119,7 +154,7 @@ export default function AdvancedMultiTrackPlayer({ baseUrl, fileId }: Props) {
       });
 
       // โหลดไฟล์เสียงของ stem นี้จาก baseUrl ที่ส่งเข้ามา (ถ้าเป็น vocals และถูก polish ให้ใช้ไฟล์ polished)
-      const audioUrl = (stem === "vocals" && isVocalPolished) 
+      const audioUrl = (stem === "vocals" && isVocalPolished)
         ? `${baseUrl}/vocals_polished.wav`
         : `${baseUrl}/${stem}.wav`;
       ws.load(audioUrl).catch((e: unknown) => {
@@ -129,8 +164,9 @@ export default function AdvancedMultiTrackPlayer({ baseUrl, fileId }: Props) {
       ws.on("ready", () => {
         // เมื่อไฟล์พร้อมใช้งานแล้วค่อยเก็บ instance ลง ref
         waveSurferRefs.current[stem] = ws;
-        // ตั้งค่าเสียงเริ่มต้นให้ตรงกับสถานะ mute/volume ปัจจุบัน
-        ws.setVolume(mutedTracks[stem] ? 0 : trackVolumes[stem] / 100);
+        // ตั้งค่าเสียงเริ่มต้นให้ตรงกับสถานะ solo/mute/volume ปัจจุบัน
+        syncVolume(ws, stem);
+        setReadyMap((prev) => ({ ...prev, [stem]: true }));
         // บันทึกความยาวเพลงของ stem นี้ไว้ใช้แสดงบน UI
         setDurations((prev) => ({
           ...prev,
@@ -138,7 +174,12 @@ export default function AdvancedMultiTrackPlayer({ baseUrl, fileId }: Props) {
         }));
       });
       ws.on("audioprocess", (time: number) => {
-        // ระหว่างเล่นเพลงจะยิง event นี้บ่อย ๆ เพื่ออัปเดตเวลาปัจจุบันแบบ realtime
+        // ระหว่างเล่นเพลงจะยิง event นี้ทุก animation frame (~60fps)
+        // throttle เหลือ ~10 ครั้ง/วินาที เพื่อไม่ให้ setState 240 ครั้ง/วินาที
+        // (ตัวเลขเวลาที่แสดงไม่จำเป็นต้องละเอียดขนาดนั้น — M5)
+        const now = performance.now();
+        if (now - lastTimeUpdateRef.current < 100) return;
+        lastTimeUpdateRef.current = now;
         setCurrentTimes((prev) => ({
           ...prev,
           [stem]: time,
@@ -158,27 +199,32 @@ export default function AdvancedMultiTrackPlayer({ baseUrl, fileId }: Props) {
     return () => {
       // cleanup ตอน component ถูกถอด หรือก่อน effect ทำงานรอบใหม่
       stems.forEach((stem) => {
-        waveSurferRefs.current[stem]?.destroy();
+        const ws = waveSurferRefs.current[stem];
+        if (ws) {
+          ws.destroy();
+          waveSurferRefs.current[stem] = null;
+        }
       });
     };
-  }, [baseUrl, isVocalPolished, fileId]);
+  }, [baseUrl, fileId]);
+
+  // เมื่อเปิด/ปิด Vocal Polish ให้โหลดเฉพาะ stem vocals ใหม่
+  // (ไม่ต้อง rebuild player ทั้ง 4 ตัว เพื่อไม่ให้เสียตำแหน่งเล่นของ stem อื่น)
+  useEffect(() => {
+    const ws = waveSurferRefs.current.vocals;
+    if (!ws) return;
+    const audioUrl = `${baseUrl}/vocals${isVocalPolished ? "_polished" : ""}.wav`;
+    ws.load(audioUrl).catch((e: unknown) => {
+      if ((e as { name?: string })?.name === "AbortError") return;
+      console.error("WaveSurfer reload error for vocals", e);
+    });
+  }, [isVocalPolished, baseUrl]);
 
   useEffect(() => {
     // ทำให้สถานะ mute, solo และ volume slider สะท้อนลงไปยัง WaveSurfer ของแต่ละแทร็กจริง
     stems.forEach((stem) => {
       const ws = waveSurferRefs.current[stem];
-      if (!ws) return;
-      
-      let shouldPlay = true;
-      if (soloedTrack !== null) {
-        // ถ้ามีการโซโล่ แทร็กที่ตรงกับ soloedTrack เท่านั้นที่จะดัง
-        shouldPlay = soloedTrack === stem;
-      } else {
-        // ถ้าไม่มีการโซโล่ แทร็กที่ไม่ได้ถูก Mute จะดังปกติ
-        shouldPlay = !mutedTracks[stem];
-      }
-      
-      ws.setVolume(shouldPlay ? trackVolumes[stem] / 100 : 0);
+      if (ws) syncVolume(ws, stem);
     });
   }, [mutedTracks, trackVolumes, soloedTrack]);
 
@@ -186,7 +232,7 @@ export default function AdvancedMultiTrackPlayer({ baseUrl, fileId }: Props) {
   const seekToPointer = (stem: StemType, clientX: number) => {
     // หา player และ element ของ stem ที่กำลังถูกคลิกหรือลาก
     const ws = waveSurferRefs.current[stem];
-    const container = document.getElementById(`waveform-${stem}`);
+    const container = containerRefs.current[stem];
     if (!ws || !container) return;
     // อ่านขนาดและตำแหน่งจริงของ waveform บนหน้าจอ
     const rect = container.getBoundingClientRect();
@@ -201,7 +247,11 @@ export default function AdvancedMultiTrackPlayer({ baseUrl, fileId }: Props) {
     }));
   };
 
+  // ปุ่มเล่นจะใช้ได้ก็ต่อเมื่อทุก stem โหลดพร้อมแล้ว (กันกดเร็วเกิน -> หลุด sync ถาวร)
+  const allReady = stems.every((stem) => readyMap[stem]);
+
   const togglePlay = () => {
+    if (!allReady) return;
     // สลับ play/pause ของทุก stem พร้อมกัน เพื่อให้ยัง sync กันอยู่
     stems.forEach((stem) => {
       const ws = waveSurferRefs.current[stem];
@@ -254,25 +304,43 @@ export default function AdvancedMultiTrackPlayer({ baseUrl, fileId }: Props) {
 
   const handleToggleVocalPolish = async () => {
     if (!fileId) return;
-    
+
     // ถ้าเคย polish แล้ว และกดอีกครั้งให้ปิด
     if (isVocalPolished) {
       setIsVocalPolished(false);
+      setPolishError(null);
       return;
     }
-    
+
     // ถ้ายังไม่เคย polish ให้เรียก API
     setIsPolishing(true);
+    setPolishError(null);
+    polishAbortRef.current?.abort();
+    const controller = new AbortController();
+    polishAbortRef.current = controller;
     try {
       const apiBase = API_BASE_URL;
       const res = await fetch(`${apiBase}/api/process/vocal-polish?file_id=${fileId}`, {
-        method: 'POST'
+        method: "POST",
+        signal: controller.signal,
       });
-      if (res.ok) {
-        setIsVocalPolished(true);
+      if (!res.ok) {
+        // แสดงข้อความ error จาก backend (ถ้ามี) ให้ผู้ใช้รู้ว่าล้มเหลว
+        let message = "เกิดข้อผิดพลาดในการปรับแต่งเสียงร้อง";
+        try {
+          const body = await res.json();
+          if (typeof body?.detail === "string") message = body.detail;
+        } catch {
+          // อ่าน body ไม่ได้ ใช้ข้อความเริ่มต้น
+        }
+        setPolishError(message);
+        return;
       }
+      setIsVocalPolished(true);
     } catch (err) {
+      if ((err as { name?: string })?.name === "AbortError") return;
       console.error("Failed to polish vocals:", err);
+      setPolishError("ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาลองใหม่");
     } finally {
       setIsPolishing(false);
     }
@@ -303,7 +371,9 @@ export default function AdvancedMultiTrackPlayer({ baseUrl, fileId }: Props) {
           </button>
           <button
             onClick={togglePlay}
-            className={`flex items-center justify-center gap-2 rounded-xl px-6 py-2.5 text-sm font-bold transition-all min-w-[120px] ${
+            disabled={!allReady}
+            data-testid="play-toggle"
+            className={`flex items-center justify-center gap-2 rounded-xl px-6 py-2.5 text-sm font-bold transition-all min-w-[120px] disabled:cursor-not-allowed disabled:opacity-40 ${
               isPlaying
                 ? "bg-[#222] text-white hover:bg-[#333] shadow-inner"
                 : "bg-gradient-to-b from-[#E5A93D] to-[#D6962A] text-[#0A0A0A] shadow-[0_0_20px_rgba(229,169,61,0.2)] hover:shadow-[0_0_25px_rgba(229,169,61,0.4)] hover:to-[#E5A93D]"
@@ -352,6 +422,7 @@ export default function AdvancedMultiTrackPlayer({ baseUrl, fileId }: Props) {
                   <div className="flex gap-2">
                     <button
                       onClick={() => toggleMute(stem)}
+                      data-testid={`mute-${stem}`}
                       className={`flex-1 rounded-lg border py-2 text-[11px] font-bold tracking-wider transition-all ${
                         isMuted
                           ? "border-[#FF4444] bg-[#FF4444]/10 text-[#FF4444] shadow-[0_0_10px_rgba(255,68,68,0.15)]"
@@ -362,6 +433,7 @@ export default function AdvancedMultiTrackPlayer({ baseUrl, fileId }: Props) {
                     </button>
                     <button
                       onClick={() => toggleSolo(stem)}
+                      data-testid={`solo-${stem}`}
                       className={`flex-1 rounded-lg border py-2 text-[11px] font-bold tracking-wider transition-all ${
                         isSoloed
                           ? "border-[#E5A93D] bg-[#E5A93D] text-[#0A0A0A] shadow-[0_0_15px_rgba(229,169,61,0.3)]"
@@ -373,9 +445,10 @@ export default function AdvancedMultiTrackPlayer({ baseUrl, fileId }: Props) {
                     {stem === "vocals" && (
                       <button
                         onClick={handleToggleVocalPolish}
-                        disabled={isPolishing}
+                        disabled={isPolishing || !readyMap.vocals}
+                        data-testid="polish-toggle"
                         title="AI Vocal Polish"
-                        className={`flex-1 flex items-center justify-center rounded-lg border py-2 transition-all ${
+                        className={`flex-1 flex items-center justify-center rounded-lg border py-2 transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
                           isVocalPolished
                             ? "border-purple-500 bg-purple-500/15 text-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.15)]"
                             : "border-[#333] bg-[#0A0A0A] text-[#8E8E8E] hover:border-purple-500 hover:text-purple-400"
@@ -389,6 +462,11 @@ export default function AdvancedMultiTrackPlayer({ baseUrl, fileId }: Props) {
                       </button>
                     )}
                   </div>
+                  {stem === "vocals" && polishError && (
+                    <p data-testid="polish-error" className="mt-2 text-[11px] font-medium text-[#FF4444]">
+                      {polishError}
+                    </p>
+                  )}
                 </div>
 
                 {/* Waveform & Volume (Right) */}
@@ -412,8 +490,7 @@ export default function AdvancedMultiTrackPlayer({ baseUrl, fileId }: Props) {
                   </div>
                   
                   <div
-                    id={`waveform-${stem}`}
-                    className="h-[72px] w-full cursor-pointer rounded-xl border border-[#222] bg-[#050505] shadow-inner relative overflow-hidden"
+                    className="relative h-[72px] w-full cursor-pointer overflow-hidden rounded-xl border border-[#222] bg-[#050505] shadow-inner"
                     onPointerDown={(e) => {
                       draggingStemRef.current = stem;
                       seekToPointer(stem, e.clientX);
@@ -430,8 +507,15 @@ export default function AdvancedMultiTrackPlayer({ baseUrl, fileId }: Props) {
                       draggingStemRef.current = null;
                     }}
                   >
-                    {/* Dark gradient overlay for a polished look */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/40 pointer-events-none z-10" />
+                    {/* container ของ WaveSurfer แยกจาก DOM ที่ React render (ห้าม innerHTML ล้าง) */}
+                    <div
+                      ref={(el) => {
+                        containerRefs.current[stem] = el;
+                      }}
+                      className="h-full w-full"
+                    />
+                    {/* Gradient overlay เป็น sibling ของ WaveSurfer container เพื่อให้ React ดูแลได้ */}
+                    <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-b from-black/40 via-transparent to-black/40" />
                   </div>
                 </div>
               </div>

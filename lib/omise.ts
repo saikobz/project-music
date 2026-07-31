@@ -13,13 +13,27 @@ export const omise = Omise({
 // wrapper นี้แปลง url + options ให้เป็น options object เดียว ทำให้ทั้งสองทำงานร่วมกัน
 const originalRequest = https.request;
 
-https.request = function (
-  input: string | URL | https.RequestOptions,
-  optionsOrCallback?: https.RequestOptions | ((res: any) => void),
-  callback?: (res: any) => void
-) {
-  if (typeof input === "string" && optionsOrCallback && typeof optionsOrCallback === "object") {
-    return originalRequest({ ...urlToHttpOptions(new URL(input)), ...optionsOrCallback }, callback as any);
-  }
-  return originalRequest(input as https.RequestOptions, optionsOrCallback as any);
-} as typeof https.request;
+// L5: กัน patch ซ้อนเมื่อ HMR reload (ถ้า patch ไปแล้วจะไม่ wrapper ซ้ำอีก)
+const HARMONIQ_PATCH_MARKER = "__harmoniqHttpsPatched";
+
+if (!(https as unknown as Record<string, unknown>)[HARMONIQ_PATCH_MARKER]) {
+  https.request = function (
+    input: string | URL | https.RequestOptions,
+    optionsOrCallback?: https.RequestOptions | ((res: any) => void),
+    callback?: (res: any) => void
+  ) {
+    if (optionsOrCallback && typeof optionsOrCallback === "object") {
+      // รองรับทั้ง string URL และ URL object + options
+      const url = typeof input === "string" ? new URL(input) : input;
+      if (url instanceof URL) {
+        return originalRequest(
+          { ...urlToHttpOptions(url), ...optionsOrCallback },
+          callback as any
+        );
+      }
+    }
+    return originalRequest(input as https.RequestOptions, optionsOrCallback as any);
+  } as typeof https.request;
+
+  (https as unknown as Record<string, unknown>)[HARMONIQ_PATCH_MARKER] = true;
+}
