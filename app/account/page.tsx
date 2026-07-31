@@ -89,15 +89,15 @@ export default function AccountPage() {
         </div>
 
         {/* Tab Bar */}
-        <div className="flex flex-wrap gap-1 border-b border-[#222] pb-0">
+        <div className="flex flex-wrap gap-1 border-b border-[#2C2824] pb-0">
           {TABS.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-3 text-sm font-medium rounded-t-lg transition cursor-pointer whitespace-nowrap ${
                 activeTab === tab.id
-                  ? "bg-[#111] text-[#F97316] border border-b-0 border-[#222] -mb-[1px]"
-                  : "text-[#888] hover:text-white hover:bg-[#111]"
+                  ? "bg-[#161412] text-[#F97316] border border-b-0 border-[#2C2824] -mb-[1px]"
+                  : "text-[#8E8E8E] hover:text-white hover:bg-[#161412]"
               }`}
             >
               {tab.icon}
@@ -107,7 +107,7 @@ export default function AccountPage() {
         </div>
 
         {/* Subscription & Quota Card (always visible) */}
-        <div className="bg-[#111111] border border-[#222222] rounded-2xl p-6 space-y-4">
+        <div className="bg-[#161412] border border-[#2C2824] rounded-2xl p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-semibold text-[#8E8E8E] uppercase tracking-wider">Current Subscription</p>
@@ -118,18 +118,18 @@ export default function AccountPage() {
             </Link>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-[#CCCCCC]">Monthly Song Processing Quota</span>
+            <span className="text-[#A09890]">Monthly Song Processing Quota</span>
             <span className="font-bold text-[#34D399]">{isUnlimited ? "Unlimited" : `${used} / ${max} songs used`}</span>
           </div>
           {!isUnlimited && (
-            <div className="w-full bg-[#222222] rounded-full h-2.5 overflow-hidden">
+            <div className="w-full bg-[#2C2824] rounded-full h-2.5 overflow-hidden">
               <div className="bg-[#34D399] h-2.5 rounded-full transition-all duration-300" style={{ width: `${percent}%` }}></div>
             </div>
           )}
         </div>
 
         {/* Tab Content */}
-        <div className="bg-[#111111] border border-[#222222] rounded-2xl p-6">
+        <div className="bg-[#161412] border border-[#2C2824] rounded-2xl p-6">
           {activeTab === "profile" && (
             <ProfileSection user={user} onUpdated={handleProfileUpdated} />
           )}

@@ -35,7 +35,7 @@ export default function FaqSection() {
   const toggle = (i: number) => setOpenIdx((prev) => (prev === i ? null : i));
 
   return (
-    <section className="py-24 bg-[#0E0E0E] border-t border-[#1F1F1F]">
+    <section className="py-24 bg-[#0D0B0A] border-t border-[#1E1E1E]">
       <div className="max-w-3xl mx-auto px-4">
         <div className="text-center space-y-3 mb-14">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
@@ -54,8 +54,8 @@ export default function FaqSection() {
                 key={i}
                 className={`rounded-xl border transition-all ${
                   isOpen
-                    ? "bg-[#141414] border-purple-500/20"
-                    : "bg-[#0E0E0E] border-[#1F1F1F] hover:border-[#2E2E2E]"
+                    ? "bg-[#1E1B18] border-purple-500/20"
+                    : "bg-[#161412] border-[#1E1E1E] hover:border-[#2C2824]"
                 }`}
               >
                 <button
@@ -66,7 +66,7 @@ export default function FaqSection() {
                     {faq.q}
                   </span>
                   <ChevronDown
-                    className={`w-4 h-4 text-[#666666] shrink-0 transition-transform duration-200 ${
+                    className={`w-4 h-4 text-[#5C5854] shrink-0 transition-transform duration-200 ${
                       isOpen ? "rotate-180" : ""
                     }`}
                   />

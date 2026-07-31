@@ -49,7 +49,7 @@ export const Navbar: React.FC = () => {
                 className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-150 ${
                   isActive
                     ? "bg-[#1E1B18] text-[#F97316] font-semibold border border-[#F97316]/20"
-                    : "text-[#888888] hover:text-[#F5F0EB] hover:bg-[#111111]"
+                    : "text-[#8E8E8E] hover:text-[#F5F0EB] hover:bg-[#161412]"
                 }`}
               >
                 {link.label}
@@ -64,7 +64,7 @@ export const Navbar: React.FC = () => {
 
           {/* ปุ่ม Hamburger สำหรับมือถือ */}
           <button
-            className="md:hidden p-2 rounded-md text-[#888888] hover:text-[#F5F0EB] hover:bg-[#111111] transition cursor-pointer"
+            className="md:hidden p-2 rounded-md text-[#8E8E8E] hover:text-[#F5F0EB] hover:bg-[#161412] transition cursor-pointer"
             onClick={() => setMobileOpen((o) => !o)}
             aria-label="Toggle menu"
           >
@@ -91,7 +91,7 @@ export const Navbar: React.FC = () => {
                 key={link.href}
                 href={link.href}
                 className={`block px-3 py-2 rounded-md text-sm font-medium transition ${
-                  isActive ? "bg-[#1E1B18] text-[#F97316] font-semibold" : "text-[#888888] hover:text-[#F5F0EB] hover:bg-[#111111]"
+                  isActive ? "bg-[#1E1B18] text-[#F97316] font-semibold" : "text-[#8E8E8E] hover:text-[#F5F0EB] hover:bg-[#161412]"
                 }`}
               >
                 {link.label}

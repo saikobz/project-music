@@ -35,20 +35,20 @@ export default function UserMenu() {
     <div className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-2 p-1 rounded-full border border-[#222222] bg-[#111111] hover:border-[#36322E] transition cursor-pointer"
+        className="flex items-center gap-2 p-1 rounded-full border border-[#2C2824] bg-[#161412] hover:border-[#36322E] transition cursor-pointer"
       >
         {user.image ? (
           <img src={user.image} alt={user.name || "User Avatar"} className="w-8 h-8 rounded-full" />
         ) : (
-          <div className="w-8 h-8 rounded-full bg-[#222222] flex items-center justify-center text-xs font-bold text-[#F5F0EB]">
+          <div className="w-8 h-8 rounded-full bg-[#2C2824] flex items-center justify-center text-xs font-bold text-[#F5F0EB]">
             {user.name ? user.name[0].toUpperCase() : "U"}
           </div>
         )}
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-56 bg-[#111111] border border-[#222222] rounded-xl shadow-2xl p-2 z-50 space-y-1">
-          <div className="px-3 py-2 border-b border-[#222222]">
+        <div className="absolute right-0 mt-2 w-56 bg-[#161412] border border-[#2C2824] rounded-xl shadow-2xl p-2 z-50 space-y-1">
+          <div className="px-3 py-2 border-b border-[#2C2824]">
             <p className="text-sm font-bold text-[#F5F0EB] truncate">{user.name || "User Account"}</p>
             <p className="text-xs text-[#8E8E8E] truncate mb-2">{user.email}</p>
             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${tierColors[tier] || tierColors.FREE}`}>
@@ -59,7 +59,7 @@ export default function UserMenu() {
           <Link
             href="/account"
             onClick={() => setOpen(false)}
-            className="block px-3 py-2 text-xs text-[#CCCCCC] hover:text-white hover:bg-[#1E1B18] rounded-md transition"
+            className="block px-3 py-2 text-xs text-[#A09890] hover:text-white hover:bg-[#1E1B18] rounded-md transition"
           >
             ⚙️ Account Settings
           </Link>

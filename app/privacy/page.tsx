@@ -11,7 +11,7 @@ export default function PrivacyPage() {
       <Navbar />
 
       <main className="flex-grow max-w-4xl mx-auto px-4 py-12 md:py-16 space-y-8">
-        <header className="space-y-3 border-b border-[#222] pb-6">
+        <header className="space-y-3 border-b border-[#2C2824] pb-6">
           <div className="inline-flex items-center gap-2 text-emerald-400 text-xs font-semibold uppercase tracking-wider">
             <Lock className="w-4 h-4" />
             <span>Data Protection & Privacy Policy</span>
@@ -20,8 +20,8 @@ export default function PrivacyPage() {
           <p className="text-sm text-[#8E8E8E]">ปรับปรุงล่าสุดเมื่อ: 25 กรกฎาคม 2026</p>
         </header>
 
-        <article className="space-y-8 text-sm md:text-base text-[#D0D0D0] leading-relaxed">
-          <section className="space-y-3 bg-[#111111] p-6 rounded-2xl border border-[#222]">
+        <article className="space-y-8 text-sm md:text-base text-[#A09890] leading-relaxed">
+          <section className="space-y-3 bg-[#161412] p-6 rounded-2xl border border-[#2C2824]">
             <h2 className="text-xl font-semibold text-white flex items-center gap-2">
               <ShieldCheck className="w-5 h-5 text-emerald-400" />
               1. การคุ้มครองข้อมูลส่วนบุคคล (PDPA Compliance)
@@ -31,7 +31,7 @@ export default function PrivacyPage() {
             </p>
           </section>
 
-          <section className="space-y-3 bg-[#111111] p-6 rounded-2xl border border-[#222]">
+          <section className="space-y-3 bg-[#161412] p-6 rounded-2xl border border-[#2C2824]">
             <h2 className="text-xl font-semibold text-white flex items-center gap-2">
               <Trash2 className="w-5 h-5 text-purple-400" />
               2. นโยบายลบไฟล์เสียงชั่วคราว (Temporary Audio Retention & Cleanup)
@@ -41,7 +41,7 @@ export default function PrivacyPage() {
             </p>
           </section>
 
-          <section className="space-y-3 bg-[#111111] p-6 rounded-2xl border border-[#222]">
+          <section className="space-y-3 bg-[#161412] p-6 rounded-2xl border border-[#2C2824]">
             <h2 className="text-xl font-semibold text-white flex items-center gap-2">
               <Database className="w-5 h-5 text-blue-400" />
               3. ระบบชำระเงินและคุกกี้ (Payments & Cookies)

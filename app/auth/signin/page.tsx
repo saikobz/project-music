@@ -65,14 +65,14 @@ function SignInForm() {
   };
 
   return (
-    <div className="bg-[#111111] border border-[#222222] rounded-2xl p-8 max-w-md w-full shadow-2xl space-y-6">
+    <div className="bg-[#161412] border border-[#2C2824] rounded-2xl p-8 max-w-md w-full shadow-2xl space-y-6">
       <div className="text-center space-y-2">
         <h1 className="text-2xl font-bold tracking-tight">Welcome to HarmoniQ</h1>
         <p className="text-xs text-[#8E8E8E]">AI Music Separator & Audio Toolkit</p>
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-[#222222]">
+      <div className="flex border-b border-[#2C2824]">
         <button
           onClick={() => { setTab("signin"); setError(null); }}
           className={`flex-1 py-2 text-sm font-semibold transition border-b-2 cursor-pointer ${
@@ -144,15 +144,15 @@ function SignInForm() {
         </button>
       </form>
 
-      <div className="relative flex items-center justify-center border-t border-[#222222] pt-4">
-        <span className="bg-[#111111] px-2 text-[10px] uppercase text-[#8E8E8E] font-bold">Or continue with</span>
+      <div className="relative flex items-center justify-center border-t border-[#2C2824] pt-4">
+        <span className="bg-[#161412] px-2 text-[10px] uppercase text-[#8E8E8E] font-bold">Or continue with</span>
       </div>
 
       {/* Social Logins */}
       <div className="space-y-2">
         <button
           onClick={() => signIn("google")}
-          className="w-full py-2 bg-[#1E1B18] hover:bg-[#222222] border border-[#36322E] text-white text-xs font-semibold rounded-lg flex items-center justify-center gap-2 transition cursor-pointer"
+          className="w-full py-2 bg-[#1E1B18] hover:bg-[#2C2824] border border-[#36322E] text-white text-xs font-semibold rounded-lg flex items-center justify-center gap-2 transition cursor-pointer"
         >
           🌐 Google
         </button>

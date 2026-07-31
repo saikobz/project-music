@@ -88,16 +88,16 @@ export default function ApiPricingPage() {
               >
                 <div className="flex items-baseline gap-3">
                   <h3 className="text-xl font-bold" style={{ color: plan.color }}>{plan.name}</h3>
-                  <span className="text-sm text-[#888888]">{plan.price}</span>
+                  <span className="text-sm text-[#8E8E8E]">{plan.price}</span>
                 </div>
                 <ul className="space-y-2">
                   {plan.features.map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-sm text-[#CCCCCC]">
+                    <li key={f} className="flex items-start gap-2 text-sm text-[#A09890]">
                       <span style={{ color: plan.color }}>✓</span> {f}
                     </li>
                   ))}
                   {plan.missing.map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-sm text-[#444444] line-through">
+                    <li key={f} className="flex items-start gap-2 text-sm text-[#36322E] line-through">
                       <span>✗</span> {f}
                     </li>
                   ))}
@@ -113,10 +113,10 @@ export default function ApiPricingPage() {
           <div className="space-y-4">
             {API_EXAMPLES.map((ex) => (
               <div key={ex.lang} className="rounded-xl border border-[#1E1E1E] overflow-hidden">
-                <div className="flex items-center gap-2 px-4 py-2 bg-[#111111] border-b border-[#1E1E1E]">
+                <div className="flex items-center gap-2 px-4 py-2 bg-[#161412] border-b border-[#1E1E1E]">
                   <span className="text-xs font-semibold text-[#34D399]">{ex.lang}</span>
                 </div>
-                <pre className="p-4 text-xs text-[#A09890] font-mono overflow-x-auto leading-relaxed bg-[#080808]">{ex.code}</pre>
+                <pre className="p-4 text-xs text-[#A09890] font-mono overflow-x-auto leading-relaxed bg-[#050505]">{ex.code}</pre>
               </div>
             ))}
           </div>

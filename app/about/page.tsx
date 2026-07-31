@@ -26,16 +26,16 @@ export default function AboutPage() {
 
         {/* About Section */}
         <header className="space-y-4">
-          <p className="text-xs font-semibold tracking-[0.2em] text-[#64748B] uppercase">About</p>
+          <p className="text-xs font-semibold tracking-[0.2em] text-[#8E8E8E] uppercase">About</p>
           <h1 className="text-4xl font-bold tracking-tight">เกี่ยวกับ HarmoniQ</h1>
           <p className="text-[#8E8E8E] max-w-2xl leading-relaxed text-base">
             HarmoniQ เป็นโปรเจกต์วิชาการที่ผสมผสานความสามารถของ Machine Learning
             เข้ากับการออกแบบ Web Application สมัยใหม่ เพื่อให้นักดนตรีและวิศวกรเสียง
             สามารถเข้าถึงเครื่องมือระดับสตูดิโอได้ผ่านเว็บเบราว์เซอร์โดยตรง
           </p>
-          <p className="text-[#666666] leading-relaxed text-sm max-w-2xl">
-            ระบบ Backend ขับเคลื่อนด้วย <span className="text-[#94A3B8]">FastAPI (Python 3.10)</span> และโมเดล
-            PyTorch ฝั่ง Frontend สร้างด้วย <span className="text-[#94A3B8]">Next.js 15 + React 19 + Tailwind CSS 4</span>
+          <p className="text-[#5C5854] leading-relaxed text-sm max-w-2xl">
+            ระบบ Backend ขับเคลื่อนด้วย <span className="text-[#A09890]">FastAPI (Python 3.10)</span> และโมเดล
+            PyTorch ฝั่ง Frontend สร้างด้วย <span className="text-[#A09890]">Next.js 15 + React 19 + Tailwind CSS 4</span>
           </p>
         </header>
 
@@ -44,8 +44,8 @@ export default function AboutPage() {
           <h2 className="text-2xl font-bold">Tech Stack</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             {TECH_STACK.map((t) => (
-              <div key={t.name} className="rounded-xl border border-[#1E1E1E] bg-[#0E0E0E] p-4">
-                <p className="text-sm font-bold text-[#E0E0E0]">{t.name}</p>
+              <div key={t.name} className="rounded-xl border border-[#1E1E1E] bg-[#161412] p-4">
+                <p className="text-sm font-bold text-[#F5F0EB]">{t.name}</p>
                 <p className="text-xs text-[#5C5854] mt-1">{t.role}</p>
               </div>
             ))}
@@ -53,7 +53,7 @@ export default function AboutPage() {
         </section>
 
         {/* Support Link CTA */}
-        <section className="rounded-2xl border border-[#1E1E1E] bg-[#0E0E0E] p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <section className="rounded-2xl border border-[#1E1E1E] bg-[#161412] p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
             <h3 className="text-lg font-bold">มีข้อสงสัยหรือต้องการติดต่อทีมงาน?</h3>
             <p className="text-xs text-[#8E8E8E] mt-1">สามารถส่งข้อความหรือรายงานปัญหาการใช้งานได้ที่ศูนย์ช่วยเหลือ</p>

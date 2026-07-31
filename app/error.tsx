@@ -52,7 +52,7 @@ export default function ErrorBoundary({ error, reset }: ErrorProps) {
           
           <button
             onClick={() => window.location.reload()}
-            className="w-full rounded-xl border border-[#2C2824] bg-[#161412] px-4 py-3.5 font-semibold text-[#8E8E8E] hover:text-white hover:border-[#444444] transition-colors cursor-pointer"
+            className="w-full rounded-xl border border-[#2C2824] bg-[#161412] px-4 py-3.5 font-semibold text-[#8E8E8E] hover:text-white hover:border-[#36322E] transition-colors cursor-pointer"
           >
             รีโหลดทั้งหน้า (Force Reload)
           </button>

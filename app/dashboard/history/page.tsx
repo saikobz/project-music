@@ -165,7 +165,7 @@ export default function HistoryPage() {
       <Navbar />
 
       <main className="flex-grow max-w-5xl mx-auto w-full px-4 py-12 space-y-8">
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#222] pb-6">
+        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#2C2824] pb-6">
           <div>
             <div className="inline-flex items-center gap-2 text-purple-400 text-xs font-semibold uppercase tracking-wider mb-1">
               <Clock className="w-4 h-4" />
@@ -187,12 +187,12 @@ export default function HistoryPage() {
         </header>
 
         {recordsLoading ? (
-          <div className="bg-[#111111] border border-[#222222] rounded-2xl p-12 text-center">
+          <div className="bg-[#161412] border border-[#2C2824] rounded-2xl p-12 text-center">
             <div className="text-[#8E8E8E] text-sm">Loading history...</div>
           </div>
         ) : records.length === 0 ? (
-          <div className="bg-[#111111] border border-[#222222] rounded-2xl p-12 text-center space-y-4">
-            <Music className="w-12 h-12 text-[#444] mx-auto" />
+          <div className="bg-[#161412] border border-[#2C2824] rounded-2xl p-12 text-center space-y-4">
+            <Music className="w-12 h-12 text-[#36322E] mx-auto" />
             <h3 className="text-lg font-semibold">ยังไม่มีประวัติการแยกแทร็กเสียง</h3>
             <p className="text-xs text-[#8E8E8E] max-w-sm mx-auto">
               อัปโหลดไฟล์ WAV ใน Studio Workspace เพื่อเริ่มแยกแทร็กเสียงดนตรีด้วย AI
@@ -205,10 +205,10 @@ export default function HistoryPage() {
             </Link>
           </div>
         ) : (
-          <div className="bg-[#111111] border border-[#222222] rounded-2xl overflow-hidden shadow-xl">
+          <div className="bg-[#161412] border border-[#2C2824] rounded-2xl overflow-hidden shadow-xl">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs md:text-sm">
-                <thead className="bg-[#181818] border-b border-[#222] text-[#888] font-medium uppercase text-xs">
+                <thead className="bg-[#1E1B18] border-b border-[#2C2824] text-[#8E8E8E] font-medium uppercase text-xs">
                   <tr>
                     <th className="py-3.5 px-4">ชื่อไฟล์เพลง</th>
                     <th className="py-3.5 px-4">วันที่แยกแทร็ก</th>
@@ -217,7 +217,7 @@ export default function HistoryPage() {
                     <th className="py-3.5 px-4 text-right">การจัดการ</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#1F1F1F]">
+                <tbody className="divide-y divide-[#1E1E1E]">
                   {records.map((record) => {
                     let stemsList: string[] = [];
                     try { stemsList = record.stems ? JSON.parse(record.stems) : []; } catch {}
@@ -228,7 +228,7 @@ export default function HistoryPage() {
                     const isExpired = expiresAtMs !== null && Date.now() >= expiresAtMs;
 
                     return (
-                      <tr key={record.id} className="hover:bg-[#161616] transition-colors">
+                      <tr key={record.id} className="hover:bg-[#1E1B18] transition-colors">
                         <td className="py-4 px-4">
                           <div className="flex items-center gap-3">
                             {record.fileId && (
@@ -262,7 +262,7 @@ export default function HistoryPage() {
                               {stemsList.map((stem) => (
                                 <span
                                   key={stem}
-                                  className="px-2 py-0.5 rounded-md bg-[#202020] border border-[#303030] text-[11px] text-purple-300"
+                                  className="px-2 py-0.5 rounded-md bg-[#1E1B18] border border-[#36322E] text-[11px] text-purple-300"
                                 >
                                   {stem}
                                 </span>
@@ -304,7 +304,7 @@ export default function HistoryPage() {
                                 className={`p-2 rounded-lg transition text-xs flex items-center gap-1.5 ${
                                   isExpired
                                     ? "bg-[#1E1B18] text-[#5C5854] cursor-not-allowed"
-                                    : "bg-[#202020] hover:bg-[#303030] text-white"
+                                    : "bg-[#1E1B18] hover:bg-[#36322E] text-white"
                                 }`}
                               >
                                 <Download className="w-4 h-4 text-purple-400" />

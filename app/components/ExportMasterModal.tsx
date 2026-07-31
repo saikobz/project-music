@@ -60,7 +60,7 @@ export default function ExportMasterModal({ isOpen, onClose, onExport, isExporti
               className={`rounded-xl border p-4 text-left transition-all ${
                 exportType === "mix"
                   ? "border-[#E5A93D] bg-[#E5A93D]/10 shadow-[0_0_15px_rgba(229,169,61,0.1)]"
-                  : "border-[#2C2824] bg-[#161412] hover:border-[#444444]"
+                  : "border-[#2C2824] bg-[#161412] hover:border-[#36322E]"
               }`}
             >
               <div className={`mb-1 font-semibold ${exportType === "mix" ? "text-[#E5A93D]" : "text-white"}`}>Mixed Audio</div>
@@ -71,7 +71,7 @@ export default function ExportMasterModal({ isOpen, onClose, onExport, isExporti
               className={`rounded-xl border p-4 text-left transition-all ${
                 exportType === "stems"
                   ? "border-[#E5A93D] bg-[#E5A93D]/10 shadow-[0_0_15px_rgba(229,169,61,0.1)]"
-                  : "border-[#2C2824] bg-[#161412] hover:border-[#444444]"
+                  : "border-[#2C2824] bg-[#161412] hover:border-[#36322E]"
               }`}
             >
               <div className={`mb-1 font-semibold ${exportType === "stems" ? "text-[#E5A93D]" : "text-white"}`}>Separate Stems</div>
@@ -85,7 +85,7 @@ export default function ExportMasterModal({ isOpen, onClose, onExport, isExporti
           <div>
             <div className="mb-3 text-xs font-medium uppercase tracking-widest text-[#8E8E8E]">2. Format</div>
             <div className="flex flex-col gap-2">
-              <label className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors ${exportFormat === "wav" ? "border-[#E5A93D] bg-[#E5A93D]/5" : "border-[#2C2824] bg-[#161412] hover:border-[#444444]"}`}>
+              <label className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors ${exportFormat === "wav" ? "border-[#E5A93D] bg-[#E5A93D]/5" : "border-[#2C2824] bg-[#161412] hover:border-[#36322E]"}`}>
                 <input
                   type="radio"
                   name="format"
@@ -96,7 +96,7 @@ export default function ExportMasterModal({ isOpen, onClose, onExport, isExporti
                 />
                 <span className="text-sm font-medium text-white">WAV <span className="text-xs text-[#8E8E8E] font-normal">(Lossless)</span></span>
               </label>
-              <label className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors ${exportFormat === "mp3" ? "border-[#E5A93D] bg-[#E5A93D]/5" : "border-[#2C2824] bg-[#161412] hover:border-[#444444]"}`}>
+              <label className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors ${exportFormat === "mp3" ? "border-[#E5A93D] bg-[#E5A93D]/5" : "border-[#2C2824] bg-[#161412] hover:border-[#36322E]"}`}>
                 <input
                   type="radio"
                   name="format"
@@ -133,17 +133,17 @@ export default function ExportMasterModal({ isOpen, onClose, onExport, isExporti
           <div className="mb-8">
             <div className="mb-3 text-xs font-medium uppercase tracking-widest text-[#8E8E8E]">4. Mastering Level (LUFS)</div>
             <div className="grid grid-cols-3 gap-3">
-              <label className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border p-3 transition-colors ${targetLufs === -16.0 ? "border-[#E5A93D] bg-[#E5A93D]/5" : "border-[#2C2824] bg-[#161412] hover:border-[#444444]"}`}>
+              <label className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border p-3 transition-colors ${targetLufs === -16.0 ? "border-[#E5A93D] bg-[#E5A93D]/5" : "border-[#2C2824] bg-[#161412] hover:border-[#36322E]"}`}>
                 <input type="radio" name="lufs" value={-16} checked={targetLufs === -16.0} onChange={() => setTargetLufs(-16.0)} className="mb-2 accent-[#E5A93D]" />
                 <span className="text-sm font-bold text-white">-16</span>
                 <span className="text-[10px] text-[#8E8E8E] text-center mt-1">Apple Music</span>
               </label>
-              <label className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border p-3 transition-colors ${targetLufs === -14.0 ? "border-[#E5A93D] bg-[#E5A93D]/5" : "border-[#2C2824] bg-[#161412] hover:border-[#444444]"}`}>
+              <label className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border p-3 transition-colors ${targetLufs === -14.0 ? "border-[#E5A93D] bg-[#E5A93D]/5" : "border-[#2C2824] bg-[#161412] hover:border-[#36322E]"}`}>
                 <input type="radio" name="lufs" value={-14} checked={targetLufs === -14.0} onChange={() => setTargetLufs(-14.0)} className="mb-2 accent-[#E5A93D]" />
                 <span className="text-sm font-bold text-white">-14</span>
                 <span className="text-[10px] text-[#8E8E8E] text-center mt-1">Spotify / YT</span>
               </label>
-              <label className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border p-3 transition-colors ${targetLufs === -9.0 ? "border-[#E5A93D] bg-[#E5A93D]/5" : "border-[#2C2824] bg-[#161412] hover:border-[#444444]"}`}>
+              <label className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border p-3 transition-colors ${targetLufs === -9.0 ? "border-[#E5A93D] bg-[#E5A93D]/5" : "border-[#2C2824] bg-[#161412] hover:border-[#36322E]"}`}>
                 <input type="radio" name="lufs" value={-9} checked={targetLufs === -9.0} onChange={() => setTargetLufs(-9.0)} className="mb-2 accent-[#E5A93D]" />
                 <span className="text-sm font-bold text-white">-9</span>
                 <span className="text-[10px] text-[#8E8E8E] text-center mt-1">CD / Loud</span>

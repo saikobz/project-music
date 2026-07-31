@@ -123,7 +123,7 @@ function ConfirmDeleteContent() {
 
       <button
         onClick={() => router.back()}
-        className="text-xs text-[#666] hover:text-white transition"
+        className="text-xs text-[#5C5854] hover:text-white transition"
       >
         กลับไปหน้าก่อนหน้า
       </button>

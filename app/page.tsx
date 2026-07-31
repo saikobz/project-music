@@ -46,7 +46,7 @@ export default function Home() {
 
       <main className="flex-grow">
         {/* ──────── Hero Section ──────── */}
-        <section className="relative overflow-hidden pt-16 pb-24 md:pt-24 md:pb-32 border-b border-[#1F1F1F]">
+        <section className="relative overflow-hidden pt-16 pb-24 md:pt-24 md:pb-32 border-b border-[#1E1E1E]">
           <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-purple-600/15 blur-[120px] rounded-full pointer-events-none animate-glow-pulse" />
           <div className="absolute top-1/3 left-1/3 w-[400px] h-[250px] bg-blue-600/10 blur-[100px] rounded-full pointer-events-none animate-glow-pulse" style={{ animationDelay: "1.5s" }} />
 
@@ -78,7 +78,7 @@ export default function Home() {
               </Link>
               <Link
                 href="/pricing"
-                className="w-full sm:w-auto px-8 py-4 rounded-xl bg-[#181818] border border-[#2E2E2E] hover:border-[#444444] text-[#E0E0E0] hover:text-white font-semibold transition-all"
+                className="w-full sm:w-auto px-8 py-4 rounded-xl bg-[#161412] border border-[#2C2824] hover:border-[#36322E] text-[#F5F0EB] hover:text-white font-semibold transition-all"
               >
                 ดูราคาและแพ็กเกจ
               </Link>
@@ -102,7 +102,7 @@ export default function Home() {
         </section>
 
         {/* ──────── Social Proof / Metrics Bar ──────── */}
-        <section className="py-14 bg-[#0C0C0C] border-b border-[#1F1F1F]">
+        <section className="py-14 bg-[#0D0B0A] border-b border-[#1E1E1E]">
           <div className="max-w-6xl mx-auto px-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
               {STATS.map((stat) => {
@@ -122,7 +122,7 @@ export default function Home() {
         </section>
 
         {/* ──────── Features Grid ──────── */}
-        <section className="py-20 bg-[#0E0E0E]">
+        <section className="py-20 bg-[#0D0B0A]">
           <div className="max-w-6xl mx-auto px-4 space-y-12">
             <div className="text-center space-y-3">
               <h2 className="text-3xl md:text-4xl font-bold">ฟีเจอร์ระดับมืออาชีพสำหรับโปรดิวเซอร์</h2>
@@ -136,7 +136,7 @@ export default function Home() {
                 const c = COLOR_MAP[f.color];
                 const Icon = f.icon;
                 return (
-                  <div key={f.title} className={`p-6 rounded-2xl bg-[#141414] border ${c.border} ${c.hover} transition-all space-y-4 group`}>
+                  <div key={f.title} className={`p-6 rounded-2xl bg-[#161412] border ${c.border} ${c.hover} transition-all space-y-4 group`}>
                     <div className={`w-12 h-12 rounded-xl ${c.bg} border ${c.border} flex items-center justify-center ${c.text} transition-all group-hover:scale-110`}>
                       <Icon className="w-6 h-6" />
                     </div>
@@ -153,7 +153,7 @@ export default function Home() {
         <HowItWorks />
 
         {/* ──────── AI Model Specs & Security ──────── */}
-        <section className="py-20 bg-[#0E0E0E] border-t border-[#1F1F1F]">
+        <section className="py-20 bg-[#0D0B0A] border-t border-[#1E1E1E]">
           <div className="max-w-6xl mx-auto px-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
               <div className="space-y-5">
@@ -172,7 +172,7 @@ export default function Home() {
                     "24-bit Lossless WAV Export",
                     "TLS Encryption ทุกการเชื่อมต่อ",
                   ].map((item) => (
-                    <li key={item} className="flex items-start gap-2 text-[#CCCCCC]">
+                    <li key={item} className="flex items-start gap-2 text-[#A09890]">
                       <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />
                       <span>{item}</span>
                     </li>
@@ -180,10 +180,10 @@ export default function Home() {
                 </ul>
               </div>
               <div className="hidden md:flex items-center justify-center">
-                <div className="w-full max-w-sm aspect-square rounded-3xl bg-gradient-to-br from-purple-600/10 via-indigo-600/5 to-pink-600/10 border border-[#242424] flex items-center justify-center p-8">
+                <div className="w-full max-w-sm aspect-square rounded-3xl bg-gradient-to-br from-purple-600/10 via-indigo-600/5 to-pink-600/10 border border-[#2C2824] flex items-center justify-center p-8">
                   <div className="text-center space-y-4">
                     <BrainCircuit className="w-16 h-16 text-purple-400 mx-auto opacity-60" />
-                    <p className="text-xs text-[#666666] font-mono">Open-Unmix v2.1 · PyTorch Backend</p>
+                    <p className="text-xs text-[#5C5854] font-mono">Open-Unmix v2.1 · PyTorch Backend</p>
                   </div>
                 </div>
               </div>
@@ -195,7 +195,7 @@ export default function Home() {
         <FaqSection />
 
         {/* ──────── Final CTA ──────── */}
-        <section className="py-20 bg-[#0D0B0A] border-t border-[#1F1F1F]">
+        <section className="py-20 bg-[#0D0B0A] border-t border-[#1E1E1E]">
           <div className="max-w-4xl mx-auto px-4 text-center space-y-6">
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight">พร้อมสัมผัสประสบการณ์แยกเสียงด้วย AI แล้วหรือยัง?</h2>
             <p className="text-sm md:text-base text-[#A09890] max-w-2xl mx-auto">
@@ -211,7 +211,7 @@ export default function Home() {
               </Link>
               <Link
                 href="/pricing"
-                className="w-full sm:w-auto px-8 py-4 rounded-xl bg-[#181818] border border-[#2E2E2E] hover:border-[#444444] text-[#E0E0E0] hover:text-white font-semibold transition-all"
+                className="w-full sm:w-auto px-8 py-4 rounded-xl bg-[#161412] border border-[#2C2824] hover:border-[#36322E] text-[#F5F0EB] hover:text-white font-semibold transition-all"
               >
                 เปรียบเทียบแพ็กเกจ
               </Link>

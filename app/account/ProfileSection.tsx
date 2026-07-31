@@ -44,8 +44,8 @@ export default function ProfileSection({ user, onUpdated }: ProfileSectionProps)
         {image ? (
           <img src={image} alt="Avatar" className="w-16 h-16 rounded-full object-cover border border-[#36322E]" />
         ) : (
-          <div className="w-16 h-16 rounded-full bg-[#222] flex items-center justify-center">
-            <User className="w-8 h-8 text-[#666]" />
+          <div className="w-16 h-16 rounded-full bg-[#2C2824] flex items-center justify-center">
+            <User className="w-8 h-8 text-[#5C5854]" />
           </div>
         )}
         <div className="flex-1">

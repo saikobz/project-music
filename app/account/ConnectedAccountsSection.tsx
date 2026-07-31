@@ -79,15 +79,15 @@ export default function ConnectedAccountsSection() {
       {providers.map((provider) => (
         <div
           key={provider.id}
-          className="flex items-center justify-between p-4 rounded-xl bg-[#1E1B18] border border-[#222]"
+          className="flex items-center justify-between p-4 rounded-xl bg-[#1E1B18] border border-[#2C2824]"
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#222] flex items-center justify-center text-[#888]">
+            <div className="w-10 h-10 rounded-full bg-[#2C2824] flex items-center justify-center text-[#8E8E8E]">
               {PROVIDER_ICONS[provider.icon] || PROVIDER_ICONS.mail}
             </div>
             <div>
               <p className="text-sm font-semibold">{provider.name}</p>
-              <p className="text-xs text-[#666]">
+              <p className="text-xs text-[#5C5854]">
                 {provider.linked ? "Connected" : "Not connected"}
               </p>
             </div>

@@ -52,8 +52,8 @@ export default function HowItWorks() {
                 {/* Arrow connector between steps on desktop */}
                 {i < STEPS.length - 1 && (
                   <div className="hidden md:flex absolute top-6 -right-3 lg:-right-4 z-20 items-center justify-center">
-                    <div className="w-7 h-7 rounded-full bg-[#181818] border border-[#2E2E2E] flex items-center justify-center shadow-lg">
-                      <ArrowRight className="w-3.5 h-3.5 text-[#666666]" />
+                    <div className="w-7 h-7 rounded-full bg-[#161412] border border-[#2C2824] flex items-center justify-center shadow-lg">
+                      <ArrowRight className="w-3.5 h-3.5 text-[#5C5854]" />
                     </div>
                   </div>
                 )}
@@ -77,7 +77,7 @@ export default function HowItWorks() {
                 {/* Mobile downward arrow */}
                 {i < STEPS.length - 1 && (
                   <div className="md:hidden flex items-center justify-center py-2">
-                    <ArrowRight className="w-5 h-5 text-[#444444] rotate-90" />
+                    <ArrowRight className="w-5 h-5 text-[#36322E] rotate-90" />
                   </div>
                 )}
               </div>

@@ -17,9 +17,9 @@ export default function PasswordSection({ hasPassword }: PasswordSectionProps) {
   if (!hasPassword) {
     return (
       <div className="text-center py-8 space-y-3">
-        <KeyRound className="w-10 h-10 text-[#444] mx-auto" />
+        <KeyRound className="w-10 h-10 text-[#36322E] mx-auto" />
         <p className="text-[#8E8E8E] text-sm">You signed up with OAuth and don&apos;t have a password yet.</p>
-        <p className="text-[#666] text-xs">Password login is not available for OAuth accounts.</p>
+        <p className="text-[#5C5854] text-xs">Password login is not available for OAuth accounts.</p>
       </div>
     );
   }

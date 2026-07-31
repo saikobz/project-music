@@ -349,8 +349,8 @@ export default function AdvancedMultiTrackPlayer({ baseUrl, fileId }: Props) {
 
 
   return (
-    <div className="space-y-6 rounded-2xl border border-[#222] bg-[#0D0B0A] p-6 shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
-      <div className="flex items-center justify-between border-b border-[#222] pb-5">
+    <div className="space-y-6 rounded-2xl border border-[#2C2824] bg-[#0D0B0A] p-6 shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
+      <div className="flex items-center justify-between border-b border-[#2C2824] pb-5">
         <div className="flex items-center gap-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#E5A93D]/20 to-[#E5A93D]/5 border border-[#E5A93D]/20">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[#E5A93D]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -375,7 +375,7 @@ export default function AdvancedMultiTrackPlayer({ baseUrl, fileId }: Props) {
             data-testid="play-toggle"
             className={`flex items-center justify-center gap-2 rounded-xl px-6 py-2.5 text-sm font-bold transition-all min-w-[120px] disabled:cursor-not-allowed disabled:opacity-40 ${
               isPlaying
-                ? "bg-[#222] text-white hover:bg-[#36322E] shadow-inner"
+                ? "bg-[#2C2824] text-white hover:bg-[#36322E] shadow-inner"
                 : "bg-gradient-to-b from-[#E5A93D] to-[#D6962A] text-[#0D0B0A] shadow-[0_0_20px_rgba(229,169,61,0.2)] hover:shadow-[0_0_25px_rgba(229,169,61,0.4)] hover:to-[#E5A93D]"
             }`}
           >
@@ -395,10 +395,10 @@ export default function AdvancedMultiTrackPlayer({ baseUrl, fileId }: Props) {
               key={stem}
               className={`relative overflow-hidden rounded-2xl border transition-all duration-300 ${
                 isDimmed 
-                  ? "border-[#111] opacity-30 grayscale" 
+                  ? "border-[#161412] opacity-30 grayscale" 
                   : isSoloed 
                     ? "border-[#E5A93D]/50 bg-[#161412] shadow-[0_0_30px_rgba(229,169,61,0.05)]" 
-                    : "border-[#222] bg-[#111] hover:border-[#36322E]"
+                    : "border-[#2C2824] bg-[#161412] hover:border-[#36322E]"
               }`}
             >
               {/* Subtle background tint based on stem color */}
@@ -409,12 +409,12 @@ export default function AdvancedMultiTrackPlayer({ baseUrl, fileId }: Props) {
               
               <div className="relative flex flex-col md:flex-row p-4 gap-5">
                 {/* Control Panel (Left) */}
-                <div className="flex w-full md:w-56 flex-shrink-0 flex-col justify-between border-b border-[#222] pb-4 md:border-b-0 md:border-r md:pb-0 md:pr-5">
+                <div className="flex w-full md:w-56 flex-shrink-0 flex-col justify-between border-b border-[#2C2824] pb-4 md:border-b-0 md:border-r md:pb-0 md:pr-5">
                   <div className="flex items-center justify-between mb-4 mt-1">
                     <span className="text-[13px] font-bold uppercase tracking-widest text-white drop-shadow-md">
                       {stem}
                     </span>
-                    <span className="text-[11px] font-mono font-medium text-[#8E8E8E] bg-[#000] px-2 py-0.5 rounded-md border border-[#222]">
+                    <span className="text-[11px] font-mono font-medium text-[#8E8E8E] bg-[#000] px-2 py-0.5 rounded-md border border-[#2C2824]">
                       {formatTime(currentTimes[stem])}
                     </span>
                   </div>
@@ -425,7 +425,7 @@ export default function AdvancedMultiTrackPlayer({ baseUrl, fileId }: Props) {
                       data-testid={`mute-${stem}`}
                       className={`flex-1 rounded-lg border py-2 text-[11px] font-bold tracking-wider transition-all ${
                         isMuted
-                          ? "border-[#FF4444] bg-[#FF4444]/10 text-[#FF4444] shadow-[0_0_10px_rgba(255,68,68,0.15)]"
+                          ? "border-[#EF4444] bg-[#EF4444]/10 text-[#EF4444] shadow-[0_0_10px_rgba(255,68,68,0.15)]"
                           : "border-[#36322E] bg-[#0D0B0A] text-[#8E8E8E] hover:border-[#5C5854] hover:text-white"
                       }`}
                     >
@@ -463,7 +463,7 @@ export default function AdvancedMultiTrackPlayer({ baseUrl, fileId }: Props) {
                     )}
                   </div>
                   {stem === "vocals" && polishError && (
-                    <p data-testid="polish-error" className="mt-2 text-[11px] font-medium text-[#FF4444]">
+                    <p data-testid="polish-error" className="mt-2 text-[11px] font-medium text-[#EF4444]">
                       {polishError}
                     </p>
                   )}
@@ -471,7 +471,7 @@ export default function AdvancedMultiTrackPlayer({ baseUrl, fileId }: Props) {
 
                 {/* Waveform & Volume (Right) */}
                 <div className="flex flex-1 flex-col justify-center gap-3">
-                  <div className="flex items-center gap-4 rounded-xl border border-[#222] bg-[#050505] p-2 px-4">
+                  <div className="flex items-center gap-4 rounded-xl border border-[#2C2824] bg-[#050505] p-2 px-4">
                     <div className="flex items-center gap-1.5 w-14">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-[#5C5854]" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clipRule="evenodd" /></svg>
                       <span className="text-[10px] font-bold text-white font-mono">{String(trackVolumes[stem]).padStart(3, "0")}</span>
@@ -490,7 +490,7 @@ export default function AdvancedMultiTrackPlayer({ baseUrl, fileId }: Props) {
                   </div>
                   
                   <div
-                    className="relative h-[72px] w-full cursor-pointer overflow-hidden rounded-xl border border-[#222] bg-[#050505] shadow-inner"
+                    className="relative h-[72px] w-full cursor-pointer overflow-hidden rounded-xl border border-[#2C2824] bg-[#050505] shadow-inner"
                     onPointerDown={(e) => {
                       draggingStemRef.current = stem;
                       seekToPointer(stem, e.clientX);

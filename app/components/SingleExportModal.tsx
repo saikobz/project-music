@@ -29,7 +29,7 @@ export default function SingleExportModal({ isOpen, onClose, onExport, isExporti
         <div className="mb-6">
           <div className="mb-3 text-xs font-medium uppercase tracking-widest text-[#8E8E8E]">1. Format</div>
           <div className="flex flex-col gap-2">
-            <label className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors ${format === "wav" ? "border-[#E5A93D] bg-[#E5A93D]/5" : "border-[#2C2824] bg-[#161412] hover:border-[#444444]"}`}>
+            <label className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors ${format === "wav" ? "border-[#E5A93D] bg-[#E5A93D]/5" : "border-[#2C2824] bg-[#161412] hover:border-[#36322E]"}`}>
               <input
                 type="radio"
                 name="single_format"
@@ -40,7 +40,7 @@ export default function SingleExportModal({ isOpen, onClose, onExport, isExporti
               />
               <span className="text-sm font-medium text-white">WAV <span className="text-xs text-[#8E8E8E] font-normal">(Lossless)</span></span>
             </label>
-            <label className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors ${format === "mp3" ? "border-[#E5A93D] bg-[#E5A93D]/5" : "border-[#2C2824] bg-[#161412] hover:border-[#444444]"}`}>
+            <label className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors ${format === "mp3" ? "border-[#E5A93D] bg-[#E5A93D]/5" : "border-[#2C2824] bg-[#161412] hover:border-[#36322E]"}`}>
               <input
                 type="radio"
                 name="single_format"

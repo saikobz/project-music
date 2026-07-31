@@ -295,7 +295,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
             </div>
 
             {/* ===== PROCESSING MODULE – redesigned studio console style ===== */}
-            <div className="rounded-xl border border-[#1E1E1E] bg-[#0E0E0E] shadow-xl overflow-hidden">
+            <div className="rounded-xl border border-[#1E1E1E] bg-[#161412] shadow-xl overflow-hidden">
 
               {/* ── หัว Module พร้อม indicator LED ── */}
               <div className="flex items-center gap-2.5 px-4 pt-4 pb-3 border-b border-[#1E1E1E]">
@@ -317,7 +317,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
               <div className="p-4 space-y-4">
 
                 {/* ── Tab selector: console-style ── */}
-                <div className="grid grid-cols-2 gap-1.5 p-1 rounded-lg bg-[#080808] border border-[#1E1B18]">
+                <div className="grid grid-cols-2 gap-1.5 p-1 rounded-lg bg-[#050505] border border-[#1E1B18]">
                   {([
                     { value: "separate", label: "Stem Separation", icon: "⊗", activeColor: "text-[#A78BFA] border-[#A78BFA]/60 bg-[#A78BFA]/10 shadow-[0_0_12px_rgba(167,139,250,0.15)]" },
                     { value: "eq-ai",    label: "Auto EQ (AI)",    icon: "⟿", activeColor: "text-[#22D3EE] border-[#22D3EE]/60 bg-[#22D3EE]/10 shadow-[0_0_12px_rgba(34,211,238,0.15)]" },
@@ -331,7 +331,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                       className={`relative flex flex-col items-center gap-0.5 rounded-md px-2 py-2.5 text-xs font-medium border transition-all duration-200 cursor-pointer ${
                         action === item.value
                           ? item.activeColor
-                          : "text-[#444444] border-transparent bg-transparent hover:text-[#888888] hover:bg-[#111111]"
+                          : "text-[#36322E] border-transparent bg-transparent hover:text-[#8E8E8E] hover:bg-[#161412]"
                       } disabled:opacity-40 disabled:cursor-not-allowed`}
                     >
                       <span className={`text-base leading-none transition-all duration-200 ${
@@ -347,7 +347,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                 {action === "separate" && (
                   <div className="rounded-lg border border-[#A78BFA]/20 bg-[#A78BFA]/5 p-3 space-y-2">
                     <p className="text-xs text-[#A78BFA] font-medium">Stem Separation</p>
-                    <p className="text-[11px] text-[#666666] leading-relaxed">
+                    <p className="text-[11px] text-[#5C5854] leading-relaxed">
                       แยกไฟล์เสียงออกเป็น 4 แทร็กอิสระ — Vocals, Drums, Bass, Other — พร้อมเล่นและ Mix ได้ทันที
                     </p>
                     <div className="grid grid-cols-4 gap-1 pt-1">
@@ -365,7 +365,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                     <select
                       value={genre}
                       onChange={(e) => setGenre(e.target.value)}
-                      className={`w-full rounded-lg bg-[#080808] border p-2.5 text-[#C8C8C8] text-sm focus:outline-none transition ${
+                      className={`w-full rounded-lg bg-[#050505] border p-2.5 text-[#A09890] text-sm focus:outline-none transition ${
                         action === "eq-ai"
                           ? "border-[#22D3EE]/30 focus:border-[#22D3EE]/70"
                           : "border-[#E5A93D]/30 focus:border-[#F97316]/70"
@@ -423,7 +423,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                 )}
 
                 {/* ── Trimming ── */}
-                <div className="rounded-lg border border-[#1E1B18] bg-[#080808] p-3 space-y-3">
+                <div className="rounded-lg border border-[#1E1B18] bg-[#050505] p-3 space-y-3">
                   <label className="flex items-center gap-2.5 cursor-pointer select-none group">
                     {/* Custom checkbox */}
                     <span className={`w-4 h-4 rounded flex-shrink-0 border transition-all duration-150 flex items-center justify-center ${
@@ -438,7 +438,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                       )}
                     </span>
                     <input type="checkbox" checked={isTrimming} onChange={(e) => setIsTrimming(e.target.checked)} disabled={loading} className="sr-only" />
-                    <span className="text-xs font-medium text-[#888888] group-hover:text-[#AAAAAA] transition-colors">Trim — ตัดช่วงเวลาก่อนประมวลผล</span>
+                    <span className="text-xs font-medium text-[#8E8E8E] group-hover:text-[#A09890] transition-colors">Trim — ตัดช่วงเวลาก่อนประมวลผล</span>
                   </label>
                   {isTrimming && (
                     <div className="grid grid-cols-2 gap-2 pl-6">
@@ -447,7 +447,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                         <input
                           type="number" min="0" value={trimStart}
                           onChange={(e) => setTrimStart(e.target.value)} disabled={loading}
-                          className="w-full rounded-md bg-[#111111] border border-[#2C2824] px-2.5 py-1.5 text-sm text-[#E0E0E0] focus:border-[#F97316]/50 focus:outline-none transition"
+                          className="w-full rounded-md bg-[#161412] border border-[#2C2824] px-2.5 py-1.5 text-sm text-[#F5F0EB] focus:border-[#F97316]/50 focus:outline-none transition"
                         />
                       </div>
                       <div>
@@ -455,7 +455,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                         <input
                           type="number" min="1" value={trimEnd}
                           onChange={(e) => setTrimEnd(e.target.value)} disabled={loading}
-                          className="w-full rounded-md bg-[#111111] border border-[#2C2824] px-2.5 py-1.5 text-sm text-[#E0E0E0] focus:border-[#F97316]/50 focus:outline-none transition"
+                          className="w-full rounded-md bg-[#161412] border border-[#2C2824] px-2.5 py-1.5 text-sm text-[#F5F0EB] focus:border-[#F97316]/50 focus:outline-none transition"
                         />
                       </div>
                     </div>
@@ -481,7 +481,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                       data-testid="process-button"
                       className={`relative w-full rounded-lg py-3.5 text-sm font-bold tracking-widest uppercase overflow-hidden transition-all duration-300 ${
                         isDisabled
-                          ? "bg-[#1E1B18] text-[#36322E] cursor-not-allowed border border-[#222222]"
+                          ? "bg-[#1E1B18] text-[#36322E] cursor-not-allowed border border-[#2C2824]"
                           : `bg-gradient-to-r ${moduleStyle.base} text-white cursor-pointer`
                       }`}
                       style={!isDisabled ? { boxShadow: loading ? `0 0 20px ${moduleStyle.glow}` : `0 0 10px ${moduleStyle.glow}` } : {}}
@@ -511,7 +511,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                 <div className="space-y-2">
                   <div className="flex flex-col gap-1.5 w-full">
                     {/* Indeterminate progress bar — เคลื่อนที่ไปมาไม่แสดง % */}
-                    <div className="w-full h-1.5 overflow-hidden rounded-full bg-[#111111] border border-[#1E1B18]">
+                    <div className="w-full h-1.5 overflow-hidden rounded-full bg-[#161412] border border-[#1E1B18]">
                       <div 
                         className={`h-full rounded-full transition-all ${
                           action === "separate" ? "bg-gradient-to-r from-[#A78BFA] via-[#C084FC] to-[#A78BFA]" 
@@ -529,7 +529,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                       {/* ไม่แสดง % ปลอมอีกต่อไป */}
                     </div>
                     {processingTime && (
-                      <div className="text-[11px] text-[#444444] font-mono">⏱ {processingTime}</div>
+                      <div className="text-[11px] text-[#36322E] font-mono">⏱ {processingTime}</div>
                     )}
                   </div>
                 </div>
@@ -617,7 +617,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                 )}
 
                 {downloadUrl && downloadFileName && !downloadFileName.endsWith(".zip") && (
-                  <div className="rounded-2xl border border-[#222] bg-[#0D0B0A] p-5 space-y-5 shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
+                  <div className="rounded-2xl border border-[#2C2824] bg-[#0D0B0A] p-5 space-y-5 shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
                     <div>
                       <WaveformPlayer audioUrl={downloadUrl} />
                     </div>

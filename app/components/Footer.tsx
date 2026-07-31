@@ -6,7 +6,7 @@ import { Music } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="border-t border-[#1E1E1E] bg-[#080808] py-12 mt-auto text-[#888888]">
+    <footer className="border-t border-[#1E1E1E] bg-[#050505] py-12 mt-auto text-[#8E8E8E]">
       <div className="mx-auto max-w-6xl px-4 space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="space-y-3 md:col-span-1">
@@ -16,7 +16,7 @@ export function Footer() {
               </div>
               <span>HarmoniQ</span>
             </div>
-            <p className="text-xs text-[#777777] leading-relaxed max-w-xs">
+            <p className="text-xs text-[#8E8E8E] leading-relaxed max-w-xs">
               ระบบ AI แยกแทร็กเสียงดนตรีและมาสเตอริ่งสำหรับโปรดิวเซอร์มืออาชีพ
             </p>
           </div>
@@ -50,7 +50,7 @@ export function Footer() {
 
         <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#5C5854]">
           <p>© {new Date().getFullYear()} HarmoniQ Inc. All rights reserved.</p>
-          <div className="flex items-center gap-1.5 text-[#777777]">
+          <div className="flex items-center gap-1.5 text-[#8E8E8E]">
             <span></span>
             <span>สร้างสรรค์เพื่อโปรดิวเซอร์และนักดนตรี</span>
           </div>

@@ -62,10 +62,10 @@ export default function DataSection({ hasPassword }: DataSectionProps) {
       {/* Export Section */}
       <div>
         <p className="text-xs font-semibold text-[#8E8E8E] uppercase tracking-wider mb-3">Export Data</p>
-        <div className="p-4 rounded-xl bg-[#1E1B18] border border-[#222] flex items-center justify-between">
+        <div className="p-4 rounded-xl bg-[#1E1B18] border border-[#2C2824] flex items-center justify-between">
           <div>
             <p className="text-sm font-semibold">Download Your Data</p>
-            <p className="text-xs text-[#666]">Export profile, preferences, history, and usage data as JSON.</p>
+            <p className="text-xs text-[#5C5854]">Export profile, preferences, history, and usage data as JSON.</p>
           </div>
           <button
             onClick={handleExport}
@@ -85,7 +85,7 @@ export default function DataSection({ hasPassword }: DataSectionProps) {
             <AlertTriangle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
             <div>
               <p className="text-sm font-semibold text-red-400">Delete Account</p>
-              <p className="text-xs text-[#888] mt-1">
+              <p className="text-xs text-[#8E8E8E] mt-1">
                 Permanently delete your account, all data, and project history. This action cannot be undone.
               </p>
             </div>
@@ -102,7 +102,7 @@ export default function DataSection({ hasPassword }: DataSectionProps) {
             <div className="space-y-3 border-t border-red-500/10 pt-4">
               {hasPassword && (
                 <div>
-                  <label className="block text-xs text-[#888] mb-1">Enter your password to confirm:</label>
+                  <label className="block text-xs text-[#8E8E8E] mb-1">Enter your password to confirm:</label>
                   <input
                     type="password"
                     value={deletePassword}
@@ -121,7 +121,7 @@ export default function DataSection({ hasPassword }: DataSectionProps) {
                 </button>
                 <button
                   onClick={() => { setShowDeleteModal(false); setDeletePassword(""); }}
-                  className="px-4 py-2 bg-[#1E1B18] text-[#888] text-xs rounded-lg hover:text-white transition cursor-pointer"
+                  className="px-4 py-2 bg-[#1E1B18] text-[#8E8E8E] text-xs rounded-lg hover:text-white transition cursor-pointer"
                 >
                   Cancel
                 </button>

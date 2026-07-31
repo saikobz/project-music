@@ -44,14 +44,14 @@ export default function GuidePage() {
           <h2 className="text-2xl font-bold">ย่านความถี่ EQ</h2>
           <div className="space-y-3">
             {EQ_BANDS.map((band) => (
-              <div key={band.range} className="flex gap-4 items-start rounded-xl border border-[#1E1E1E] bg-[#0E0E0E] p-4">
+              <div key={band.range} className="flex gap-4 items-start rounded-xl border border-[#1E1E1E] bg-[#161412] p-4">
                 <span
                   className="mt-1 w-2.5 h-2.5 rounded-full flex-shrink-0"
                   style={{ background: band.color, boxShadow: `0 0 8px ${band.color}80` }}
                 />
                 <div>
-                  <p className="text-sm font-semibold text-[#E0E0E0] mb-1">{band.range}</p>
-                  <p className="text-sm text-[#888888] leading-relaxed">{band.desc}</p>
+                  <p className="text-sm font-semibold text-[#F5F0EB] mb-1">{band.range}</p>
+                  <p className="text-sm text-[#8E8E8E] leading-relaxed">{band.desc}</p>
                 </div>
               </div>
             ))}
@@ -63,13 +63,13 @@ export default function GuidePage() {
           <h2 className="text-2xl font-bold">พารามิเตอร์ Compressor</h2>
           <div className="grid sm:grid-cols-2 gap-4">
             {PARAMS.map((p) => (
-              <div key={p.name} className="rounded-xl border border-[#1E1E1E] bg-[#0E0E0E] p-5 space-y-2">
+              <div key={p.name} className="rounded-xl border border-[#1E1E1E] bg-[#161412] p-5 space-y-2">
                 <div className="flex items-baseline gap-2">
                   <h3 className="text-base font-bold text-[#E5A93D]">{p.name}</h3>
                   <span className="text-xs text-[#5C5854] font-mono">{p.unit}</span>
                 </div>
-                <p className="text-sm text-[#AAAAAA] leading-relaxed">{p.desc}</p>
-                <p className="text-xs text-[#666666] border-t border-[#1E1E1E] pt-2 leading-relaxed">💡 {p.tip}</p>
+                <p className="text-sm text-[#A09890] leading-relaxed">{p.desc}</p>
+                <p className="text-xs text-[#5C5854] border-t border-[#1E1E1E] pt-2 leading-relaxed">💡 {p.tip}</p>
               </div>
             ))}
           </div>

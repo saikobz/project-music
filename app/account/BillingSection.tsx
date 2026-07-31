@@ -53,7 +53,7 @@ export default function BillingSection() {
       case "successful": return "text-[#34D399] bg-[#34D399]/10";
       case "failed": return "text-red-400 bg-red-500/10";
       case "expired": return "text-yellow-400 bg-yellow-500/10";
-      default: return "text-[#888] bg-[#1E1B18]";
+      default: return "text-[#8E8E8E] bg-[#1E1B18]";
     }
   };
 
@@ -98,7 +98,7 @@ export default function BillingSection() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold">Cancel {currentTier} Plan</p>
-                <p className="text-xs text-[#888] mt-0.5">
+                <p className="text-xs text-[#8E8E8E] mt-0.5">
                   You will keep {currentTier} features until the current period ends, then downgrade to FREE.
                 </p>
               </div>
@@ -123,7 +123,7 @@ export default function BillingSection() {
                     <button onClick={handleCancel} disabled={canceling} className="px-3 py-1.5 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white text-xs font-bold rounded-lg transition cursor-pointer">
                       {canceling ? "..." : "Confirm"}
                     </button>
-                    <button onClick={() => { setShowCancel(false); setCancelPassword(""); }} className="px-3 py-1.5 bg-[#1E1B18] text-[#888] text-xs rounded-lg hover:text-white transition cursor-pointer">
+                    <button onClick={() => { setShowCancel(false); setCancelPassword(""); }} className="px-3 py-1.5 bg-[#1E1B18] text-[#8E8E8E] text-xs rounded-lg hover:text-white transition cursor-pointer">
                       Back
                     </button>
                   </div>
@@ -140,28 +140,28 @@ export default function BillingSection() {
           <div className="text-[#8E8E8E] text-sm py-4">กำลังโหลดประวัติการชำระเงิน...</div>
         ) : payments.length === 0 ? (
           <div className="text-center py-8">
-            <CreditCard className="w-10 h-10 text-[#444] mx-auto mb-2" />
-            <p className="text-[#888] text-sm">ยังไม่มีประวัติการชำระเงิน</p>
+            <CreditCard className="w-10 h-10 text-[#36322E] mx-auto mb-2" />
+            <p className="text-[#8E8E8E] text-sm">ยังไม่มีประวัติการชำระเงิน</p>
           </div>
         ) : (
-          <div className="bg-[#1E1B18] border border-[#222] rounded-xl overflow-hidden">
+          <div className="bg-[#1E1B18] border border-[#2C2824] rounded-xl overflow-hidden">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[#111] text-[#888] uppercase">
+              <thead className="bg-[#161412] text-[#8E8E8E] uppercase">
                 <tr>
                   <th className="py-3 px-4 font-medium">Date</th>
                   <th className="py-3 px-4 font-medium">Amount</th>
                   <th className="py-3 px-4 font-medium text-right">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#222]">
+              <tbody className="divide-y divide-[#2C2824]">
                 {payments.map((payment) => (
-                  <tr key={payment.id} className="hover:bg-[#111] transition-colors">
-                    <td className="py-3 px-4 text-[#CCC]">
+                  <tr key={payment.id} className="hover:bg-[#161412] transition-colors">
+                    <td className="py-3 px-4 text-[#A09890]">
                       {new Date(payment.paidAt).toLocaleDateString("th-TH", {
                         year: "numeric", month: "short", day: "numeric",
                       })}
                     </td>
-                    <td className="py-3 px-4 text-[#CCC] font-mono">{formatAmount(payment.amount)}</td>
+                    <td className="py-3 px-4 text-[#A09890] font-mono">{formatAmount(payment.amount)}</td>
                     <td className="py-3 px-4 text-right">
                       <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium ${statusStyle(payment.status)}`}>
                         {statusIcon(payment.status)}

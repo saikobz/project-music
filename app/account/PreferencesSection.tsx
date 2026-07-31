@@ -73,7 +73,7 @@ export default function PreferencesSection({ preferences, onUpdated }: Preferenc
             className={`flex items-center gap-2 px-5 py-3 rounded-xl border transition cursor-pointer ${
               theme === "DARK"
                 ? "bg-[#1E1B18] border-[#F97316] text-[#F97316]"
-                : "bg-[#111] border-[#222] text-[#888] hover:border-[#444]"
+                : "bg-[#161412] border-[#2C2824] text-[#8E8E8E] hover:border-[#36322E]"
             }`}
           >
             <Moon className="w-5 h-5" />
@@ -84,7 +84,7 @@ export default function PreferencesSection({ preferences, onUpdated }: Preferenc
             className={`flex items-center gap-2 px-5 py-3 rounded-xl border transition cursor-pointer ${
               theme === "LIGHT"
                 ? "bg-[#1E1B18] border-[#F97316] text-[#F97316]"
-                : "bg-[#111] border-[#222] text-[#888] hover:border-[#444]"
+                : "bg-[#161412] border-[#2C2824] text-[#8E8E8E] hover:border-[#36322E]"
             }`}
           >
             <Sun className="w-5 h-5" />
@@ -102,7 +102,7 @@ export default function PreferencesSection({ preferences, onUpdated }: Preferenc
             className={`flex items-center gap-2 px-5 py-3 rounded-xl border transition cursor-pointer ${
               language === "TH"
                 ? "bg-[#1E1B18] border-[#F97316] text-[#F97316]"
-                : "bg-[#111] border-[#222] text-[#888] hover:border-[#444]"
+                : "bg-[#161412] border-[#2C2824] text-[#8E8E8E] hover:border-[#36322E]"
             }`}
           >
             <Globe className="w-5 h-5" />
@@ -113,7 +113,7 @@ export default function PreferencesSection({ preferences, onUpdated }: Preferenc
             className={`flex items-center gap-2 px-5 py-3 rounded-xl border transition cursor-pointer ${
               language === "EN"
                 ? "bg-[#1E1B18] border-[#F97316] text-[#F97316]"
-                : "bg-[#111] border-[#222] text-[#888] hover:border-[#444]"
+                : "bg-[#161412] border-[#2C2824] text-[#8E8E8E] hover:border-[#36322E]"
             }`}
           >
             <Globe className="w-5 h-5" />
@@ -130,13 +130,13 @@ export default function PreferencesSection({ preferences, onUpdated }: Preferenc
           className={`flex items-center gap-3 px-5 py-3 rounded-xl border transition cursor-pointer w-full sm:w-auto ${
             emailNotifications
               ? "bg-[#1E1B18] border-[#F97316]/40 text-[#F97316]"
-              : "bg-[#111] border-[#222] text-[#888] hover:border-[#444]"
+              : "bg-[#161412] border-[#2C2824] text-[#8E8E8E] hover:border-[#36322E]"
           }`}
         >
           {emailNotifications ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
           <div className="text-left">
             <p className="text-sm font-semibold">Email Notifications</p>
-            <p className="text-xs text-[#666]">
+            <p className="text-xs text-[#5C5854]">
               {emailNotifications ? "Receive emails when processing completes" : "No email notifications"}
             </p>
           </div>
