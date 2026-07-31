@@ -1,7 +1,7 @@
 // หน้าที่ของไฟล์นี้:
 // - เป็นฟอร์มหลักของหน้าเว็บสำหรับรับไฟล์ WAV และเลือกประเภทการประมวลผล
 // - เรียก backend ตาม action ที่ผู้ใช้เลือก เช่น แยก stem, Auto-EQ, Compressor และ Pitch Shift
-// - จัดการสถานะของ UI เช่น progress, error, ผลวิเคราะห์, ลิงก์ดาวน์โหลด และตัวเล่นผลลัพธ์
+// - จัดการสถานะของ UI เช่น error, ผลวิเคราะห์, ลิงก์ดาวน์โหลด และตัวเล่นผลลัพธ์
 "use client";
 import React, { useRef, useState } from "react";
 import axios from "axios";
@@ -828,8 +828,8 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                           : action === "eq-ai" ? "bg-gradient-to-r from-[#22D3EE] via-[#67e8f9] to-[#22D3EE]"
                           : action === "compressor" ? "bg-gradient-to-r from-[#E5A93D] via-[#FBBF24] to-[#E5A93D]"
                           : "bg-gradient-to-r from-[#34D399] via-[#6EE7B7] to-[#34D399]"
-                        } bg-[length:200%_auto] animate-shimmer`}
-                        style={{ width: "60%" }}
+                        } ${loading ? "bg-[length:200%_auto] animate-shimmer" : ""}`}
+                        style={{ width: loading ? "60%" : "100%" }}
                       />
                     </div>
                     <div className="flex justify-between items-center">
