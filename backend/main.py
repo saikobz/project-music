@@ -50,6 +50,8 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    # ให้ browser อ่านค่า X-File-Id จาก response ของ Auto-EQ/Compressor/Pitch ได้
+    expose_headers=["X-File-Id"],
 )
 
 # ลงทะเบียน Routers

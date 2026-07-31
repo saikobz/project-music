@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+// TTL ของไฟล์ output ที่ backend จะลบอัตโนมัติ (จาก .env, default 1200 วิ = 20 นาที)
+const TTL_SECONDS = parseInt(process.env.SEPARATE_TTL_SECONDS || "1200", 10);
+
 export async function GET(req?: Request) {
   const { session, response: authResponse } = await requireSession();
   if (authResponse) return authResponse;
@@ -16,7 +19,15 @@ export async function GET(req?: Request) {
     ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
   });
 
-  return NextResponse.json({ records });
+  // record เก่าที่ยังไม่มี expiresAt -> คำนวณจาก createdAt + TTL เพื่อให้สถานะไฟล์ถูกต้อง
+  const enriched = records.map((r) => ({
+    ...r,
+    expiresAt:
+      r.expiresAt ??
+      (r.fileId ? new Date(r.createdAt.getTime() + TTL_SECONDS * 1000) : null),
+  }));
+
+  return NextResponse.json({ records: enriched });
 }
 
 export async function POST(req: Request) {
@@ -47,14 +58,17 @@ export async function POST(req: Request) {
   const validStems = Array.isArray(stems)
     ? stems.filter((s): s is string => typeof s === "string").slice(0, 8)
     : null;
+  const fileIdValue = typeof fileId === "string" ? fileId : null;
 
   const record = await prisma.projectRecord.create({
     data: {
       userId: session.user.id,
       action,
       originalFilename,
-      fileId: typeof fileId === "string" ? fileId : null,
+      fileId: fileIdValue,
       stems: validStems && validStems.length > 0 ? JSON.stringify(validStems) : null,
+      // บันทึกเวลาหมดอายุเฉพาะ action ที่มีไฟล์ output (เช่น separate) ตาม TTL backend
+      expiresAt: fileIdValue ? new Date(Date.now() + TTL_SECONDS * 1000) : null,
     },
   });
 

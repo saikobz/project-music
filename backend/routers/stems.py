@@ -121,19 +121,42 @@ async def separate(
 
 
 @router.get("/download/{file_id}")
-async def download_zip(file_id: str):
-    """ดาวน์โหลด ZIP รวมทุก Stem ของ file_id ที่กำหนด"""
-    safe_file_id = os.path.basename(file_id)
-    zip_filename = f"{safe_file_id}_separated.zip"
-    zip_path = os.path.join(UPLOAD_DIR, zip_filename)
+async def download_file(file_id: str):
+    """ดาวน์โหลดไฟล์ผลลัพธ์ของ file_id ที่กำหนด (ZIP stems / Auto-EQ / Compressor / Pitch Shift)
 
+    - ลำดับการค้นหา: ZIP ของ stems ใน uploads/ ก่อน -> แล้วค้นหาไฟล์ output ที่ขึ้นต้นด้วย
+      {file_id}_ ใน uploads/, eq_applied/, compressed/ (ทุกไฟล์ถูก TTL cleanup ลบภายใน 20 นาที)
+    - ถ้าไม่พบ -> 404 แสดงว่าไฟล์ถูกลบไปแล้ว (หมดอายุ) หรือไม่เคยถูกสร้าง
+    """
+    safe_file_id = os.path.basename(file_id)
+
+    # 1) ZIP รวมทุก Stem (จาก /separate)
+    zip_path = os.path.join(UPLOAD_DIR, f"{safe_file_id}_separated.zip")
     if os.path.exists(zip_path):
         return FileResponse(
             zip_path,
             media_type="application/zip",
             filename="separated.zip",
         )
-    return JSONResponse(status_code=404, content={"status": "error", "message": "ไม่พบไฟล์ zip สำหรับดาวน์โหลด"})
+
+    # 2) ค้นหาไฟล์ output อื่น ๆ (Auto-EQ / Compressor / Pitch Shift) ที่ขึ้นต้นด้วย file_id_
+    for directory in [UPLOAD_DIR, "eq_applied", "compressed"]:
+        if not os.path.isdir(directory):
+            continue
+        try:
+            names = os.listdir(directory)
+        except OSError:
+            continue
+        for name in sorted(names):
+            if name.startswith(f"{safe_file_id}_") and os.path.isfile(os.path.join(directory, name)):
+                path = os.path.join(directory, name)
+                ext = name.lower().rsplit(".", 1)[-1]
+                media_type = (
+                    "audio/mpeg" if ext == "mp3" else "audio/wav" if ext == "wav" else "application/octet-stream"
+                )
+                return FileResponse(path, media_type=media_type, filename=name)
+
+    return JSONResponse(status_code=404, content={"status": "error", "message": "ไม่พบไฟล์สำหรับดาวน์โหลด (ไฟล์อาจถูกลบตามเวลาหมดอายุ)"})
 
 
 @router.get("/separated/{file_id}/{filename}")

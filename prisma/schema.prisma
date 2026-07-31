@@ -104,14 +104,15 @@ model PaymentRecord {
 }
 
 model ProjectRecord {
-  id               String   @id @default(cuid())
+  id               String    @id @default(cuid())
   userId           String
-  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   action           String
   originalFilename String
   fileId           String?
   stems            String?
-  createdAt        DateTime @default(now())
+  expiresAt        DateTime? // เวลาหมดอายุของไฟล์ output ตาม TTL (เฉพาะ action ที่มี fileId)
+  createdAt        DateTime  @default(now())
 
   @@index([userId])
 }

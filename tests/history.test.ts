@@ -41,6 +41,21 @@ describe("History API — GET", () => {
     const res = await GET();
     expect(res.status).toBe(401);
   });
+
+  it("should enrich legacy records with expiresAt = createdAt + TTL when fileId exists", async () => {
+    (getServerSession as jest.Mock).mockResolvedValueOnce(authedSession);
+    const createdAt = new Date("2026-07-31T10:00:00Z");
+    prismaMock.projectRecord.findMany.mockResolvedValueOnce([
+      { id: "rec-1", fileId: "abc123", createdAt, expiresAt: null },
+      { id: "rec-2", fileId: null, createdAt, expiresAt: null },
+    ]);
+
+    const res = await GET(new Request("http://localhost/api/history"));
+    const body = await res.json();
+
+    expect(body.records[0].expiresAt).toBe(new Date(createdAt.getTime() + 1200 * 1000).toISOString());
+    expect(body.records[1].expiresAt).toBeNull();
+  });
 });
 
 describe("History API — POST", () => {
@@ -107,6 +122,41 @@ describe("History API — POST", () => {
     expect(prismaMock.projectRecord.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ stems: null }),
+      })
+    );
+  });
+
+  it("should set expiresAt = now + TTL when fileId is provided", async () => {
+    const before = Date.now();
+    const req = new Request("http://localhost/api/history", {
+      method: "POST",
+      body: JSON.stringify({
+        action: "separate",
+        originalFilename: "test.wav",
+        fileId: "file-1",
+      }),
+    });
+    const res = await POST(req);
+    const after = Date.now();
+    expect(res.status).toBe(200);
+
+    const data = prismaMock.projectRecord.create.mock.calls[0][0].data;
+    expect(data.fileId).toBe("file-1");
+    const expiresAtMs = (data.expiresAt as Date).getTime();
+    expect(expiresAtMs).toBeGreaterThanOrEqual(before + 1200 * 1000 - 5000);
+    expect(expiresAtMs).toBeLessThanOrEqual(after + 1200 * 1000 + 5000);
+  });
+
+  it("should set expiresAt = null when no fileId is provided", async () => {
+    const req = new Request("http://localhost/api/history", {
+      method: "POST",
+      body: JSON.stringify({ action: "apply-eq-ai", originalFilename: "test.wav" }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+    expect(prismaMock.projectRecord.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ expiresAt: null }),
       })
     );
   });

@@ -605,7 +605,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                     {fileId && (
                       <button
                         onClick={handleKaraokeDownload}
-                        className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#2A2A2A] bg-[#121212] px-4 py-3.5 font-semibold text-white shadow-[0_4px_15px_rgba(0,0,0,0.2)] transition-all hover:border-[#E5A93D]/50 hover:text-[#E5A93D] hover:bg-[#1A1A1A]"
+                        className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl border border-[#2A2A2A] bg-[#121212] px-4 py-3.5 font-semibold text-white shadow-[0_4px_15px_rgba(0,0,0,0.2)] transition-all hover:border-[#E5A93D]/50 hover:text-[#E5A93D] hover:bg-[#1A1A1A]"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 opacity-70" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.938l3-8V5a1 1 0 00-1-1H4a1 1 0 00-1 1v1.938l3 8V17a3 3 0 006 0v-2.062z" clipRule="evenodd" />

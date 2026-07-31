@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { Navbar } from "../../components/Navbar";
 import { Footer } from "../../components/Footer";
-import { Music, Download, Trash2, Clock, Disc, ArrowRight, Play, Pause } from "lucide-react";
+import { Music, Download, Trash2, Clock, Disc, ArrowRight, Play, Pause, CircleAlert } from "lucide-react";
 import { toast } from "sonner";
 import { API_BASE_URL } from "@/lib/config";
 import { downloadViaBlob } from "@/lib/download";
@@ -15,7 +15,13 @@ interface HistoryRecord {
   originalFilename: string;
   fileId: string | null;
   stems: string | null;
+  expiresAt: string | null;
   createdAt: string;
+}
+
+// แปลงเวลาหมดอายุเป็น HH:MM น. (แสดงครั้งเดียว ไม่ต้อง re-render)
+function formatExpiryTime(ms: number): string {
+  return new Date(ms).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" }) + " น.";
 }
 
 export default function HistoryPage() {
@@ -49,15 +55,26 @@ export default function HistoryPage() {
       .finally(() => setRecordsLoading(false));
   }, [data]);
 
-  const togglePlay = (fileId: string) => {
-    if (playingId === fileId) {
+  const togglePlay = (action: string, fileId: string, expiresAtMs: number | null) => {
+    // ถ้าไฟล์หมดอายุไปแล้ว ห้ามเล่น
+    if (expiresAtMs !== null && Date.now() >= expiresAtMs) {
+      toast.error("ไฟล์หมดอายุแล้ว (ระบบลบไฟล์อัตโนมัติ) กรุณาประมวลผลใหม่");
+      return;
+    }
+    // ใช้ key แบบ action:fileId กันปุ่มของ record อื่นชนกันตอนเล่น
+    const playKey = `${action}:${fileId}`;
+    if (playingId === playKey) {
       audioRef.current?.pause();
       setPlayingId(null);
     } else {
       if (audioRef.current) {
         audioRef.current.pause();
       }
-      const url = `${API_BASE_URL}/separated/${fileId}/vocals.wav`;
+      // separate: เล่นตัวอย่าง vocals.wav โดยตรง, อื่น ๆ: เล่นไฟล์ output เดียวผ่าน /download
+      const url =
+        action === "separate"
+          ? `${API_BASE_URL}/separated/${fileId}/vocals.wav`
+          : `${API_BASE_URL}/download/${fileId}`;
       const audio = new Audio(url);
       audio.onended = () => setPlayingId(null);
       // M10: ไฟล์อาจถูกลบไปแล้วตาม TTL (~20 นาที) -> ต้องแจ้งผู้ใช้ ไม่ใช่เงียบ
@@ -70,22 +87,31 @@ export default function HistoryPage() {
         toast.error("ไม่สามารถเล่นไฟล์ได้ (ไฟล์อาจหมดอายุแล้ว) กรุณาประมวลผลใหม่");
       });
       audioRef.current = audio;
-      setPlayingId(fileId);
+      setPlayingId(playKey);
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string, filename?: string) => {
+    // ให้ผู้ใช้ยืนยันก่อนลบ กันการกดผิด/ลบโดยไม่ตั้งใจ
+    const name = filename || "ไฟล์นี้";
+    if (!window.confirm(`ลบประวัติ "${name}" ?\nเมื่อลบแล้วจะไม่สามารถกู้คืนได้`)) return;
     const res = await fetch(`/api/history/${id}`, { method: "DELETE" });
     if (res.ok) {
       setRecords((prev) => prev.filter((r) => r.id !== id));
+      toast.success("ลบรายการออกจากประวัติแล้ว");
     } else {
       toast.error("ไม่สามารถลบรายการได้ กรุณาลองใหม่");
     }
   };
 
-  const handleDownload = async (fileId: string) => {
+  const handleDownload = async (fileId: string, expiresAtMs: number | null, filename = "separated.zip") => {
+    // ถ้าไฟล์หมดอายุไปแล้ว (เช่น นับถอยหลังทันพอดี) ห้ามดาวน์โหลด
+    if (expiresAtMs !== null && Date.now() >= expiresAtMs) {
+      toast.error("ไฟล์หมดอายุแล้ว (ระบบลบไฟล์อัตโนมัติ) กรุณาประมวลผลใหม่");
+      return;
+    }
     // M9: ดาวน์โหลดผ่าน fetch -> blob (ลิงก์ข้าม origin + download attribute ไม่ทำงาน)
-    const ok = await downloadViaBlob(`${API_BASE_URL}/download/${fileId}`, "separated.zip");
+    const ok = await downloadViaBlob(`${API_BASE_URL}/download/${fileId}`, filename);
     if (!ok) {
       toast.error("ไฟล์หมดอายุแล้ว (ระบบลบไฟล์อัตโนมัติ) กรุณาประมวลผลใหม่");
     }
@@ -187,6 +213,7 @@ export default function HistoryPage() {
                     <th className="py-3.5 px-4">ชื่อไฟล์เพลง</th>
                     <th className="py-3.5 px-4">วันที่แยกแทร็ก</th>
                     <th className="py-3.5 px-4">รายละเอียด</th>
+                    <th className="py-3.5 px-4">สถานะไฟล์</th>
                     <th className="py-3.5 px-4 text-right">การจัดการ</th>
                   </tr>
                 </thead>
@@ -196,16 +223,26 @@ export default function HistoryPage() {
                     try { stemsList = record.stems ? JSON.parse(record.stems) : []; } catch {}
                     const isSeparate = record.action === "separate";
 
+                    // คำนวณสถานะหมดอายุของไฟล์จาก expiresAt (จาก backend) เทียบกับเวลาปัจจุบัน
+                    const expiresAtMs = record.expiresAt ? new Date(record.expiresAt).getTime() : null;
+                    const isExpired = expiresAtMs !== null && Date.now() >= expiresAtMs;
+
                     return (
                       <tr key={record.id} className="hover:bg-[#161616] transition-colors">
                         <td className="py-4 px-4">
                           <div className="flex items-center gap-3">
-                            {isSeparate && record.fileId && (
+                            {record.fileId && (
                               <button
-                                onClick={() => togglePlay(record.fileId!)}
-                                className="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center hover:bg-purple-500 hover:text-white transition"
+                                onClick={() => togglePlay(record.action, record.fileId!, expiresAtMs)}
+                                disabled={isExpired}
+                                className={`w-9 h-9 rounded-xl border flex items-center justify-center transition ${
+                                  isExpired
+                                    ? "bg-[#1A1A1A] border-[#2A2A2A] text-[#555] cursor-not-allowed"
+                                    : "bg-purple-500/10 border-purple-500/20 text-purple-400 hover:bg-purple-500 hover:text-white cursor-pointer"
+                                }`}
+                                title={isExpired ? "ไฟล์หมดอายุแล้ว" : "เล่นตัวอย่าง"}
                               >
-                                {playingId === record.fileId ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
+                                {playingId === `${record.action}:${record.fileId}` ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
                               </button>
                             )}
                             <div>
@@ -235,20 +272,49 @@ export default function HistoryPage() {
                             <span className="text-[11px] text-[#555]">—</span>
                           )}
                         </td>
+                        <td className="py-4 px-4">
+                          {record.fileId && expiresAtMs !== null ? (
+                            isExpired ? (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-red-500/10 border border-red-500/30 text-red-400 text-[11px] font-medium">
+                                <CircleAlert className="w-3.5 h-3.5" />
+                                หมดอายุ
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[11px] font-medium tabular-nums">
+                                <Clock className="w-3.5 h-3.5" />
+                                หมดอายุ {formatExpiryTime(expiresAtMs)}
+                              </span>
+                            )
+                          ) : (
+                            <span className="text-[11px] text-[#555]">—</span>
+                          )}
+                        </td>
                         <td className="py-4 px-4 text-right">
                           <div className="flex items-center justify-end gap-2">
-                            {isSeparate && record.fileId && (
+                            {record.fileId && (
                               <button
-                                onClick={() => handleDownload(record.fileId!)}
-                                className="p-2 rounded-lg bg-[#202020] hover:bg-[#303030] text-white transition text-xs flex items-center gap-1.5"
+                                onClick={() =>
+                                  handleDownload(
+                                    record.fileId!,
+                                    expiresAtMs,
+                                    isSeparate ? "separated.zip" : record.originalFilename
+                                  )
+                                }
+                                disabled={isExpired}
+                                className={`p-2 rounded-lg transition text-xs flex items-center gap-1.5 ${
+                                  isExpired
+                                    ? "bg-[#1A1A1A] text-[#555] cursor-not-allowed"
+                                    : "bg-[#202020] hover:bg-[#303030] text-white"
+                                }`}
                               >
                                 <Download className="w-4 h-4 text-purple-400" />
                                 <span className="hidden sm:inline">ดาวน์โหลด</span>
                               </button>
                             )}
                             <button
-                              onClick={() => handleDelete(record.id)}
+                              onClick={() => handleDelete(record.id, record.originalFilename)}
                               className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition"
+                              title="ลบรายการ"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>

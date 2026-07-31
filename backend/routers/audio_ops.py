@@ -77,10 +77,12 @@ async def apply_eq_ai(
         if export_format == "mp3":
             result_path = await asyncio.to_thread(convert_to_mp3, result_path)
 
+        # ส่ง X-File-Id กลับไปเพื่อให้ Frontend เก็บ file_id ไว้แสดงผล/ดาวน์โหลดในประวัติ
         return FileResponse(
             result_path,
             media_type="audio/mpeg" if export_format == "mp3" else "audio/wav",
             filename=os.path.basename(result_path),
+            headers={"X-File-Id": file_id},
         )
     except HTTPException as http_exc:
         raise http_exc
@@ -129,7 +131,7 @@ async def apply_compressor(
     # ตรวจสิทธิ์ก่อนเริ่มงาน (B6: ไฟล์ไม่ผ่าน validate จะไม่เสียโควตา)
     validate_request_quota(request=request, user_tier=x_user_tier, user_id=x_user_id)
     try:
-        _, input_path = await save_upload(file, trim_start=trim_start, trim_end=trim_end)
+        file_id, input_path = await save_upload(file, trim_start=trim_start, trim_end=trim_end)
         # ผ่านการตรวจสอบไฟล์แล้ว -> ถึงค่อยนับโควตา (เฉพาะ Guest)
         increment_guest_quota(request, user_id=x_user_id)
         os.makedirs("compressed", exist_ok=True)
@@ -154,10 +156,12 @@ async def apply_compressor(
         if export_format == "mp3":
             output_path = await asyncio.to_thread(convert_to_mp3, output_path)
 
+        # ส่ง X-File-Id กลับไปเพื่อให้ Frontend เก็บ file_id ไว้แสดงผล/ดาวน์โหลดในประวัติ
         return FileResponse(
             output_path,
             media_type="audio/mpeg" if export_format == "mp3" else "audio/wav",
             filename=os.path.basename(output_path),
+            headers={"X-File-Id": file_id},
         )
     except HTTPException as http_exc:
         raise http_exc
@@ -195,10 +199,12 @@ async def pitch_shift(
         if export_format == "mp3":
             result_path = await asyncio.to_thread(convert_to_mp3, result_path)
 
+        # ส่ง X-File-Id กลับไปเพื่อให้ Frontend เก็บ file_id ไว้แสดงผล/ดาวน์โหลดในประวัติ
         return FileResponse(
             result_path,
             media_type="audio/mpeg" if export_format == "mp3" else "audio/wav",
             filename=os.path.basename(result_path),
+            headers={"X-File-Id": file_id},
         )
     except HTTPException as http_exc:
         raise http_exc

@@ -12,6 +12,14 @@ import type { CompressorParams } from "@/app/components/settings/CompressorSetti
 
 const API_BASE = API_BASE_URL;
 
+// อ่าน X-File-Id ที่ backend ส่งกลับมา (ใช้เก็บ fileId ในประวัติสำหรับ EQ/Compressor/Pitch)
+function extractFileId(headers: any): string | undefined {
+  if (!headers) return undefined;
+  const value =
+    typeof headers.get === "function" ? headers.get("x-file-id") : headers["x-file-id"] ?? headers["X-File-Id"];
+  return typeof value === "string" && value ? value : undefined;
+}
+
 export interface AudioAnalysisResult {
   tempo: number;
   key: string;
@@ -288,7 +296,7 @@ export function useAudioProcessor({
           suffix = `_eq_ai_${autoEqModel}_${genre}_${deltaClampDb}db`;
           successMsg = "Auto-EQ ประมวลผลเสร็จสิ้น";
           setStatusText("Running Auto-EQ...");
-          saveHistory("eq-ai");
+          saveHistory("eq-ai", extractFileId(response.headers));
         }
 
         if (action === "compressor") {
@@ -320,7 +328,7 @@ export function useAudioProcessor({
           suffix = `_compressed_${compParams.strength}`;
           successMsg = "ประมวลผล Compressor เสร็จแล้ว";
           setStatusText("กำลังสร้างไฟล์ Compressor...");
-          saveHistory("compressor");
+          saveHistory("compressor", extractFileId(response.headers));
         }
 
         if (action === "pitch") {
@@ -340,7 +348,7 @@ export function useAudioProcessor({
           suffix = `_pitch_${pitchSteps}`;
           successMsg = "ประมวลผล Pitch Shift เสร็จแล้ว";
           setStatusText("กำลังสร้างไฟล์ Pitch Shift...");
-          saveHistory("pitch");
+          saveHistory("pitch", extractFileId(response.headers));
         }
 
         if (file && suffix) {
