@@ -37,6 +37,7 @@
 2. **การจัดสไตล์ (Styling):**
    * ใช้ **Tailwind CSS 4** ในการจัดการหน้าจอและสไตล์ ห้ามใช้ inline styles ที่ไม่จำเป็น
    * รักษาหน้าตาเว็บที่ดูดี (Premium Aesthetics) รองรับ Responsive Design ทุกขนาดหน้าจอ
+   * **ทุกครั้งที่สร้าง/แก้ไข UI ให้อ่านไฟล์ `DESIGN.md` ก่อนเสมอ** — ไฟล์นี้เป็น Design System หลักของโปรเจกต์ (สี, ฟอนต์, component patterns, animation) ต้องใช้ค่าจาก DESIGN.md เท่านั้น ห้ามตั้งสี/ฟอนต์ใหม่เองตามใจ
 3. **เครื่องเล่นเสียง (Audio Player):**
    * การแสดงผล Waveform และเครื่องเล่นหลายแทร็กใช้ไลบรารี **WaveSurfer.js** หากแก้ไขโค้ดที่เกี่ยวข้อง ให้ตรวจสอบเรื่องการผูก Event Listener และการ Clean up Instance เสมอเพื่อป้องกัน Memory Leak
 4. **Environment Variables:**
