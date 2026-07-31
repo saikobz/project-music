@@ -15,7 +15,7 @@ export default function UserMenu() {
     return (
       <button
         onClick={() => signIn()}
-        className="px-4 py-1.5 bg-[#34D399] hover:bg-[#2cb984] text-[#0D0B0A] text-sm font-semibold rounded-md transition cursor-pointer"
+        className="px-4 py-1.5 bg-gradient-to-br from-[#F97316] to-[#EA580C] hover:from-[#FB923C] hover:to-[#F97316] text-white text-sm font-semibold rounded-md transition cursor-pointer"
       >
         Sign In
       </button>
@@ -66,7 +66,7 @@ export default function UserMenu() {
           <Link
             href="/pricing"
             onClick={() => setOpen(false)}
-            className="block px-3 py-2 text-xs text-[#34D399] hover:bg-[#1E1B18] rounded-md transition"
+            className="block px-3 py-2 text-xs text-[#F97316] hover:bg-[#1E1B18] rounded-md transition"
           >
             ⚡ Upgrade Plan
           </Link>

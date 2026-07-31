@@ -70,7 +70,7 @@ export default function PasswordSection({ hasPassword }: PasswordSectionProps) {
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
             required
-            className="w-full bg-[#1E1B18] border border-[#36322E] rounded-lg pl-10 pr-10 py-2.5 text-sm text-[#F5F0EB] focus:outline-none focus:border-[#34D399] transition"
+            className="w-full bg-[#1E1B18] border border-[#36322E] rounded-lg pl-10 pr-10 py-2.5 text-sm text-[#F5F0EB] focus:outline-none focus:border-[#F97316] transition"
           />
           <button type="button" onClick={() => setShow(!show)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#5C5854] hover:text-white cursor-pointer">
             {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -88,7 +88,7 @@ export default function PasswordSection({ hasPassword }: PasswordSectionProps) {
           onChange={(e) => setNewPassword(e.target.value)}
           required
           minLength={6}
-          className="w-full bg-[#1E1B18] border border-[#36322E] rounded-lg px-3 py-2.5 text-sm text-[#F5F0EB] focus:outline-none focus:border-[#34D399] transition"
+          className="w-full bg-[#1E1B18] border border-[#36322E] rounded-lg px-3 py-2.5 text-sm text-[#F5F0EB] focus:outline-none focus:border-[#F97316] transition"
         />
       </div>
 
@@ -102,14 +102,14 @@ export default function PasswordSection({ hasPassword }: PasswordSectionProps) {
           onChange={(e) => setConfirmPassword(e.target.value)}
           required
           minLength={6}
-          className="w-full bg-[#1E1B18] border border-[#36322E] rounded-lg px-3 py-2.5 text-sm text-[#F5F0EB] focus:outline-none focus:border-[#34D399] transition"
+          className="w-full bg-[#1E1B18] border border-[#36322E] rounded-lg px-3 py-2.5 text-sm text-[#F5F0EB] focus:outline-none focus:border-[#F97316] transition"
         />
       </div>
 
       <button
         type="submit"
         disabled={saving}
-        className="px-6 py-2.5 bg-[#34D399] hover:bg-[#2cb984] disabled:opacity-50 text-[#0D0B0A] text-sm font-bold rounded-lg transition cursor-pointer"
+        className="px-6 py-2.5 bg-gradient-to-br from-[#F97316] to-[#EA580C] hover:from-[#FB923C] hover:to-[#F97316] disabled:opacity-50 text-white text-sm font-bold rounded-lg transition cursor-pointer"
       >
         {saving ? "Changing..." : "Change Password"}
       </button>

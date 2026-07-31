@@ -57,7 +57,7 @@ export default function ProfileSection({ user, onUpdated }: ProfileSectionProps)
             value={image}
             onChange={(e) => setImage(e.target.value)}
             placeholder=""
-            className="w-full bg-[#1E1B18] border border-[#36322E] rounded-lg px-3 py-2 text-sm text-[#F5F0EB] placeholder-[#5C5854] focus:outline-none focus:border-[#34D399] transition"
+            className="w-full bg-[#1E1B18] border border-[#36322E] rounded-lg px-3 py-2 text-sm text-[#F5F0EB] placeholder-[#5C5854] focus:outline-none focus:border-[#F97316] transition"
           />
         </div>
       </div>
@@ -73,7 +73,7 @@ export default function ProfileSection({ user, onUpdated }: ProfileSectionProps)
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full bg-[#1E1B18] border border-[#36322E] rounded-lg pl-10 pr-3 py-2.5 text-sm text-[#F5F0EB] placeholder-[#5C5854] focus:outline-none focus:border-[#34D399] transition"
+            className="w-full bg-[#1E1B18] border border-[#36322E] rounded-lg pl-10 pr-3 py-2.5 text-sm text-[#F5F0EB] placeholder-[#5C5854] focus:outline-none focus:border-[#F97316] transition"
           />
         </div>
       </div>
@@ -89,7 +89,7 @@ export default function ProfileSection({ user, onUpdated }: ProfileSectionProps)
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-[#1E1B18] border border-[#36322E] rounded-lg pl-10 pr-3 py-2.5 text-sm text-[#F5F0EB] placeholder-[#5C5854] focus:outline-none focus:border-[#34D399] transition"
+            className="w-full bg-[#1E1B18] border border-[#36322E] rounded-lg pl-10 pr-3 py-2.5 text-sm text-[#F5F0EB] placeholder-[#5C5854] focus:outline-none focus:border-[#F97316] transition"
           />
         </div>
       </div>
@@ -97,7 +97,7 @@ export default function ProfileSection({ user, onUpdated }: ProfileSectionProps)
       <button
         type="submit"
         disabled={saving}
-        className="px-6 py-2.5 bg-[#34D399] hover:bg-[#2cb984] disabled:opacity-50 text-[#0D0B0A] text-sm font-bold rounded-lg transition cursor-pointer"
+        className="px-6 py-2.5 bg-gradient-to-br from-[#F97316] to-[#EA580C] hover:from-[#FB923C] hover:to-[#F97316] disabled:opacity-50 text-white text-sm font-bold rounded-lg transition cursor-pointer"
       >
         {saving ? "Saving..." : "Save Changes"}
       </button>

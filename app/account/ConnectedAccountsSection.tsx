@@ -98,7 +98,7 @@ export default function ConnectedAccountsSection() {
               className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer ${
                 provider.linked
                   ? "bg-red-500/10 text-red-400 hover:bg-red-500/20"
-                  : "bg-[#34D399]/10 text-[#34D399] hover:bg-[#34D399]/20"
+                  : "bg-[#F97316]/10 text-[#F97316] hover:bg-[#F97316]/20"
               }`}
             >
               {provider.linked ? (

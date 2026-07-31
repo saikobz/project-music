@@ -77,7 +77,7 @@ function SignInForm() {
           onClick={() => { setTab("signin"); setError(null); }}
           className={`flex-1 py-2 text-sm font-semibold transition border-b-2 cursor-pointer ${
             tab === "signin"
-              ? "border-[#34D399] text-[#34D399]"
+              ? "border-[#F97316] text-[#F97316]"
               : "border-transparent text-[#8E8E8E] hover:text-[#F5F0EB]"
           }`}
         >
@@ -87,7 +87,7 @@ function SignInForm() {
           onClick={() => { setTab("register"); setError(null); }}
           className={`flex-1 py-2 text-sm font-semibold transition border-b-2 cursor-pointer ${
             tab === "register"
-              ? "border-[#34D399] text-[#34D399]"
+              ? "border-[#F97316] text-[#F97316]"
               : "border-transparent text-[#8E8E8E] hover:text-[#F5F0EB]"
           }`}
         >
@@ -108,7 +108,7 @@ function SignInForm() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="John Doe"
-              className="w-full bg-[#1E1B18] border border-[#36322E] rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-[#34D399]"
+              className="w-full bg-[#1E1B18] border border-[#36322E] rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-[#F97316]"
             />
           </div>
         )}
@@ -120,7 +120,7 @@ function SignInForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="name@example.com"
-            className="w-full bg-[#1E1B18] border border-[#36322E] rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-[#34D399]"
+            className="w-full bg-[#1E1B18] border border-[#36322E] rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-[#F97316]"
           />
         </div>
         <div>
@@ -131,14 +131,14 @@ function SignInForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
-            className="w-full bg-[#1E1B18] border border-[#36322E] rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-[#34D399]"
+            className="w-full bg-[#1E1B18] border border-[#36322E] rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-[#F97316]"
           />
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2.5 bg-[#34D399] hover:bg-[#2cb984] text-[#0D0B0A] font-bold text-sm rounded-lg transition cursor-pointer"
+          className="w-full py-2.5 bg-gradient-to-br from-[#F97316] to-[#EA580C] hover:from-[#FB923C] hover:to-[#F97316] text-white font-bold text-sm rounded-lg transition cursor-pointer"
         >
           {loading ? "Processing..." : tab === "signin" ? "Sign In with Email" : "Create Account"}
         </button>

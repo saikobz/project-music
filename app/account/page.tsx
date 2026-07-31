@@ -63,7 +63,7 @@ export default function AccountPage() {
         <Navbar />
         <div className="max-w-3xl mx-auto py-16 text-center space-y-4">
           <p className="text-red-400 font-medium">Please sign in to view your account details.</p>
-          <Link href="/api/auth/signin" className="inline-block px-6 py-2 bg-[#34D399] hover:bg-[#2cb984] text-[#0D0B0A] font-bold rounded-lg transition">
+          <Link href="/api/auth/signin" className="inline-block px-6 py-2 bg-gradient-to-br from-[#F97316] to-[#EA580C] hover:from-[#FB923C] hover:to-[#F97316] text-white font-bold rounded-lg transition">
             Sign In
           </Link>
         </div>
@@ -96,7 +96,7 @@ export default function AccountPage() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-3 text-sm font-medium rounded-t-lg transition cursor-pointer whitespace-nowrap ${
                 activeTab === tab.id
-                  ? "bg-[#111] text-[#34D399] border border-b-0 border-[#222] -mb-[1px]"
+                  ? "bg-[#111] text-[#F97316] border border-b-0 border-[#222] -mb-[1px]"
                   : "text-[#888] hover:text-white hover:bg-[#111]"
               }`}
             >
@@ -113,7 +113,7 @@ export default function AccountPage() {
               <p className="text-xs font-semibold text-[#8E8E8E] uppercase tracking-wider">Current Subscription</p>
               <h3 className="text-xl font-extrabold text-[#34D399] mt-0.5">{subscription.tier} PLAN</h3>
             </div>
-            <Link href="/pricing" className="px-4 py-2 bg-[#34D399] hover:bg-[#2cb984] text-[#0D0B0A] text-xs font-bold rounded-lg transition">
+            <Link href="/pricing" className="px-4 py-2 bg-gradient-to-br from-[#F97316] to-[#EA580C] hover:from-[#FB923C] hover:to-[#F97316] text-white text-xs font-bold rounded-lg transition">
               Change Plan
             </Link>
           </div>

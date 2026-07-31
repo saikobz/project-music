@@ -72,7 +72,7 @@ export default function PreferencesSection({ preferences, onUpdated }: Preferenc
             onClick={() => handleThemeChange("DARK")}
             className={`flex items-center gap-2 px-5 py-3 rounded-xl border transition cursor-pointer ${
               theme === "DARK"
-                ? "bg-[#1E1B18] border-[#34D399] text-[#34D399]"
+                ? "bg-[#1E1B18] border-[#F97316] text-[#F97316]"
                 : "bg-[#111] border-[#222] text-[#888] hover:border-[#444]"
             }`}
           >
@@ -83,7 +83,7 @@ export default function PreferencesSection({ preferences, onUpdated }: Preferenc
             onClick={() => handleThemeChange("LIGHT")}
             className={`flex items-center gap-2 px-5 py-3 rounded-xl border transition cursor-pointer ${
               theme === "LIGHT"
-                ? "bg-[#1E1B18] border-[#34D399] text-[#34D399]"
+                ? "bg-[#1E1B18] border-[#F97316] text-[#F97316]"
                 : "bg-[#111] border-[#222] text-[#888] hover:border-[#444]"
             }`}
           >
@@ -101,7 +101,7 @@ export default function PreferencesSection({ preferences, onUpdated }: Preferenc
             onClick={() => handleLanguageChange("TH")}
             className={`flex items-center gap-2 px-5 py-3 rounded-xl border transition cursor-pointer ${
               language === "TH"
-                ? "bg-[#1E1B18] border-[#34D399] text-[#34D399]"
+                ? "bg-[#1E1B18] border-[#F97316] text-[#F97316]"
                 : "bg-[#111] border-[#222] text-[#888] hover:border-[#444]"
             }`}
           >
@@ -112,7 +112,7 @@ export default function PreferencesSection({ preferences, onUpdated }: Preferenc
             onClick={() => handleLanguageChange("EN")}
             className={`flex items-center gap-2 px-5 py-3 rounded-xl border transition cursor-pointer ${
               language === "EN"
-                ? "bg-[#1E1B18] border-[#34D399] text-[#34D399]"
+                ? "bg-[#1E1B18] border-[#F97316] text-[#F97316]"
                 : "bg-[#111] border-[#222] text-[#888] hover:border-[#444]"
             }`}
           >
@@ -129,7 +129,7 @@ export default function PreferencesSection({ preferences, onUpdated }: Preferenc
           onClick={() => handleNotificationChange(!emailNotifications)}
           className={`flex items-center gap-3 px-5 py-3 rounded-xl border transition cursor-pointer w-full sm:w-auto ${
             emailNotifications
-              ? "bg-[#1E1B18] border-[#34D399]/40 text-[#34D399]"
+              ? "bg-[#1E1B18] border-[#F97316]/40 text-[#F97316]"
               : "bg-[#111] border-[#222] text-[#888] hover:border-[#444]"
           }`}
         >

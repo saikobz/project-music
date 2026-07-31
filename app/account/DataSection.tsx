@@ -69,7 +69,7 @@ export default function DataSection({ hasPassword }: DataSectionProps) {
           </div>
           <button
             onClick={handleExport}
-            className="flex items-center gap-2 px-4 py-2 bg-[#34D399]/10 text-[#34D399] text-xs font-semibold rounded-lg hover:bg-[#34D399]/20 transition cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2 bg-[#F97316]/10 text-[#F97316] text-xs font-semibold rounded-lg hover:bg-[#F97316]/20 transition cursor-pointer"
           >
             <Download className="w-4 h-4" />
             Export

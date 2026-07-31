@@ -43,7 +43,7 @@ export default function PricingPage() {
             {!session ? (
               <button
                 onClick={() => router.push("/auth/signin")}
-                className="w-full py-2.5 bg-[#34D399] hover:bg-[#2cb984] font-semibold text-[#0D0B0A] rounded-lg transition-colors cursor-pointer"
+                className="w-full py-2.5 bg-gradient-to-br from-[#F97316] to-[#EA580C] hover:from-[#FB923C] hover:to-[#F97316] font-semibold text-white rounded-lg transition-colors cursor-pointer"
               >
                 เริ่มต้นใช้งานฟรี
               </button>
@@ -78,7 +78,7 @@ export default function PricingPage() {
             ) : currentTier === "PRO" ? null : (
               <button
                 onClick={() => setSelectedTier("BASIC")}
-                className="w-full py-2.5 bg-[#34D399] hover:bg-[#2cb984] font-semibold text-[#0D0B0A] rounded-lg transition-colors cursor-pointer"
+                className="w-full py-2.5 bg-gradient-to-br from-[#F97316] to-[#EA580C] hover:from-[#FB923C] hover:to-[#F97316] font-semibold text-white rounded-lg transition-colors cursor-pointer"
               >
                 สมัครแพ็กเกจ Basic
               </button>
