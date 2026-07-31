@@ -7,13 +7,13 @@ class TestAuthGuard(unittest.TestCase):
         with self.assertRaises(HTTPException) as cm:
             validate_tier_and_quota(user_tier="FREE", used_quota=0, model_type="CNN")
         self.assertEqual(cm.exception.status_code, 403)
-        self.assertIn("CNN model requires Basic or Pro", cm.exception.detail)
+        self.assertIn("โมเดล AutoEQ แบบ CNN สงวนสิทธิ์เฉพาะผู้ใช้สมาชิกระดับ Basic หรือ Pro", cm.exception.detail)
 
     def test_free_tier_exceeded_quota(self):
         with self.assertRaises(HTTPException) as cm:
             validate_tier_and_quota(user_tier="FREE", used_quota=3, model_type="LSTM")
         self.assertEqual(cm.exception.status_code, 403)
-        self.assertIn("Monthly quota reached", cm.exception.detail)
+        self.assertIn("โควตาประมวลผลฟรีสำหรับผู้ใช้ FREE เต็มแล้ว", cm.exception.detail)
 
     def test_free_tier_within_quota(self):
         # Should not raise exception when used_quota is 2 (< 3)
@@ -23,7 +23,7 @@ class TestAuthGuard(unittest.TestCase):
         with self.assertRaises(HTTPException) as cm:
             validate_tier_and_quota(user_tier="FREE", used_quota=0, model_type="LSTM", pitch_shift_semitones=5)
         self.assertEqual(cm.exception.status_code, 403)
-        self.assertIn("Pitch shift of 5 semitones exceeds allowed limit", cm.exception.detail)
+        self.assertIn("การปรับ Pitch 5 เซมิโทน เกินโควตาของแพ็กเกจ FREE", cm.exception.detail)
 
     def test_basic_tier_can_use_cnn_and_higher_pitch_shift(self):
         # Should not raise exception
