@@ -89,7 +89,7 @@ export default function AccountPage() {
         </div>
 
         {/* Tab Bar */}
-        <div className="flex gap-1 border-b border-[#222] pb-0 overflow-x-auto">
+        <div className="flex flex-wrap gap-1 border-b border-[#222] pb-0">
           {TABS.map((tab) => (
             <button
               key={tab.id}
