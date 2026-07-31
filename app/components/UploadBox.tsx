@@ -142,7 +142,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [isSingleExportModalOpen, setIsSingleExportModalOpen] = useState(false);
 
-  // สถานะของ UI ล้วน ๆ เช่น banner ข้อความ, ผลวิเคราะห์, และ progress จำลอง
+  // สถานะของ UI ล้วน ๆ เช่น banner ข้อความ และผลวิเคราะห์
   // สถานะข้อความและการตอบสนองของ UI
   // ===== กลุ่ม state สำหรับสถานะของหน้า =====
   const [loading, setLoading] = useState(false);
@@ -150,7 +150,6 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<{ tempo: number; key: string; pitch: string | null } | null>(null);
   const [statusText, setStatusText] = useState<string | null>(null);
-  const [progress, setProgress] = useState(0);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const handleExport = async (exportType: string, format: string, targetLufs: number, selectedStems: string[]) => {
@@ -333,8 +332,6 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
     setSuccessMessage(null);
     setAnalysis(null);
     setStatusText("กำลังอัปโหลดและประมวลผล...");
-    // แสดง indeterminate progress animation ระหว่างรอ backend ประมวลผล
-    setProgress(0);
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
@@ -477,7 +474,6 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
       const minutes = Math.floor(duration / 60);
       const seconds = duration % 60;
       setProcessingTime(`${minutes} นาที ${seconds} วินาที`);
-      setProgress(100);
       setStatusText("เสร็จแล้ว! ดาวน์โหลดหรือเล่นไฟล์ได้เลย");
       setSuccessMessage(successMsg);
       toast.success(successMsg);
@@ -513,9 +509,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
       setErrorMessage(message);
       toast.error(message);
       setStatusText(null);
-      setProgress(100);
     } finally {
-      setProgress(0);
       setLoading(false);
     }
   };
