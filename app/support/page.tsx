@@ -14,7 +14,7 @@ export default function SupportPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#0A0A0A] text-[#F3F3F3]">
+    <div className="flex min-h-screen flex-col bg-[#0D0B0A] text-[#F5F0EB]">
       <Navbar />
 
       <main className="flex-grow max-w-4xl mx-auto px-4 py-12 md:py-16 space-y-8">
@@ -58,30 +58,30 @@ export default function SupportPage() {
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-medium text-[#A0A0A0] mb-1">ชื่อของคุณ</label>
+                  <label className="block text-xs font-medium text-[#A09890] mb-1">ชื่อของคุณ</label>
                   <input
                     type="text"
                     required
                     placeholder="กรอกชื่อ-นามสกุล"
-                    className="w-full px-4 py-3 rounded-xl bg-[#1A1A1A] border border-[#333] text-white focus:outline-none focus:border-purple-500 text-sm"
+                    className="w-full px-4 py-3 rounded-xl bg-[#1E1B18] border border-[#36322E] text-white focus:outline-none focus:border-purple-500 text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-[#A0A0A0] mb-1">อีเมลติดต่อ</label>
+                  <label className="block text-xs font-medium text-[#A09890] mb-1">อีเมลติดต่อ</label>
                   <input
                     type="email"
                     required
                     placeholder="yourname@example.com"
-                    className="w-full px-4 py-3 rounded-xl bg-[#1A1A1A] border border-[#333] text-white focus:outline-none focus:border-purple-500 text-sm"
+                    className="w-full px-4 py-3 rounded-xl bg-[#1E1B18] border border-[#36322E] text-white focus:outline-none focus:border-purple-500 text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-[#A0A0A0] mb-1">รายละเอียดข้อความ/ปัญหาที่พบ</label>
+                  <label className="block text-xs font-medium text-[#A09890] mb-1">รายละเอียดข้อความ/ปัญหาที่พบ</label>
                   <textarea
                     rows={4}
                     required
                     placeholder="อธิบายปัญหาที่ต้องการความช่วยเหลือ..."
-                    className="w-full px-4 py-3 rounded-xl bg-[#1A1A1A] border border-[#333] text-white focus:outline-none focus:border-purple-500 text-sm"
+                    className="w-full px-4 py-3 rounded-xl bg-[#1E1B18] border border-[#36322E] text-white focus:outline-none focus:border-purple-500 text-sm"
                   ></textarea>
                 </div>
                 <button

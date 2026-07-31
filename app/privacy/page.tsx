@@ -7,7 +7,7 @@ import { Lock, ShieldCheck, Database, Trash2 } from "lucide-react";
 
 export default function PrivacyPage() {
   return (
-    <div className="flex min-h-screen flex-col bg-[#0A0A0A] text-[#F3F3F3]">
+    <div className="flex min-h-screen flex-col bg-[#0D0B0A] text-[#F5F0EB]">
       <Navbar />
 
       <main className="flex-grow max-w-4xl mx-auto px-4 py-12 md:py-16 space-y-8">

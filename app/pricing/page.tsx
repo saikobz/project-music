@@ -13,7 +13,7 @@ export default function PricingPage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-[#F3F3F3] flex flex-col justify-between">
+    <div className="min-h-screen bg-[#0D0B0A] text-[#F5F0EB] flex flex-col justify-between">
       <Navbar />
 
       <main className="flex-grow mx-auto w-full max-w-5xl px-4 py-16">
@@ -27,28 +27,28 @@ export default function PricingPage() {
 
         <div className="grid md:grid-cols-3 gap-8">
           {/* Free Plan */}
-          <div className="bg-[#111111] border border-[#222222] rounded-2xl p-6 flex flex-col justify-between hover:border-[#333333] transition-colors">
+          <div className="bg-[#111111] border border-[#222222] rounded-2xl p-6 flex flex-col justify-between hover:border-[#36322E] transition-colors">
             <div>
               <h3 className="text-xl font-bold mb-2 text-[#34D399]">Free</h3>
-              <div className="text-3xl font-extrabold mb-4 text-[#F3F3F3]">0 THB</div>
+              <div className="text-3xl font-extrabold mb-4 text-[#F5F0EB]">0 THB</div>
               <ul className="text-[#8E8E8E] text-sm space-y-3 mb-6">
                 <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> 3 เพลง / เดือน (ความยาวไม่เกิน 3 นาที)</li>
                 <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> AutoEQ - โมเดล LSTM</li>
                 <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> Audio Compressor (Basic Presets)</li>
                 <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> Pitch Shift (จำกัดช่วง ±2 Semitones)</li>
-                <li className="flex items-center gap-2 text-[#555555] line-through"><span>✗</span> AutoEQ - โมเดล CNN (Locked)</li>
-                <li className="flex items-center gap-2 text-[#555555] line-through"><span>✗</span> LUFS & Peak Auto Mastering</li>
+                <li className="flex items-center gap-2 text-[#5C5854] line-through"><span>✗</span> AutoEQ - โมเดล CNN (Locked)</li>
+                <li className="flex items-center gap-2 text-[#5C5854] line-through"><span>✗</span> LUFS & Peak Auto Mastering</li>
               </ul>
             </div>
             {!session ? (
               <button
                 onClick={() => router.push("/auth/signin")}
-                className="w-full py-2.5 bg-[#34D399] hover:bg-[#2cb984] font-semibold text-[#0A0A0A] rounded-lg transition-colors cursor-pointer"
+                className="w-full py-2.5 bg-[#34D399] hover:bg-[#2cb984] font-semibold text-[#0D0B0A] rounded-lg transition-colors cursor-pointer"
               >
                 เริ่มต้นใช้งานฟรี
               </button>
             ) : currentTier === "FREE" ? (
-              <button className="w-full py-2.5 bg-[#1A1A1A] text-[#666666] font-medium rounded-lg cursor-not-allowed">
+              <button className="w-full py-2.5 bg-[#1E1B18] text-[#666666] font-medium rounded-lg cursor-not-allowed">
                 แพ็กเกจปัจจุบัน
               </button>
             ) : null}
@@ -56,29 +56,29 @@ export default function PricingPage() {
 
           {/* Basic Plan */}
           <div className="bg-[#111111] border border-[#34D399]/40 rounded-2xl p-6 flex flex-col justify-between relative shadow-lg shadow-[#34D399]/5">
-            <span className="absolute -top-3 right-6 bg-[#34D399] text-[#0A0A0A] text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full">
+            <span className="absolute -top-3 right-6 bg-[#34D399] text-[#0D0B0A] text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full">
               Popular
             </span>
             <div>
-              <h3 className="text-xl font-bold mb-2 text-[#F3F3F3]">Basic</h3>
-              <div className="text-3xl font-extrabold mb-4 text-[#F3F3F3]">99 THB<span className="text-sm font-normal text-[#8E8E8E]">/เดือน</span></div>
+              <h3 className="text-xl font-bold mb-2 text-[#F5F0EB]">Basic</h3>
+              <div className="text-3xl font-extrabold mb-4 text-[#F5F0EB]">99 THB<span className="text-sm font-normal text-[#8E8E8E]">/เดือน</span></div>
               <ul className="text-[#CCCCCC] text-sm space-y-3 mb-6">
                 <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> 15 เพลง / เดือน</li>
                 <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> AutoEQ ได้ทั้งโมเดล LSTM & CNN</li>
                 <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> Studio Compressor (ปรับแต่ง Knee, Gain, Dry/Wet)</li>
                 <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> Pitch Shift (ขยายช่วง ±6 Semitones)</li>
                 <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> Export ไฟล์ WAV Lossless</li>
-                <li className="flex items-center gap-2 text-[#555555] line-through"><span>✗</span> LUFS & Peak Auto Mastering</li>
+                <li className="flex items-center gap-2 text-[#5C5854] line-through"><span>✗</span> LUFS & Peak Auto Mastering</li>
               </ul>
             </div>
             {currentTier === "BASIC" ? (
-              <button className="w-full py-2.5 bg-[#1A1A1A] text-[#666666] font-medium rounded-lg cursor-not-allowed">
+              <button className="w-full py-2.5 bg-[#1E1B18] text-[#666666] font-medium rounded-lg cursor-not-allowed">
                 แพ็กเกจปัจจุบัน
               </button>
             ) : currentTier === "PRO" ? null : (
               <button
                 onClick={() => setSelectedTier("BASIC")}
-                className="w-full py-2.5 bg-[#34D399] hover:bg-[#2cb984] font-semibold text-[#0A0A0A] rounded-lg transition-colors cursor-pointer"
+                className="w-full py-2.5 bg-[#34D399] hover:bg-[#2cb984] font-semibold text-[#0D0B0A] rounded-lg transition-colors cursor-pointer"
               >
                 สมัครแพ็กเกจ Basic
               </button>
@@ -89,7 +89,7 @@ export default function PricingPage() {
           <div className="bg-gradient-to-b from-[#1A162B] to-[#111111] border border-purple-500/40 rounded-2xl p-6 flex flex-col justify-between">
             <div>
               <h3 className="text-xl font-bold mb-2 text-purple-400">Pro</h3>
-              <div className="text-3xl font-extrabold mb-4 text-[#F3F3F3]">299 THB<span className="text-sm font-normal text-[#8E8E8E]">/เดือน</span></div>
+              <div className="text-3xl font-extrabold mb-4 text-[#F5F0EB]">299 THB<span className="text-sm font-normal text-[#8E8E8E]">/เดือน</span></div>
               <ul className="text-[#CCCCCC] text-sm space-y-3 mb-6">
                 <li className="flex items-center gap-2"><span className="text-purple-400">✓</span> ไม่จำกัดจำนวนเพลง (Unlimited)</li>
                 <li className="flex items-center gap-2"><span className="text-purple-400">✓</span> ใช้ได้ทุกโมเดล (LSTM & CNN)</li>
@@ -100,7 +100,7 @@ export default function PricingPage() {
               </ul>
             </div>
             {currentTier === "PRO" ? (
-              <button className="w-full py-2.5 bg-[#1A1A1A] text-[#666666] font-medium rounded-lg cursor-not-allowed">
+              <button className="w-full py-2.5 bg-[#1E1B18] text-[#666666] font-medium rounded-lg cursor-not-allowed">
                 แพ็กเกจปัจจุบัน
               </button>
             ) : (

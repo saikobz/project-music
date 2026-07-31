@@ -20,7 +20,7 @@ const TECH_STACK = [
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-[#F3F3F3] flex flex-col">
+    <div className="min-h-screen bg-[#0D0B0A] text-[#F5F0EB] flex flex-col">
       <Navbar />
       <main className="flex-grow mx-auto w-full max-w-4xl px-4 py-12 space-y-16">
 
@@ -46,7 +46,7 @@ export default function AboutPage() {
             {TECH_STACK.map((t) => (
               <div key={t.name} className="rounded-xl border border-[#1E1E1E] bg-[#0E0E0E] p-4">
                 <p className="text-sm font-bold text-[#E0E0E0]">{t.name}</p>
-                <p className="text-xs text-[#555555] mt-1">{t.role}</p>
+                <p className="text-xs text-[#5C5854] mt-1">{t.role}</p>
               </div>
             ))}
           </div>

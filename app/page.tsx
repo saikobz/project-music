@@ -41,7 +41,7 @@ const COLOR_MAP: Record<string, { border: string; bg: string; text: string; hove
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen flex-col bg-[#0A0A0A] text-[#F3F3F3]">
+    <div className="flex min-h-screen flex-col bg-[#0D0B0A] text-[#F5F0EB]">
       <Navbar />
 
       <main className="flex-grow">
@@ -64,7 +64,7 @@ export default function Home() {
               </span>
             </h1>
 
-            <p className="text-base md:text-xl text-[#A0A0A0] max-w-2xl mx-auto font-light leading-relaxed">
+            <p className="text-base md:text-xl text-[#A09890] max-w-2xl mx-auto font-light leading-relaxed">
               เครื่องมือสำหรับ Producer และนักดนตรี แยก เสียงร้อง, กลอง, เบส และเครื่องดนตรีออกจากกันด้วย PyTorch AI พร้อมปรับ EQ, Compressor และ Pitch Shift ในที่เดียว
             </p>
 
@@ -84,7 +84,7 @@ export default function Home() {
               </Link>
             </div>
 
-            <div className="pt-8 flex flex-wrap items-center justify-center gap-6 text-xs text-[#A0A0A0]">
+            <div className="pt-8 flex flex-wrap items-center justify-center gap-6 text-xs text-[#A09890]">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                 <span>รองรับไฟล์ WAV Lossless</span>
@@ -113,7 +113,7 @@ export default function Home() {
                       <Icon className="w-5 h-5" />
                     </div>
                     <div className="text-2xl font-bold text-white">{stat.number}</div>
-                    <div className="text-xs text-[#A0A0A0]">{stat.label}</div>
+                    <div className="text-xs text-[#A09890]">{stat.label}</div>
                   </div>
                 );
               })}
@@ -126,7 +126,7 @@ export default function Home() {
           <div className="max-w-6xl mx-auto px-4 space-y-12">
             <div className="text-center space-y-3">
               <h2 className="text-3xl md:text-4xl font-bold">ฟีเจอร์ระดับมืออาชีพสำหรับโปรดิวเซอร์</h2>
-              <p className="text-[#A0A0A0] max-w-xl mx-auto text-sm md:text-base">
+              <p className="text-[#A09890] max-w-xl mx-auto text-sm md:text-base">
                 เครื่องมือครบครันที่ช่วยให้การแยกชิ้นดนตรีและการปรับแต่งเสียงเป็นเรื่องง่ายและรวดเร็ว
               </p>
             </div>
@@ -141,7 +141,7 @@ export default function Home() {
                       <Icon className="w-6 h-6" />
                     </div>
                     <h3 className="text-lg font-semibold">{f.title}</h3>
-                    <p className="text-sm text-[#A0A0A0] leading-relaxed">{f.desc}</p>
+                    <p className="text-sm text-[#A09890] leading-relaxed">{f.desc}</p>
                   </div>
                 );
               })}
@@ -162,7 +162,7 @@ export default function Home() {
                   <span>AI Model Specs</span>
                 </div>
                 <h2 className="text-3xl font-bold tracking-tight">Powered by Open-Unmix PyTorch</h2>
-                <p className="text-sm text-[#A0A0A0] leading-relaxed">
+                <p className="text-sm text-[#A09890] leading-relaxed">
                   HarmoniQ ใช้โมเดล Open-Unmix ที่ปรับแต่งเพิ่มเติมบน PyTorch เพื่อแยกแทร็กเสียงด้วยคุณภาพสูงสุด พร้อมระบบ Zero Data Retention — ไฟล์ของคุณจะถูกลบอัตโนมัติภายใน 2 ชั่วโมงหลังประมวลผล
                 </p>
                 <ul className="space-y-3 text-sm">
@@ -195,10 +195,10 @@ export default function Home() {
         <FaqSection />
 
         {/* ──────── Final CTA ──────── */}
-        <section className="py-20 bg-[#0A0A0A] border-t border-[#1F1F1F]">
+        <section className="py-20 bg-[#0D0B0A] border-t border-[#1F1F1F]">
           <div className="max-w-4xl mx-auto px-4 text-center space-y-6">
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight">พร้อมสัมผัสประสบการณ์แยกเสียงด้วย AI แล้วหรือยัง?</h2>
-            <p className="text-sm md:text-base text-[#A0A0A0] max-w-2xl mx-auto">
+            <p className="text-sm md:text-base text-[#A09890] max-w-2xl mx-auto">
               เริ่มต้นใช้งานได้ทันที 3 เพลงต่อเดือนในแพ็กเกจ Free หรืออัปเกรดเพื่อการใช้งานที่ไม่จำกัด
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">

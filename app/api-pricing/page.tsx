@@ -65,7 +65,7 @@ print(data["file_id"], data["zip_url"])`,
 
 export default function ApiPricingPage() {
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-[#F3F3F3] flex flex-col">
+    <div className="min-h-screen bg-[#0D0B0A] text-[#F5F0EB] flex flex-col">
       <Navbar />
       <main className="flex-grow mx-auto w-full max-w-5xl px-4 py-12 space-y-16">
         <header className="space-y-3">
@@ -116,7 +116,7 @@ export default function ApiPricingPage() {
                 <div className="flex items-center gap-2 px-4 py-2 bg-[#111111] border-b border-[#1E1E1E]">
                   <span className="text-xs font-semibold text-[#34D399]">{ex.lang}</span>
                 </div>
-                <pre className="p-4 text-xs text-[#A0A0A0] font-mono overflow-x-auto leading-relaxed bg-[#080808]">{ex.code}</pre>
+                <pre className="p-4 text-xs text-[#A09890] font-mono overflow-x-auto leading-relaxed bg-[#080808]">{ex.code}</pre>
               </div>
             ))}
           </div>

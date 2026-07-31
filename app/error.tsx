@@ -14,8 +14,8 @@ export default function ErrorBoundary({ error, reset }: ErrorProps) {
   }, [error]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-[#050505] p-6 text-[#F3F3F3]">
-      <div className="w-full max-w-md rounded-2xl border border-[#2A2A2A] bg-[#0A0A0A] p-8 text-center shadow-2xl backdrop-blur-md">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-[#050505] p-6 text-[#F5F0EB]">
+      <div className="w-full max-w-md rounded-2xl border border-[#2C2824] bg-[#0D0B0A] p-8 text-center shadow-2xl backdrop-blur-md">
         {/* Warning Icon with premium glowing effect */}
         <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-[#E5A93D]/10 border border-[#E5A93D]/30 text-[#E5A93D] shadow-[0_0_20px_rgba(229,169,61,0.15)]">
           <svg
@@ -45,21 +45,21 @@ export default function ErrorBoundary({ error, reset }: ErrorProps) {
         <div className="flex flex-col gap-3">
           <button
             onClick={() => reset()}
-            className="w-full rounded-xl bg-gradient-to-br from-[#E5A93D] to-[#D6962A] px-4 py-3.5 font-bold text-[#0A0A0A] transition-all hover:shadow-[0_0_25px_rgba(229,169,61,0.35)] cursor-pointer"
+            className="w-full rounded-xl bg-gradient-to-br from-[#E5A93D] to-[#D6962A] px-4 py-3.5 font-bold text-[#0D0B0A] transition-all hover:shadow-[0_0_25px_rgba(229,169,61,0.35)] cursor-pointer"
           >
             ลองใหม่อีกครั้ง (Try Again)
           </button>
           
           <button
             onClick={() => window.location.reload()}
-            className="w-full rounded-xl border border-[#2A2A2A] bg-[#121212] px-4 py-3.5 font-semibold text-[#8E8E8E] hover:text-white hover:border-[#444444] transition-colors cursor-pointer"
+            className="w-full rounded-xl border border-[#2C2824] bg-[#161412] px-4 py-3.5 font-semibold text-[#8E8E8E] hover:text-white hover:border-[#444444] transition-colors cursor-pointer"
           >
             รีโหลดทั้งหน้า (Force Reload)
           </button>
         </div>
 
         {error.digest && (
-          <div className="mt-6 text-[10px] font-mono text-[#333333]">
+          <div className="mt-6 text-[10px] font-mono text-[#36322E]">
             Error Digest: {error.digest}
           </div>
         )}

@@ -9,7 +9,7 @@ export default function StudioPage() {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className={`flex min-h-screen flex-col bg-[#0A0A0A] text-[#F3F3F3] transition-all duration-300 ${
+    <div className={`flex min-h-screen flex-col bg-[#0D0B0A] text-[#F5F0EB] transition-all duration-300 ${
       isExpanded ? "overflow-y-auto" : "md:h-screen md:overflow-hidden overflow-y-auto"
     }`}>
       <Navbar />
@@ -30,7 +30,7 @@ export default function StudioPage() {
           </p>
         </header>
 
-        <section className="bg-[#121212] border border-[#2A2A2A] rounded-2xl shadow-2xl overflow-hidden">
+        <section className="bg-[#161412] border border-[#2C2824] rounded-2xl shadow-2xl overflow-hidden">
           <UploadBox onHeightChange={setIsExpanded} />
         </section>
       </main>
