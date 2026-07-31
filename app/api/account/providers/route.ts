@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { OAUTH_PROVIDERS } from "@/lib/config";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -9,11 +10,7 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const configuredProviders = [
-    { id: "google", name: "Google", icon: "google" },
-    { id: "facebook", name: "Facebook", icon: "facebook" },
-    { id: "line", name: "LINE", icon: "line" },
-  ];
+  const configuredProviders = OAUTH_PROVIDERS.map((p) => ({ ...p }));
 
   const accounts = await prisma.account.findMany({
     where: { userId: session.user.id },

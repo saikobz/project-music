@@ -56,7 +56,7 @@ export default function ProfileSection({ user, onUpdated }: ProfileSectionProps)
             type="url"
             value={image}
             onChange={(e) => setImage(e.target.value)}
-            placeholder="https://example.com/avatar.jpg"
+            placeholder=""
             className="w-full bg-[#1A1A1A] border border-[#333] rounded-lg px-3 py-2 text-sm text-[#F3F3F3] placeholder-[#555] focus:outline-none focus:border-[#34D399] transition"
           />
         </div>
