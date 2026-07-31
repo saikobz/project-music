@@ -86,7 +86,7 @@ export default function SupportPage() {
                 </div>
                 <button
                   type="submit"
-                  className="w-full py-3.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm flex items-center justify-center gap-2 transition-all"
+                  className="w-full py-3.5 rounded-xl bg-gradient-to-br from-[#F97316] to-[#EA580C] hover:from-[#FB923C] hover:to-[#F97316] text-white font-semibold text-sm flex items-center justify-center gap-2 transition-all"
                 >
                   <Send className="w-4 h-4" />
                   <span>ส่งข้อความ</span>

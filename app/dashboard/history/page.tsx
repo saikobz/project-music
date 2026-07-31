@@ -149,7 +149,7 @@ export default function HistoryPage() {
           </p>
           <Link
             href="/auth/signin"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs rounded-xl transition"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-br from-[#F97316] to-[#EA580C] hover:from-[#FB923C] hover:to-[#F97316] text-white font-semibold text-xs rounded-xl transition"
           >
             <span>เข้าสู่ระบบ</span>
             <ArrowRight className="w-4 h-4" />
@@ -179,7 +179,7 @@ export default function HistoryPage() {
 
           <Link
             href="/studio"
-            className="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold rounded-xl flex items-center gap-2 transition self-start md:self-auto"
+            className="px-5 py-2.5 bg-gradient-to-br from-[#F97316] to-[#EA580C] hover:from-[#FB923C] hover:to-[#F97316] text-white text-xs font-semibold rounded-xl flex items-center gap-2 transition self-start md:self-auto"
           >
             <Disc className="w-4 h-4" />
             <span>+ แยกเพลงใหม่ใน Studio</span>
@@ -199,7 +199,7 @@ export default function HistoryPage() {
             </p>
             <Link
               href="/studio"
-              className="inline-block px-6 py-2.5 bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold rounded-xl transition"
+              className="inline-block px-6 py-2.5 bg-gradient-to-br from-[#F97316] to-[#EA580C] hover:from-[#FB923C] hover:to-[#F97316] text-white text-xs font-semibold rounded-xl transition"
             >
               ไปยัง Studio Workspace
             </Link>

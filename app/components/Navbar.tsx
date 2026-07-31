@@ -31,7 +31,7 @@ export const Navbar: React.FC = () => {
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
         {/* โลโก้ */}
         <Link href="/" className="flex items-center gap-2 shrink-0">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#F97316] to-[#EA580C] flex items-center justify-center">
             <Music className="w-4 h-4 text-white" />
           </div>
           <span className="text-lg font-bold tracking-tight text-[#F5F0EB]">HarmoniQ</span>
@@ -48,7 +48,7 @@ export const Navbar: React.FC = () => {
                 href={link.href}
                 className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-150 ${
                   isActive
-                    ? "bg-[#1E1B18] text-purple-400 font-semibold border border-purple-500/20"
+                    ? "bg-[#1E1B18] text-[#F97316] font-semibold border border-[#F97316]/20"
                     : "text-[#888888] hover:text-[#FFFFFF] hover:bg-[#111111]"
                 }`}
               >
@@ -91,7 +91,7 @@ export const Navbar: React.FC = () => {
                 key={link.href}
                 href={link.href}
                 className={`block px-3 py-2 rounded-md text-sm font-medium transition ${
-                  isActive ? "bg-[#1E1B18] text-purple-400 font-semibold" : "text-[#888888] hover:text-[#F5F0EB] hover:bg-[#111111]"
+                  isActive ? "bg-[#1E1B18] text-[#F97316] font-semibold" : "text-[#888888] hover:text-[#F5F0EB] hover:bg-[#111111]"
                 }`}
               >
                 {link.label}

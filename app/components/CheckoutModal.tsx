@@ -41,22 +41,22 @@ export default function CheckoutModal({ isOpen, onClose, tier, price }: Checkout
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-md w-full text-white shadow-2xl">
+      <div className="bg-[#0D0B0A] border border-[#2C2824] rounded-2xl p-6 max-w-md w-full text-white shadow-2xl">
         <h2 className="text-xl font-bold mb-2">Subscribe to {tier} Tier</h2>
-        <p className="text-slate-400 text-sm mb-4">Total Amount: {price} THB/month</p>
+        <p className="text-[#A09890] text-sm mb-4">Total Amount: {price} THB/month</p>
 
         {qrUrl ? (
           <div className="text-center py-4">
             <p className="text-sm font-semibold mb-2">Scan QR Code via Mobile Banking App</p>
             <img src={qrUrl} alt="PromptPay QR Code" className="mx-auto w-64 h-64 rounded-lg bg-white p-2" />
-            <button onClick={onClose} className="mt-4 px-6 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white font-semibold">
+            <button onClick={onClose} className="mt-4 px-6 py-2 bg-gradient-to-br from-[#F97316] to-[#EA580C] hover:from-[#FB923C] hover:to-[#F97316] rounded-lg text-white font-semibold">
               Done
             </button>
           </div>
         ) : (
           <div>
             <div className="space-y-2 mb-6">
-              <label className="flex items-center space-x-3 p-3 bg-slate-800/80 rounded-lg cursor-pointer hover:bg-slate-800">
+              <label className="flex items-center space-x-3 p-3 bg-[#161412]/80 rounded-lg cursor-pointer hover:bg-[#161412]">
                 <input
                   type="radio"
                   name="payment"
@@ -65,7 +65,7 @@ export default function CheckoutModal({ isOpen, onClose, tier, price }: Checkout
                 />
                 <span>PromptPay QR Code (Thailand)</span>
               </label>
-              <label className="flex items-center space-x-3 p-3 bg-slate-800/80 rounded-lg cursor-pointer hover:bg-slate-800">
+              <label className="flex items-center space-x-3 p-3 bg-[#161412]/80 rounded-lg cursor-pointer hover:bg-[#161412]">
                 <input
                   type="radio"
                   name="payment"
@@ -76,11 +76,11 @@ export default function CheckoutModal({ isOpen, onClose, tier, price }: Checkout
               </label>
             </div>
             <div className="flex justify-end space-x-2">
-              <button onClick={onClose} className="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg">Cancel</button>
+              <button onClick={onClose} className="px-4 py-2 bg-[#1E1B18] hover:bg-[#36322E] rounded-lg">Cancel</button>
               <button
                 onClick={handleCheckout}
                 disabled={loading}
-                className="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg font-semibold"
+                className="px-6 py-2 bg-gradient-to-br from-[#F97316] to-[#EA580C] hover:from-[#FB923C] hover:to-[#F97316] rounded-lg font-semibold"
               >
                 {loading ? "Processing..." : "Pay Now"}
               </button>

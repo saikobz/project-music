@@ -68,7 +68,7 @@ function ConfirmDeleteContent() {
         <h2 className="text-xl font-bold">กรุณาเข้าสู่ระบบก่อน</h2>
         <button
           onClick={() => router.push("/auth/signin")}
-          className="px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs rounded-xl transition"
+          className="px-6 py-3 bg-gradient-to-br from-[#F97316] to-[#EA580C] hover:from-[#FB923C] hover:to-[#F97316] text-white font-semibold text-xs rounded-xl transition"
         >
           เข้าสู่ระบบ
         </button>

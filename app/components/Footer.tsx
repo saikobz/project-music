@@ -11,7 +11,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="space-y-3 md:col-span-1">
             <div className="flex items-center gap-2 text-white font-bold text-lg">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#F97316] to-[#EA580C] flex items-center justify-center">
                 <Music className="w-4 h-4 text-white" />
               </div>
               <span>HarmoniQ</span>

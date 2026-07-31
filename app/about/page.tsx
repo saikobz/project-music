@@ -60,7 +60,7 @@ export default function AboutPage() {
           </div>
           <Link
             href="/support"
-            className="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs rounded-xl transition shrink-0"
+            className="px-5 py-2.5 bg-gradient-to-br from-[#F97316] to-[#EA580C] hover:from-[#FB923C] hover:to-[#F97316] text-white font-semibold text-xs rounded-xl transition shrink-0"
           >
             ไปยังศูนย์ช่วยเหลือ &amp; ติดต่อ
           </Link>

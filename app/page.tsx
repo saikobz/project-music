@@ -71,7 +71,7 @@ export default function Home() {
             <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
                 href="/studio"
-                className="w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold flex items-center justify-center gap-2 shadow-lg shadow-purple-600/25 transition-all transform hover:-translate-y-0.5"
+                className="w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-br from-[#F97316] to-[#EA580C] hover:from-[#FB923C] hover:to-[#F97316] text-white font-semibold flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(249,115,22,0.25)] transition-all transform hover:-translate-y-0.5"
               >
                 <span>เข้าสู่ Studio Workspace</span>
                 <ArrowRight className="w-5 h-5" />
@@ -204,7 +204,7 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
               <Link
                 href="/studio"
-                className="w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold flex items-center justify-center gap-2 shadow-lg shadow-purple-600/25 transition-all transform hover:-translate-y-0.5"
+                className="w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-br from-[#F97316] to-[#EA580C] hover:from-[#FB923C] hover:to-[#F97316] text-white font-semibold flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(249,115,22,0.25)] transition-all transform hover:-translate-y-0.5"
               >
                 <span>เริ่มใช้งานฟรี</span>
                 <ArrowRight className="w-5 h-5" />

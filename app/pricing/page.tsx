@@ -106,7 +106,7 @@ export default function PricingPage() {
             ) : (
               <button
                 onClick={() => setSelectedTier("PRO")}
-                className="w-full py-2.5 bg-gradient-to-r from-purple-500 to-indigo-500 hover:opacity-90 font-semibold text-white rounded-lg transition-opacity cursor-pointer"
+                className="w-full py-2.5 bg-gradient-to-br from-[#F97316] to-[#EA580C] hover:from-[#FB923C] hover:to-[#F97316] font-semibold text-white rounded-lg transition-opacity cursor-pointer"
               >
                 สมัครแพ็กเกจ Pro
               </button>
