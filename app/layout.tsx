@@ -15,7 +15,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="th" className="dark">
-      <body className="bg-[#0A0A0A] text-[#F3F3F3] antialiased">
+      <body className="bg-[#0D0B0A] text-[#F5F0EB] antialiased">
         <AuthProvider>{children}</AuthProvider>
         <Toaster position="bottom-right" richColors />
       </body>

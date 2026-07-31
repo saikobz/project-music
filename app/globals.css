@@ -28,13 +28,13 @@
 }
 
 @utility glass {
-  background: rgba(20, 20, 20, 0.7);
+  background: rgba(22, 20, 18, 0.7);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(245, 240, 235, 0.06);
 }
 
 @utility glass-strong {
-  background: rgba(14, 14, 14, 0.85);
+  background: rgba(13, 11, 10, 0.85);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(245, 240, 235, 0.08);
 }
