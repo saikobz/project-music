@@ -127,7 +127,7 @@ export default function HistoryPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0A0A0A] text-[#F3F3F3] flex flex-col justify-between">
+      <div className="min-h-screen bg-[#0D0B0A] text-[#F5F0EB] flex flex-col justify-between">
         <Navbar />
         <div className="max-w-4xl mx-auto py-24 text-center text-[#8E8E8E] text-sm">Loading history...</div>
         <Footer />
@@ -137,7 +137,7 @@ export default function HistoryPage() {
 
   if (!data || data.error) {
     return (
-      <div className="min-h-screen bg-[#0A0A0A] text-[#F3F3F3] flex flex-col justify-between">
+      <div className="min-h-screen bg-[#0D0B0A] text-[#F5F0EB] flex flex-col justify-between">
         <Navbar />
         <div className="max-w-md mx-auto py-24 text-center space-y-4 px-4">
           <div className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center mx-auto text-purple-400">
@@ -161,7 +161,7 @@ export default function HistoryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-[#F3F3F3] flex flex-col justify-between">
+    <div className="min-h-screen bg-[#0D0B0A] text-[#F5F0EB] flex flex-col justify-between">
       <Navbar />
 
       <main className="flex-grow max-w-5xl mx-auto w-full px-4 py-12 space-y-8">
@@ -237,7 +237,7 @@ export default function HistoryPage() {
                                 disabled={isExpired}
                                 className={`w-9 h-9 rounded-xl border flex items-center justify-center transition ${
                                   isExpired
-                                    ? "bg-[#1A1A1A] border-[#2A2A2A] text-[#555] cursor-not-allowed"
+                                    ? "bg-[#1E1B18] border-[#2C2824] text-[#5C5854] cursor-not-allowed"
                                     : "bg-purple-500/10 border-purple-500/20 text-purple-400 hover:bg-purple-500 hover:text-white cursor-pointer"
                                 }`}
                                 title={isExpired ? "ไฟล์หมดอายุแล้ว" : "เล่นตัวอย่าง"}
@@ -251,7 +251,7 @@ export default function HistoryPage() {
                             </div>
                           </div>
                         </td>
-                        <td className="py-4 px-4 text-[#A0A0A0] text-xs">
+                        <td className="py-4 px-4 text-[#A09890] text-xs">
                           {new Date(record.createdAt).toLocaleDateString("th-TH", {
                             year: "numeric", month: "short", day: "numeric",
                           })}
@@ -269,7 +269,7 @@ export default function HistoryPage() {
                               ))}
                             </div>
                           ) : (
-                            <span className="text-[11px] text-[#555]">—</span>
+                            <span className="text-[11px] text-[#5C5854]">—</span>
                           )}
                         </td>
                         <td className="py-4 px-4">
@@ -286,7 +286,7 @@ export default function HistoryPage() {
                               </span>
                             )
                           ) : (
-                            <span className="text-[11px] text-[#555]">—</span>
+                            <span className="text-[11px] text-[#5C5854]">—</span>
                           )}
                         </td>
                         <td className="py-4 px-4 text-right">
@@ -303,7 +303,7 @@ export default function HistoryPage() {
                                 disabled={isExpired}
                                 className={`p-2 rounded-lg transition text-xs flex items-center gap-1.5 ${
                                   isExpired
-                                    ? "bg-[#1A1A1A] text-[#555] cursor-not-allowed"
+                                    ? "bg-[#1E1B18] text-[#5C5854] cursor-not-allowed"
                                     : "bg-[#202020] hover:bg-[#303030] text-white"
                                 }`}
                               >

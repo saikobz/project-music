@@ -78,7 +78,7 @@ function SignInForm() {
           className={`flex-1 py-2 text-sm font-semibold transition border-b-2 cursor-pointer ${
             tab === "signin"
               ? "border-[#34D399] text-[#34D399]"
-              : "border-transparent text-[#8E8E8E] hover:text-[#F3F3F3]"
+              : "border-transparent text-[#8E8E8E] hover:text-[#F5F0EB]"
           }`}
         >
           Sign In
@@ -88,7 +88,7 @@ function SignInForm() {
           className={`flex-1 py-2 text-sm font-semibold transition border-b-2 cursor-pointer ${
             tab === "register"
               ? "border-[#34D399] text-[#34D399]"
-              : "border-transparent text-[#8E8E8E] hover:text-[#F3F3F3]"
+              : "border-transparent text-[#8E8E8E] hover:text-[#F5F0EB]"
           }`}
         >
           Create Account
@@ -108,7 +108,7 @@ function SignInForm() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="John Doe"
-              className="w-full bg-[#1A1A1A] border border-[#333333] rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-[#34D399]"
+              className="w-full bg-[#1E1B18] border border-[#36322E] rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-[#34D399]"
             />
           </div>
         )}
@@ -120,7 +120,7 @@ function SignInForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="name@example.com"
-            className="w-full bg-[#1A1A1A] border border-[#333333] rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-[#34D399]"
+            className="w-full bg-[#1E1B18] border border-[#36322E] rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-[#34D399]"
           />
         </div>
         <div>
@@ -131,14 +131,14 @@ function SignInForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
-            className="w-full bg-[#1A1A1A] border border-[#333333] rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-[#34D399]"
+            className="w-full bg-[#1E1B18] border border-[#36322E] rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-[#34D399]"
           />
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2.5 bg-[#34D399] hover:bg-[#2cb984] text-[#0A0A0A] font-bold text-sm rounded-lg transition cursor-pointer"
+          className="w-full py-2.5 bg-[#34D399] hover:bg-[#2cb984] text-[#0D0B0A] font-bold text-sm rounded-lg transition cursor-pointer"
         >
           {loading ? "Processing..." : tab === "signin" ? "Sign In with Email" : "Create Account"}
         </button>
@@ -152,7 +152,7 @@ function SignInForm() {
       <div className="space-y-2">
         <button
           onClick={() => signIn("google")}
-          className="w-full py-2 bg-[#1A1A1A] hover:bg-[#222222] border border-[#333333] text-white text-xs font-semibold rounded-lg flex items-center justify-center gap-2 transition cursor-pointer"
+          className="w-full py-2 bg-[#1E1B18] hover:bg-[#222222] border border-[#36322E] text-white text-xs font-semibold rounded-lg flex items-center justify-center gap-2 transition cursor-pointer"
         >
           🌐 Google
         </button>
@@ -175,7 +175,7 @@ function SignInForm() {
 
 export default function SignInPage() {
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-[#F3F3F3] flex flex-col justify-between">
+    <div className="min-h-screen bg-[#0D0B0A] text-[#F5F0EB] flex flex-col justify-between">
       <Navbar />
 
       <main className="flex-grow flex items-center justify-center p-4 py-12">
