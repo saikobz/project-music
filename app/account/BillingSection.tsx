@@ -53,7 +53,7 @@ export default function BillingSection() {
       case "successful": return "text-[#34D399] bg-[#34D399]/10";
       case "failed": return "text-red-400 bg-red-500/10";
       case "expired": return "text-yellow-400 bg-yellow-500/10";
-      default: return "text-[#888] bg-[#1A1A1A]";
+      default: return "text-[#888] bg-[#1E1B18]";
     }
   };
 
@@ -117,13 +117,13 @@ export default function BillingSection() {
                     value={cancelPassword}
                     onChange={(e) => setCancelPassword(e.target.value)}
                     placeholder="Enter password to confirm"
-                    className="w-48 bg-[#0A0A0A] border border-red-500/30 rounded-lg px-3 py-2 text-xs text-[#F3F3F3] focus:outline-none focus:border-red-400 transition"
+                    className="w-48 bg-[#0D0B0A] border border-red-500/30 rounded-lg px-3 py-2 text-xs text-[#F5F0EB] focus:outline-none focus:border-red-400 transition"
                   />
                   <div className="flex gap-2">
                     <button onClick={handleCancel} disabled={canceling} className="px-3 py-1.5 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white text-xs font-bold rounded-lg transition cursor-pointer">
                       {canceling ? "..." : "Confirm"}
                     </button>
-                    <button onClick={() => { setShowCancel(false); setCancelPassword(""); }} className="px-3 py-1.5 bg-[#1A1A1A] text-[#888] text-xs rounded-lg hover:text-white transition cursor-pointer">
+                    <button onClick={() => { setShowCancel(false); setCancelPassword(""); }} className="px-3 py-1.5 bg-[#1E1B18] text-[#888] text-xs rounded-lg hover:text-white transition cursor-pointer">
                       Back
                     </button>
                   </div>
@@ -144,7 +144,7 @@ export default function BillingSection() {
             <p className="text-[#888] text-sm">ยังไม่มีประวัติการชำระเงิน</p>
           </div>
         ) : (
-          <div className="bg-[#1A1A1A] border border-[#222] rounded-xl overflow-hidden">
+          <div className="bg-[#1E1B18] border border-[#222] rounded-xl overflow-hidden">
             <table className="w-full text-left text-xs">
               <thead className="bg-[#111] text-[#888] uppercase">
                 <tr>

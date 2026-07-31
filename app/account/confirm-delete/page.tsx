@@ -113,7 +113,7 @@ function ConfirmDeleteContent() {
               })
             }
             disabled={submitting}
-            className="w-full flex items-center justify-center gap-2 rounded-xl border border-[#2A2A2A] bg-[#121212] px-4 py-3 text-sm font-semibold text-white hover:border-[#E5A93D]/50 hover:text-[#E5A93D] transition disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 rounded-xl border border-[#2C2824] bg-[#161412] px-4 py-3 text-sm font-semibold text-white hover:border-[#E5A93D]/50 hover:text-[#E5A93D] transition disabled:opacity-50"
           >
             <ShieldCheck className="w-4 h-4" />
             ยืนยันด้วย {provider.name}
@@ -133,7 +133,7 @@ function ConfirmDeleteContent() {
 
 export default function ConfirmDeletePage() {
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-[#F3F3F3] flex flex-col">
+    <div className="min-h-screen bg-[#0D0B0A] text-[#F5F0EB] flex flex-col">
       <Navbar />
       <main className="flex-grow">
         <Suspense fallback={<div className="py-24 text-center text-[#8E8E8E] text-sm">Loading...</div>}>

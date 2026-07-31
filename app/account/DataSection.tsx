@@ -62,7 +62,7 @@ export default function DataSection({ hasPassword }: DataSectionProps) {
       {/* Export Section */}
       <div>
         <p className="text-xs font-semibold text-[#8E8E8E] uppercase tracking-wider mb-3">Export Data</p>
-        <div className="p-4 rounded-xl bg-[#1A1A1A] border border-[#222] flex items-center justify-between">
+        <div className="p-4 rounded-xl bg-[#1E1B18] border border-[#222] flex items-center justify-between">
           <div>
             <p className="text-sm font-semibold">Download Your Data</p>
             <p className="text-xs text-[#666]">Export profile, preferences, history, and usage data as JSON.</p>
@@ -107,7 +107,7 @@ export default function DataSection({ hasPassword }: DataSectionProps) {
                     type="password"
                     value={deletePassword}
                     onChange={(e) => setDeletePassword(e.target.value)}
-                    className="w-full max-w-xs bg-[#0A0A0A] border border-red-500/30 rounded-lg px-3 py-2 text-sm text-[#F3F3F3] focus:outline-none focus:border-red-400 transition"
+                    className="w-full max-w-xs bg-[#0D0B0A] border border-red-500/30 rounded-lg px-3 py-2 text-sm text-[#F5F0EB] focus:outline-none focus:border-red-400 transition"
                   />
                 </div>
               )}
@@ -121,7 +121,7 @@ export default function DataSection({ hasPassword }: DataSectionProps) {
                 </button>
                 <button
                   onClick={() => { setShowDeleteModal(false); setDeletePassword(""); }}
-                  className="px-4 py-2 bg-[#1A1A1A] text-[#888] text-xs rounded-lg hover:text-white transition cursor-pointer"
+                  className="px-4 py-2 bg-[#1E1B18] text-[#888] text-xs rounded-lg hover:text-white transition cursor-pointer"
                 >
                   Cancel
                 </button>

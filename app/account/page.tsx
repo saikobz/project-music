@@ -49,7 +49,7 @@ export default function AccountPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0A0A0A] text-[#F3F3F3] flex flex-col justify-between">
+      <div className="min-h-screen bg-[#0D0B0A] text-[#F5F0EB] flex flex-col justify-between">
         <Navbar />
         <div className="max-w-3xl mx-auto py-16 text-center text-[#8E8E8E]">Loading account details...</div>
         <Footer />
@@ -59,11 +59,11 @@ export default function AccountPage() {
 
   if (!data || data.error) {
     return (
-      <div className="min-h-screen bg-[#0A0A0A] text-[#F3F3F3] flex flex-col justify-between">
+      <div className="min-h-screen bg-[#0D0B0A] text-[#F5F0EB] flex flex-col justify-between">
         <Navbar />
         <div className="max-w-3xl mx-auto py-16 text-center space-y-4">
           <p className="text-red-400 font-medium">Please sign in to view your account details.</p>
-          <Link href="/api/auth/signin" className="inline-block px-6 py-2 bg-[#34D399] hover:bg-[#2cb984] text-[#0A0A0A] font-bold rounded-lg transition">
+          <Link href="/api/auth/signin" className="inline-block px-6 py-2 bg-[#34D399] hover:bg-[#2cb984] text-[#0D0B0A] font-bold rounded-lg transition">
             Sign In
           </Link>
         </div>
@@ -79,7 +79,7 @@ export default function AccountPage() {
   const percent = isUnlimited ? 0 : Math.min(100, Math.round((used / max) * 100));
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-[#F3F3F3] flex flex-col justify-between">
+    <div className="min-h-screen bg-[#0D0B0A] text-[#F5F0EB] flex flex-col justify-between">
       <Navbar />
 
       <main className="flex-grow mx-auto w-full max-w-4xl px-4 py-12 space-y-8">
@@ -113,7 +113,7 @@ export default function AccountPage() {
               <p className="text-xs font-semibold text-[#8E8E8E] uppercase tracking-wider">Current Subscription</p>
               <h3 className="text-xl font-extrabold text-[#34D399] mt-0.5">{subscription.tier} PLAN</h3>
             </div>
-            <Link href="/pricing" className="px-4 py-2 bg-[#34D399] hover:bg-[#2cb984] text-[#0A0A0A] text-xs font-bold rounded-lg transition">
+            <Link href="/pricing" className="px-4 py-2 bg-[#34D399] hover:bg-[#2cb984] text-[#0D0B0A] text-xs font-bold rounded-lg transition">
               Change Plan
             </Link>
           </div>

@@ -79,7 +79,7 @@ export default function ConnectedAccountsSection() {
       {providers.map((provider) => (
         <div
           key={provider.id}
-          className="flex items-center justify-between p-4 rounded-xl bg-[#1A1A1A] border border-[#222]"
+          className="flex items-center justify-between p-4 rounded-xl bg-[#1E1B18] border border-[#222]"
         >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-[#222] flex items-center justify-center text-[#888]">

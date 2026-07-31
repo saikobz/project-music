@@ -42,7 +42,7 @@ export default function ProfileSection({ user, onUpdated }: ProfileSectionProps)
       {/* Avatar */}
       <div className="flex items-center gap-4">
         {image ? (
-          <img src={image} alt="Avatar" className="w-16 h-16 rounded-full object-cover border border-[#333]" />
+          <img src={image} alt="Avatar" className="w-16 h-16 rounded-full object-cover border border-[#36322E]" />
         ) : (
           <div className="w-16 h-16 rounded-full bg-[#222] flex items-center justify-center">
             <User className="w-8 h-8 text-[#666]" />
@@ -57,7 +57,7 @@ export default function ProfileSection({ user, onUpdated }: ProfileSectionProps)
             value={image}
             onChange={(e) => setImage(e.target.value)}
             placeholder=""
-            className="w-full bg-[#1A1A1A] border border-[#333] rounded-lg px-3 py-2 text-sm text-[#F3F3F3] placeholder-[#555] focus:outline-none focus:border-[#34D399] transition"
+            className="w-full bg-[#1E1B18] border border-[#36322E] rounded-lg px-3 py-2 text-sm text-[#F5F0EB] placeholder-[#5C5854] focus:outline-none focus:border-[#34D399] transition"
           />
         </div>
       </div>
@@ -68,12 +68,12 @@ export default function ProfileSection({ user, onUpdated }: ProfileSectionProps)
           Display Name
         </label>
         <div className="relative">
-          <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#555]" />
+          <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5C5854]" />
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full bg-[#1A1A1A] border border-[#333] rounded-lg pl-10 pr-3 py-2.5 text-sm text-[#F3F3F3] placeholder-[#555] focus:outline-none focus:border-[#34D399] transition"
+            className="w-full bg-[#1E1B18] border border-[#36322E] rounded-lg pl-10 pr-3 py-2.5 text-sm text-[#F5F0EB] placeholder-[#5C5854] focus:outline-none focus:border-[#34D399] transition"
           />
         </div>
       </div>
@@ -84,12 +84,12 @@ export default function ProfileSection({ user, onUpdated }: ProfileSectionProps)
           Email
         </label>
         <div className="relative">
-          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#555]" />
+          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5C5854]" />
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-[#1A1A1A] border border-[#333] rounded-lg pl-10 pr-3 py-2.5 text-sm text-[#F3F3F3] placeholder-[#555] focus:outline-none focus:border-[#34D399] transition"
+            className="w-full bg-[#1E1B18] border border-[#36322E] rounded-lg pl-10 pr-3 py-2.5 text-sm text-[#F5F0EB] placeholder-[#5C5854] focus:outline-none focus:border-[#34D399] transition"
           />
         </div>
       </div>
@@ -97,7 +97,7 @@ export default function ProfileSection({ user, onUpdated }: ProfileSectionProps)
       <button
         type="submit"
         disabled={saving}
-        className="px-6 py-2.5 bg-[#34D399] hover:bg-[#2cb984] disabled:opacity-50 text-[#0A0A0A] text-sm font-bold rounded-lg transition cursor-pointer"
+        className="px-6 py-2.5 bg-[#34D399] hover:bg-[#2cb984] disabled:opacity-50 text-[#0D0B0A] text-sm font-bold rounded-lg transition cursor-pointer"
       >
         {saving ? "Saving..." : "Save Changes"}
       </button>
