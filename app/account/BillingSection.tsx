@@ -12,17 +12,9 @@ interface PaymentRecord {
   paidAt: string;
 }
 
-const MOCK_PAYMENTS: PaymentRecord[] = [
-  { id: "mock-1", amount: 29900, currency: "thb", status: "successful", paidAt: "2026-07-25T08:30:00Z" },
-  { id: "mock-2", amount: 29900, currency: "thb", status: "successful", paidAt: "2026-06-25T08:30:00Z" },
-  { id: "mock-3", amount: 29900, currency: "thb", status: "successful", paidAt: "2026-05-25T08:30:00Z" },
-  { id: "mock-4", amount: 9900, currency: "thb", status: "successful", paidAt: "2026-04-25T08:30:00Z" },
-  { id: "mock-5", amount: 9900, currency: "thb", status: "failed", paidAt: "2026-04-20T10:15:00Z" },
-];
-
 export default function BillingSection() {
   const { data: session } = useSession();
-  const [payments, setPayments] = useState<PaymentRecord[]>(MOCK_PAYMENTS);
+  const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [cancelPassword, setCancelPassword] = useState("");
   const [showCancel, setShowCancel] = useState(false);
@@ -133,11 +125,11 @@ export default function BillingSection() {
       <div>
         <p className="text-xs font-semibold text-[#8E8E8E] uppercase tracking-wider mb-3">Payment History</p>
         {loading ? (
-          <div className="text-[#8E8E8E] text-sm py-4">Loading payment history...</div>
+          <div className="text-[#8E8E8E] text-sm py-4">กำลังโหลดประวัติการชำระเงิน...</div>
         ) : payments.length === 0 ? (
           <div className="text-center py-8">
             <CreditCard className="w-10 h-10 text-[#444] mx-auto mb-2" />
-            <p className="text-[#888] text-sm">No payment records</p>
+            <p className="text-[#888] text-sm">ยังไม่มีประวัติการชำระเงิน</p>
           </div>
         ) : (
           <div className="bg-[#1A1A1A] border border-[#222] rounded-xl overflow-hidden">
