@@ -55,7 +55,7 @@ const MODELS = [
 
 export default function ModelsPage() {
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-[#F3F3F3] flex flex-col">
+    <div className="min-h-screen bg-[#0D0B0A] text-[#F5F0EB] flex flex-col">
       <Navbar />
       <main className="flex-grow mx-auto w-full max-w-5xl px-4 py-12 space-y-12">
         <header className="space-y-3">
@@ -78,15 +78,15 @@ export default function ModelsPage() {
                   <span className="text-xs font-semibold tracking-widest uppercase mb-1 block" style={{ color: model.color }}>
                     {model.tag}
                   </span>
-                  <h2 className="text-xl font-bold text-[#F3F3F3]">{model.name}</h2>
+                  <h2 className="text-xl font-bold text-[#F5F0EB]">{model.name}</h2>
                 </div>
               </div>
-              <p className="text-sm text-[#AAAAAA] leading-relaxed">{model.desc}</p>
+              <p className="text-sm text-[#A09890] leading-relaxed">{model.desc}</p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {model.specs.map((s) => (
-                  <div key={s.label} className="rounded-lg bg-[#111111] border border-[#1E1E1E] p-3">
-                    <p className="text-[10px] font-semibold text-[#555555] uppercase tracking-wider mb-1">{s.label}</p>
-                    <p className="text-sm font-medium text-[#E0E0E0]">{s.value}</p>
+                  <div key={s.label} className="rounded-lg bg-[#161412] border border-[#1E1E1E] p-3">
+                    <p className="text-[10px] font-semibold text-[#5C5854] uppercase tracking-wider mb-1">{s.label}</p>
+                    <p className="text-sm font-medium text-[#F5F0EB]">{s.value}</p>
                   </div>
                 ))}
               </div>

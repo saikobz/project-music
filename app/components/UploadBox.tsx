@@ -368,7 +368,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                       className={`w-full rounded-lg bg-[#080808] border p-2.5 text-[#C8C8C8] text-sm focus:outline-none transition ${
                         action === "eq-ai"
                           ? "border-[#22D3EE]/30 focus:border-[#22D3EE]/70"
-                          : "border-[#E5A93D]/30 focus:border-[#E5A93D]/70"
+                          : "border-[#E5A93D]/30 focus:border-[#F97316]/70"
                       }`}
                       disabled={loading}
                     >
@@ -447,7 +447,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                         <input
                           type="number" min="0" value={trimStart}
                           onChange={(e) => setTrimStart(e.target.value)} disabled={loading}
-                          className="w-full rounded-md bg-[#111111] border border-[#2C2824] px-2.5 py-1.5 text-sm text-[#E0E0E0] focus:border-[#E5A93D]/50 focus:outline-none transition"
+                          className="w-full rounded-md bg-[#111111] border border-[#2C2824] px-2.5 py-1.5 text-sm text-[#E0E0E0] focus:border-[#F97316]/50 focus:outline-none transition"
                         />
                       </div>
                       <div>
@@ -455,7 +455,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                         <input
                           type="number" min="1" value={trimEnd}
                           onChange={(e) => setTrimEnd(e.target.value)} disabled={loading}
-                          className="w-full rounded-md bg-[#111111] border border-[#2C2824] px-2.5 py-1.5 text-sm text-[#E0E0E0] focus:border-[#E5A93D]/50 focus:outline-none transition"
+                          className="w-full rounded-md bg-[#111111] border border-[#2C2824] px-2.5 py-1.5 text-sm text-[#E0E0E0] focus:border-[#F97316]/50 focus:outline-none transition"
                         />
                       </div>
                     </div>

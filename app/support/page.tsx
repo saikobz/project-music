@@ -63,7 +63,7 @@ export default function SupportPage() {
                     type="text"
                     required
                     placeholder="กรอกชื่อ-นามสกุล"
-                    className="w-full px-4 py-3 rounded-xl bg-[#1E1B18] border border-[#36322E] text-white focus:outline-none focus:border-purple-500 text-sm"
+                    className="w-full px-4 py-3 rounded-xl bg-[#1E1B18] border border-[#36322E] text-white focus:outline-none focus:border-[#F97316] text-sm"
                   />
                 </div>
                 <div>
@@ -72,7 +72,7 @@ export default function SupportPage() {
                     type="email"
                     required
                     placeholder="yourname@example.com"
-                    className="w-full px-4 py-3 rounded-xl bg-[#1E1B18] border border-[#36322E] text-white focus:outline-none focus:border-purple-500 text-sm"
+                    className="w-full px-4 py-3 rounded-xl bg-[#1E1B18] border border-[#36322E] text-white focus:outline-none focus:border-[#F97316] text-sm"
                   />
                 </div>
                 <div>
@@ -81,7 +81,7 @@ export default function SupportPage() {
                     rows={4}
                     required
                     placeholder="อธิบายปัญหาที่ต้องการความช่วยเหลือ..."
-                    className="w-full px-4 py-3 rounded-xl bg-[#1E1B18] border border-[#36322E] text-white focus:outline-none focus:border-purple-500 text-sm"
+                    className="w-full px-4 py-3 rounded-xl bg-[#1E1B18] border border-[#36322E] text-white focus:outline-none focus:border-[#F97316] text-sm"
                   ></textarea>
                 </div>
                 <button

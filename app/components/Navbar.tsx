@@ -49,7 +49,7 @@ export const Navbar: React.FC = () => {
                 className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-150 ${
                   isActive
                     ? "bg-[#1E1B18] text-[#F97316] font-semibold border border-[#F97316]/20"
-                    : "text-[#888888] hover:text-[#FFFFFF] hover:bg-[#111111]"
+                    : "text-[#888888] hover:text-[#F5F0EB] hover:bg-[#111111]"
                 }`}
               >
                 {link.label}

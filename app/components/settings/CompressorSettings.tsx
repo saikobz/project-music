@@ -55,7 +55,7 @@ export const CompressorSettings: React.FC<CompressorSettingsProps> = ({
         <select
           value={params.strength}
           onChange={(e) => onChange({ strength: e.target.value })}
-          className="w-full rounded-lg bg-[#0D0B0A] border border-[#2C2824] p-2.5 text-[#F5F0EB] focus:border-[#E5A93D] focus:outline-none transition"
+          className="w-full rounded-lg bg-[#0D0B0A] border border-[#2C2824] p-2.5 text-[#F5F0EB] focus:border-[#F97316] focus:outline-none transition"
           disabled={loading}
         >
           <option value="soft">Soft</option>
@@ -74,7 +74,7 @@ export const CompressorSettings: React.FC<CompressorSettingsProps> = ({
               placeholder={placeholder}
               value={params[key]}
               onChange={(e) => onChange({ [key]: e.target.value } as Partial<CompressorParams>)}
-              className="w-full rounded-lg bg-[#0D0B0A] border border-[#2C2824] p-2.5 text-[#F5F0EB] focus:border-[#E5A93D] focus:outline-none transition"
+              className="w-full rounded-lg bg-[#0D0B0A] border border-[#2C2824] p-2.5 text-[#F5F0EB] focus:border-[#F97316] focus:outline-none transition"
               disabled={loading}
             />
           </div>
