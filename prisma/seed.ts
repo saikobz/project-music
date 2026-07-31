@@ -1,11 +1,12 @@
 import { PrismaClient } from "@prisma/client";
+import crypto from "crypto";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
 async function main() {
   const email = "admin@harmoniq.ai";
-  const password = "adminpassword123";
+  const password = crypto.randomBytes(16).toString("hex");
   const hashedPassword = await bcrypt.hash(password, 10);
 
   const user = await prisma.user.upsert({
