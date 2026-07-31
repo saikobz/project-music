@@ -31,13 +31,13 @@ const COLOR_CONFIG = {
 
 export default function HowItWorks() {
   return (
-    <section className="py-24 bg-[#0A0A0A] overflow-hidden">
+    <section className="py-24 bg-[#0D0B0A] overflow-hidden">
       <div className="max-w-6xl mx-auto px-4">
         <div className="text-center space-y-3 mb-16">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
             วิธีการทํางาน
           </h2>
-          <p className="text-[#A0A0A0] max-w-xl mx-auto text-sm md:text-base">
+          <p className="text-[#A09890] max-w-xl mx-auto text-sm md:text-base">
             เพียง 3 ขั้นตอนง่าย ๆ ก็ได้แทร็กเสียงพร้อมใช้งานในโปรเจกต์ของคุณ
           </p>
         </div>
@@ -61,7 +61,7 @@ export default function HowItWorks() {
                 {/* Step icon with numbered badge */}
                 <div className={`relative z-10 w-20 h-20 rounded-2xl ${colors.bg} border ${colors.border} flex items-center justify-center ${colors.text} mb-6 transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl ${colors.glow}`}>
                   <Icon className="w-8 h-8" />
-                  <span className={`absolute -top-2.5 -right-2.5 w-7 h-7 rounded-full ${colors.bg} border-2 border-[#0A0A0A] ${colors.border} flex items-center justify-center text-xs font-bold ${colors.text}`}>
+                  <span className={`absolute -top-2.5 -right-2.5 w-7 h-7 rounded-full ${colors.bg} border-2 border-[#0D0B0A] ${colors.border} flex items-center justify-center text-xs font-bold ${colors.text}`}>
                     {i + 1}
                   </span>
                 </div>
@@ -69,7 +69,7 @@ export default function HowItWorks() {
                 {/* Content card */}
                 <div className={`w-full p-5 rounded-xl border transition-all duration-300 ${colors.border} ${colors.bg} group-hover:border-opacity-60 group-hover:shadow-lg ${colors.glow}`}>
                   <h3 className="text-base font-semibold text-white mb-2">{step.title}</h3>
-                  <p className="text-sm text-[#A0A0A0] leading-relaxed">
+                  <p className="text-sm text-[#A09890] leading-relaxed">
                     {step.description}
                   </p>
                 </div>

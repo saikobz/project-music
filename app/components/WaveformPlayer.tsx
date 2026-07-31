@@ -22,7 +22,7 @@ const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl }) => {
 
     waveSurferRef.current = WaveSurfer.create({
       container: containerRef.current,
-      waveColor: "#333333",
+      waveColor: "#36322E",
       progressColor: "#E5A93D",
       cursorColor: "#FFFFFF",
       height: 96,
@@ -94,7 +94,7 @@ const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl }) => {
   };
 
   return (
-    <div className="space-y-4 rounded-2xl border border-[#222] bg-[#0A0A0A] p-5 shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
+    <div className="space-y-4 rounded-2xl border border-[#222] bg-[#0D0B0A] p-5 shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
       <div className="flex items-center justify-between border-b border-[#222] pb-4">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E5A93D]/10 border border-[#E5A93D]/20">
@@ -110,7 +110,7 @@ const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl }) => {
         <div className="flex gap-2">
           <button
             onClick={stopPlayback}
-            className="rounded-xl border border-[#333] bg-[#121212] px-4 py-2 text-xs font-semibold text-[#8E8E8E] transition-all hover:border-[#555] hover:text-white"
+            className="rounded-xl border border-[#36322E] bg-[#161412] px-4 py-2 text-xs font-semibold text-[#8E8E8E] transition-all hover:border-[#5C5854] hover:text-white"
           >
             Reset
           </button>
@@ -118,8 +118,8 @@ const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl }) => {
             onClick={togglePlay}
             className={`flex min-w-[90px] items-center justify-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
               isPlaying
-                ? "bg-[#222] text-white hover:bg-[#333] shadow-inner"
-                : "bg-gradient-to-br from-[#E5A93D] to-[#D6962A] text-[#0A0A0A] shadow-[0_0_15px_rgba(229,169,61,0.2)] hover:shadow-[0_0_20px_rgba(229,169,61,0.3)] hover:from-[#F3C05D]"
+                ? "bg-[#222] text-white hover:bg-[#36322E] shadow-inner"
+                : "bg-gradient-to-br from-[#E5A93D] to-[#D6962A] text-[#0D0B0A] shadow-[0_0_15px_rgba(229,169,61,0.2)] hover:shadow-[0_0_20px_rgba(229,169,61,0.3)] hover:from-[#F3C05D]"
             }`}
           >
             {isPlaying ? "Pause" : "Play"}
@@ -142,8 +142,8 @@ const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl }) => {
 
         {/* Volume control */}
         <div className="waveform-player-volume flex items-center gap-4 rounded-xl border border-[#222] bg-[#111] px-4 py-3">
-          <div className="flex w-16 items-center gap-2 border-r border-[#333] pr-3">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#555]" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clipRule="evenodd" /></svg>
+          <div className="flex w-16 items-center gap-2 border-r border-[#36322E] pr-3">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#5C5854]" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clipRule="evenodd" /></svg>
             <span className="text-xs font-bold text-white font-mono">{String(volume).padStart(3, "0")}</span>
           </div>
           <input
@@ -153,9 +153,9 @@ const WaveformPlayer: React.FC<WaveformPlayerProps> = ({ audioUrl }) => {
             step="1"
             value={volume}
             onChange={handleVolumeChange}
-            className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-[#333]"
+            className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-[#36322E]"
             style={{ 
-              background: `linear-gradient(to right, #E5A93D ${volume}%, #333 ${volume}%)`
+              background: `linear-gradient(to right, #E5A93D ${volume}%, #36322E ${volume}%)`
             }}
             aria-label="Volume"
           />

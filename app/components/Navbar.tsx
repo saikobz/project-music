@@ -27,15 +27,15 @@ export const Navbar: React.FC = () => {
   }, [pathname]);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-[#1E1E1E] bg-[#0A0A0A]/90 backdrop-blur-md">
+    <header className="sticky top-0 z-50 w-full border-b border-[#1E1E1E] bg-[#0D0B0A]/90 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
         {/* โลโก้ */}
         <Link href="/" className="flex items-center gap-2 shrink-0">
           <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center">
             <Music className="w-4 h-4 text-white" />
           </div>
-          <span className="text-lg font-bold tracking-tight text-[#F3F3F3]">HarmoniQ</span>
-          <span className="hidden text-xs font-medium text-[#555555] sm:inline">AI Audio Toolkit</span>
+          <span className="text-lg font-bold tracking-tight text-[#F5F0EB]">HarmoniQ</span>
+          <span className="hidden text-xs font-medium text-[#5C5854] sm:inline">AI Audio Toolkit</span>
         </Link>
 
         {/* เมนู Desktop */}
@@ -48,7 +48,7 @@ export const Navbar: React.FC = () => {
                 href={link.href}
                 className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-150 ${
                   isActive
-                    ? "bg-[#1A1A1A] text-purple-400 font-semibold border border-purple-500/20"
+                    ? "bg-[#1E1B18] text-purple-400 font-semibold border border-purple-500/20"
                     : "text-[#888888] hover:text-[#FFFFFF] hover:bg-[#111111]"
                 }`}
               >
@@ -64,7 +64,7 @@ export const Navbar: React.FC = () => {
 
           {/* ปุ่ม Hamburger สำหรับมือถือ */}
           <button
-            className="md:hidden p-2 rounded-md text-[#888888] hover:text-[#F3F3F3] hover:bg-[#111111] transition cursor-pointer"
+            className="md:hidden p-2 rounded-md text-[#888888] hover:text-[#F5F0EB] hover:bg-[#111111] transition cursor-pointer"
             onClick={() => setMobileOpen((o) => !o)}
             aria-label="Toggle menu"
           >
@@ -83,7 +83,7 @@ export const Navbar: React.FC = () => {
 
       {/* Mobile Dropdown Menu */}
       {mobileOpen && (
-        <div className="md:hidden border-t border-[#1E1E1E] bg-[#0A0A0A] px-4 py-3 space-y-1">
+        <div className="md:hidden border-t border-[#1E1E1E] bg-[#0D0B0A] px-4 py-3 space-y-1">
           {NAV_LINKS.map((link) => {
             const isActive = pathname === link.href;
             return (
@@ -91,7 +91,7 @@ export const Navbar: React.FC = () => {
                 key={link.href}
                 href={link.href}
                 className={`block px-3 py-2 rounded-md text-sm font-medium transition ${
-                  isActive ? "bg-[#1A1A1A] text-purple-400 font-semibold" : "text-[#888888] hover:text-[#F3F3F3] hover:bg-[#111111]"
+                  isActive ? "bg-[#1E1B18] text-purple-400 font-semibold" : "text-[#888888] hover:text-[#F5F0EB] hover:bg-[#111111]"
                 }`}
               >
                 {link.label}

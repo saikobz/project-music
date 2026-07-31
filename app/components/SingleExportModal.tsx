@@ -17,7 +17,7 @@ export default function SingleExportModal({ isOpen, onClose, onExport, isExporti
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#050505]/80 backdrop-blur-md transition-opacity p-4">
-      <div className="w-full max-w-[400px] rounded-2xl border border-[#2A2A2A] bg-[#0A0A0A] p-6 shadow-2xl">
+      <div className="w-full max-w-[400px] rounded-2xl border border-[#2C2824] bg-[#0D0B0A] p-6 shadow-2xl">
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-xl font-bold tracking-tight text-white">Export & Download</h2>
           <button onClick={onClose} className="text-[#8E8E8E] hover:text-white transition-colors" disabled={isExporting}>
@@ -29,7 +29,7 @@ export default function SingleExportModal({ isOpen, onClose, onExport, isExporti
         <div className="mb-6">
           <div className="mb-3 text-xs font-medium uppercase tracking-widest text-[#8E8E8E]">1. Format</div>
           <div className="flex flex-col gap-2">
-            <label className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors ${format === "wav" ? "border-[#E5A93D] bg-[#E5A93D]/5" : "border-[#2A2A2A] bg-[#121212] hover:border-[#444444]"}`}>
+            <label className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors ${format === "wav" ? "border-[#E5A93D] bg-[#E5A93D]/5" : "border-[#2C2824] bg-[#161412] hover:border-[#444444]"}`}>
               <input
                 type="radio"
                 name="single_format"
@@ -40,7 +40,7 @@ export default function SingleExportModal({ isOpen, onClose, onExport, isExporti
               />
               <span className="text-sm font-medium text-white">WAV <span className="text-xs text-[#8E8E8E] font-normal">(Lossless)</span></span>
             </label>
-            <label className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors ${format === "mp3" ? "border-[#E5A93D] bg-[#E5A93D]/5" : "border-[#2A2A2A] bg-[#121212] hover:border-[#444444]"}`}>
+            <label className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors ${format === "mp3" ? "border-[#E5A93D] bg-[#E5A93D]/5" : "border-[#2C2824] bg-[#161412] hover:border-[#444444]"}`}>
               <input
                 type="radio"
                 name="single_format"
@@ -58,11 +58,11 @@ export default function SingleExportModal({ isOpen, onClose, onExport, isExporti
         <button
           onClick={() => onExport(format)}
           disabled={isExporting}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[#E5A93D] to-[#D6962A] px-4 py-3.5 font-bold text-[#0A0A0A] transition-all hover:shadow-[0_0_20px_rgba(229,169,61,0.3)] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[#E5A93D] to-[#D6962A] px-4 py-3.5 font-bold text-[#0D0B0A] transition-all hover:shadow-[0_0_20px_rgba(229,169,61,0.3)] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isExporting ? (
             <>
-              <svg className="h-5 w-5 animate-spin text-[#0A0A0A]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <svg className="h-5 w-5 animate-spin text-[#0D0B0A]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>

@@ -30,16 +30,16 @@ const AUTO_EQ_MODEL_OPTIONS = [
 // ===== Skeleton Components สำหรับแสดงสถานะกำลังประมวลผล (Processing State) =====
 function AudioAnalysisSkeleton() {
   return (
-    <div className="rounded-xl border border-[#2A2A2A] bg-[#121212] p-5 shadow-lg animate-pulse">
+    <div className="rounded-xl border border-[#2C2824] bg-[#161412] p-5 shadow-lg animate-pulse">
       <div className="flex items-center gap-2 mb-4">
-        <div className="h-5 w-28 bg-[#2A2A2A] rounded"></div>
-        <div className="h-5 w-24 bg-[#2A2A2A] rounded opacity-50"></div>
+        <div className="h-5 w-28 bg-[#2C2824] rounded"></div>
+        <div className="h-5 w-24 bg-[#2C2824] rounded opacity-50"></div>
       </div>
       <div className="grid grid-cols-3 gap-4 text-center">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="rounded-lg bg-[#1A1A1A] p-3 border border-[#2A2A2A] space-y-2 flex flex-col items-center">
-            <div className="h-3 w-10 bg-[#2A2A2A] rounded"></div>
-            <div className="h-6 w-16 bg-[#2A2A2A] rounded"></div>
+          <div key={i} className="rounded-lg bg-[#1E1B18] p-3 border border-[#2C2824] space-y-2 flex flex-col items-center">
+            <div className="h-3 w-10 bg-[#2C2824] rounded"></div>
+            <div className="h-6 w-16 bg-[#2C2824] rounded"></div>
           </div>
         ))}
       </div>
@@ -49,33 +49,33 @@ function AudioAnalysisSkeleton() {
 
 function StemMixerSkeleton() {
   return (
-    <div className="rounded-xl border border-[#2A2A2A] bg-[#121212] p-5 shadow-lg animate-pulse space-y-4">
+    <div className="rounded-xl border border-[#2C2824] bg-[#161412] p-5 shadow-lg animate-pulse space-y-4">
       <div className="flex items-center justify-between">
-        <div className="h-5 w-32 bg-[#2A2A2A] rounded"></div>
+        <div className="h-5 w-32 bg-[#2C2824] rounded"></div>
         <div className="flex gap-2">
-          <div className="h-8 w-24 bg-[#2A2A2A] rounded-lg"></div>
-          <div className="h-8 w-20 bg-[#2A2A2A] rounded-lg"></div>
+          <div className="h-8 w-24 bg-[#2C2824] rounded-lg"></div>
+          <div className="h-8 w-20 bg-[#2C2824] rounded-lg"></div>
         </div>
       </div>
       <div className="space-y-3">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="rounded-xl border border-[#2A2A2A] bg-[#1A1A1A] p-3 space-y-3">
+          <div key={i} className="rounded-xl border border-[#2C2824] bg-[#1E1B18] p-3 space-y-3">
             <div className="flex justify-between items-center">
               <div className="space-y-1.5">
-                <div className="h-4 w-16 bg-[#2A2A2A] rounded"></div>
-                <div className="h-3 w-28 bg-[#2A2A2A] rounded opacity-60"></div>
+                <div className="h-4 w-16 bg-[#2C2824] rounded"></div>
+                <div className="h-3 w-28 bg-[#2C2824] rounded opacity-60"></div>
               </div>
               <div className="flex gap-2">
-                <div className="h-6 w-16 bg-[#2A2A2A] rounded-lg"></div>
-                <div className="h-6 w-12 bg-[#2A2A2A] rounded-lg"></div>
+                <div className="h-6 w-16 bg-[#2C2824] rounded-lg"></div>
+                <div className="h-6 w-12 bg-[#2C2824] rounded-lg"></div>
               </div>
             </div>
-            <div className="h-14 w-full bg-[#121212] rounded border border-[#2A2A2A] opacity-80 flex items-center px-3">
-              <div className="h-2 w-12 bg-[#2A2A2A] rounded mr-3"></div>
-              <div className="h-1.5 flex-grow bg-[#2A2A2A] rounded"></div>
-              <div className="h-4 w-10 bg-[#2A2A2A] rounded ml-3"></div>
+            <div className="h-14 w-full bg-[#161412] rounded border border-[#2C2824] opacity-80 flex items-center px-3">
+              <div className="h-2 w-12 bg-[#2C2824] rounded mr-3"></div>
+              <div className="h-1.5 flex-grow bg-[#2C2824] rounded"></div>
+              <div className="h-4 w-10 bg-[#2C2824] rounded ml-3"></div>
             </div>
-            <div className="h-10 w-full bg-[#121212] rounded border border-[#2A2A2A] opacity-40"></div>
+            <div className="h-10 w-full bg-[#161412] rounded border border-[#2C2824] opacity-40"></div>
           </div>
         ))}
       </div>
@@ -85,11 +85,11 @@ function StemMixerSkeleton() {
 
 function SinglePlayerSkeleton() {
   return (
-    <div className="rounded-xl border border-[#2A2A2A] bg-[#121212] p-5 shadow-lg animate-pulse space-y-4">
+    <div className="rounded-xl border border-[#2C2824] bg-[#161412] p-5 shadow-lg animate-pulse space-y-4">
       <div className="h-12 w-full bg-[#E5A93D]/10 rounded-lg border border-[#E5A93D]/20 flex items-center justify-center">
         <div className="h-4 w-40 bg-[#E5A93D]/30 rounded"></div>
       </div>
-      <div className="h-24 w-full bg-[#1A1A1A] rounded-lg border border-[#2A2A2A] opacity-60"></div>
+      <div className="h-24 w-full bg-[#1E1B18] rounded-lg border border-[#2C2824] opacity-60"></div>
     </div>
   );
 }
@@ -243,14 +243,14 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
   };
 
   return (
-    <div className={`p-6 text-[#F3F3F3] transition-all duration-500 ${!file ? "flex flex-col items-center justify-center min-h-[50vh]" : "grid gap-6 lg:grid-cols-12"}`}>
+    <div className={`p-6 text-[#F5F0EB] transition-all duration-500 ${!file ? "flex flex-col items-center justify-center min-h-[50vh]" : "grid gap-6 lg:grid-cols-12"}`}>
       {!file ? (
         <div className="w-full max-w-3xl text-center space-y-6">
-          <h2 className="text-3xl font-bold tracking-tight text-[#F3F3F3]">Upload Audio</h2>
+          <h2 className="text-3xl font-bold tracking-tight text-[#F5F0EB]">Upload Audio</h2>
           <p className="text-[#8E8E8E] font-medium">Select or drag & drop a WAV file (up to 100MB)</p>
           <label
             className={`mt-6 mx-auto flex h-64 max-w-2xl cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed transition-all
-            ${isDragging ? "border-[#E5A93D] bg-[#E5A93D]/10" : "border-[#2A2A2A] bg-[#121212] hover:border-[#E5A93D]/50 hover:bg-[#1A1A1A]"}`}
+            ${isDragging ? "border-[#E5A93D] bg-[#E5A93D]/10" : "border-[#2C2824] bg-[#161412] hover:border-[#E5A93D]/50 hover:bg-[#1E1B18]"}`}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             onDragEnter={handleDragOver}
@@ -262,8 +262,8 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
               className="hidden"
               onChange={(e) => handleFileSelect(e.target.files?.[0] || null)}
             />
-            <div className="text-lg font-medium text-[#F3F3F3]">Click to browse or drag file here</div>
-            <div className="mt-2 text-sm text-[#555555]">.wav only</div>
+            <div className="text-lg font-medium text-[#F5F0EB]">Click to browse or drag file here</div>
+            <div className="mt-2 text-sm text-[#5C5854]">.wav only</div>
           </label>
           {errorMessage && (
             <div className="rounded-lg bg-red-900/30 border border-red-900/50 p-3 text-sm text-red-400 max-w-xl mx-auto">
@@ -274,19 +274,19 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
       ) : (
         <>
           <div className="space-y-4 lg:col-span-4">
-            <div className="rounded-xl border border-[#2A2A2A] bg-[#121212] p-4 shadow-lg">
+            <div className="rounded-xl border border-[#2C2824] bg-[#161412] p-4 shadow-lg">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-medium text-[#8E8E8E] uppercase tracking-wider mb-1">Source File</p>
-                  <h2 className="text-lg font-semibold text-[#F3F3F3] truncate max-w-[200px] sm:max-w-[300px]">{file.name}</h2>
+                  <h2 className="text-lg font-semibold text-[#F5F0EB] truncate max-w-[200px] sm:max-w-[300px]">{file.name}</h2>
                 </div>
                 <button 
                   onClick={() => handleFileSelect(null)}
                   disabled={loading}
-                  className={`text-xs px-3 py-1.5 rounded bg-[#1A1A1A] border border-[#2A2A2A] text-[#8E8E8E] transition ${
+                  className={`text-xs px-3 py-1.5 rounded bg-[#1E1B18] border border-[#2C2824] text-[#8E8E8E] transition ${
                     loading 
                       ? "opacity-50 cursor-not-allowed" 
-                      : "hover:text-[#F3F3F3] hover:border-[#8E8E8E] cursor-pointer"
+                      : "hover:text-[#F5F0EB] hover:border-[#8E8E8E] cursor-pointer"
                   }`}
                 >
                   Change File
@@ -308,8 +308,8 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                     : action === "compressor" ? "bg-[#E5A93D] shadow-[0_0_5px_rgba(229,169,61,0.5)]"
                     : "bg-[#34D399] shadow-[0_0_5px_rgba(52,211,153,0.5)]"
                 }`} />
-                <p className="text-[10px] font-semibold text-[#555555] uppercase tracking-[0.15em]">Processing Module</p>
-                <div className="ml-auto text-[10px] font-mono text-[#333333]">
+                <p className="text-[10px] font-semibold text-[#5C5854] uppercase tracking-[0.15em]">Processing Module</p>
+                <div className="ml-auto text-[10px] font-mono text-[#36322E]">
                   {loading ? "RUNNING" : "STANDBY"}
                 </div>
               </div>
@@ -317,7 +317,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
               <div className="p-4 space-y-4">
 
                 {/* ── Tab selector: console-style ── */}
-                <div className="grid grid-cols-2 gap-1.5 p-1 rounded-lg bg-[#080808] border border-[#1A1A1A]">
+                <div className="grid grid-cols-2 gap-1.5 p-1 rounded-lg bg-[#080808] border border-[#1E1B18]">
                   {([
                     { value: "separate", label: "Stem Separation", icon: "⊗", activeColor: "text-[#A78BFA] border-[#A78BFA]/60 bg-[#A78BFA]/10 shadow-[0_0_12px_rgba(167,139,250,0.15)]" },
                     { value: "eq-ai",    label: "Auto EQ (AI)",    icon: "⟿", activeColor: "text-[#22D3EE] border-[#22D3EE]/60 bg-[#22D3EE]/10 shadow-[0_0_12px_rgba(34,211,238,0.15)]" },
@@ -361,7 +361,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                 {/* Genre Profile (เฉพาะ EQ / Compressor) */}
                 {(action === "eq-ai" || action === "compressor") && (
                   <div>
-                    <label className="block text-[10px] font-semibold text-[#555555] uppercase tracking-[0.12em] mb-1.5">Genre Profile</label>
+                    <label className="block text-[10px] font-semibold text-[#5C5854] uppercase tracking-[0.12em] mb-1.5">Genre Profile</label>
                     <select
                       value={genre}
                       onChange={(e) => setGenre(e.target.value)}
@@ -423,16 +423,16 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                 )}
 
                 {/* ── Trimming ── */}
-                <div className="rounded-lg border border-[#1A1A1A] bg-[#080808] p-3 space-y-3">
+                <div className="rounded-lg border border-[#1E1B18] bg-[#080808] p-3 space-y-3">
                   <label className="flex items-center gap-2.5 cursor-pointer select-none group">
                     {/* Custom checkbox */}
                     <span className={`w-4 h-4 rounded flex-shrink-0 border transition-all duration-150 flex items-center justify-center ${
-                      isTrimming ? "bg-[#E5A93D] border-[#E5A93D]" : "border-[#333333] bg-transparent group-hover:border-[#555555]"
+                      isTrimming ? "bg-[#E5A93D] border-[#E5A93D]" : "border-[#36322E] bg-transparent group-hover:border-[#5C5854]"
                     }`}
                       onClick={() => !loading && setIsTrimming(!isTrimming)}
                     >
                       {isTrimming && (
-                        <svg className="w-2.5 h-2.5 text-[#0A0A0A]" viewBox="0 0 10 10" fill="none">
+                        <svg className="w-2.5 h-2.5 text-[#0D0B0A]" viewBox="0 0 10 10" fill="none">
                           <path d="M1.5 5L4 7.5L8.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
                       )}
@@ -443,19 +443,19 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                   {isTrimming && (
                     <div className="grid grid-cols-2 gap-2 pl-6">
                       <div>
-                        <label className="block text-[10px] text-[#555555] mb-1">เริ่ม (วินาที)</label>
+                        <label className="block text-[10px] text-[#5C5854] mb-1">เริ่ม (วินาที)</label>
                         <input
                           type="number" min="0" value={trimStart}
                           onChange={(e) => setTrimStart(e.target.value)} disabled={loading}
-                          className="w-full rounded-md bg-[#111111] border border-[#2A2A2A] px-2.5 py-1.5 text-sm text-[#E0E0E0] focus:border-[#E5A93D]/50 focus:outline-none transition"
+                          className="w-full rounded-md bg-[#111111] border border-[#2C2824] px-2.5 py-1.5 text-sm text-[#E0E0E0] focus:border-[#E5A93D]/50 focus:outline-none transition"
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] text-[#555555] mb-1">สิ้นสุด (วินาที)</label>
+                        <label className="block text-[10px] text-[#5C5854] mb-1">สิ้นสุด (วินาที)</label>
                         <input
                           type="number" min="1" value={trimEnd}
                           onChange={(e) => setTrimEnd(e.target.value)} disabled={loading}
-                          className="w-full rounded-md bg-[#111111] border border-[#2A2A2A] px-2.5 py-1.5 text-sm text-[#E0E0E0] focus:border-[#E5A93D]/50 focus:outline-none transition"
+                          className="w-full rounded-md bg-[#111111] border border-[#2C2824] px-2.5 py-1.5 text-sm text-[#E0E0E0] focus:border-[#E5A93D]/50 focus:outline-none transition"
                         />
                       </div>
                     </div>
@@ -481,7 +481,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                       data-testid="process-button"
                       className={`relative w-full rounded-lg py-3.5 text-sm font-bold tracking-widest uppercase overflow-hidden transition-all duration-300 ${
                         isDisabled
-                          ? "bg-[#1A1A1A] text-[#333333] cursor-not-allowed border border-[#222222]"
+                          ? "bg-[#1E1B18] text-[#36322E] cursor-not-allowed border border-[#222222]"
                           : `bg-gradient-to-r ${moduleStyle.base} text-white cursor-pointer`
                       }`}
                       style={!isDisabled ? { boxShadow: loading ? `0 0 20px ${moduleStyle.glow}` : `0 0 10px ${moduleStyle.glow}` } : {}}
@@ -511,7 +511,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                 <div className="space-y-2">
                   <div className="flex flex-col gap-1.5 w-full">
                     {/* Indeterminate progress bar — เคลื่อนที่ไปมาไม่แสดง % */}
-                    <div className="w-full h-1.5 overflow-hidden rounded-full bg-[#111111] border border-[#1A1A1A]">
+                    <div className="w-full h-1.5 overflow-hidden rounded-full bg-[#111111] border border-[#1E1B18]">
                       <div 
                         className={`h-full rounded-full transition-all ${
                           action === "separate" ? "bg-gradient-to-r from-[#A78BFA] via-[#C084FC] to-[#A78BFA]" 
@@ -523,7 +523,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                       />
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-[11px] text-[#555555]">
+                      <span className="text-[11px] text-[#5C5854]">
                         {statusText || (loading ? "กำลังประมวลผล..." : "พร้อมใช้งาน")}
                       </span>
                       {/* ไม่แสดง % ปลอมอีกต่อไป */}
@@ -594,7 +594,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                     {fileId && (
                       <button
                         onClick={() => setIsExportModalOpen(true)}
-                        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[#E5A93D] to-[#D6962A] px-4 py-3.5 font-bold text-[#0A0A0A] shadow-[0_4px_15px_rgba(229,169,61,0.2)] transition-all hover:shadow-[0_6px_25px_rgba(229,169,61,0.35)] hover:from-[#F3C05D] hover:to-[#E5A93D]"
+                        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[#E5A93D] to-[#D6962A] px-4 py-3.5 font-bold text-[#0D0B0A] shadow-[0_4px_15px_rgba(229,169,61,0.2)] transition-all hover:shadow-[0_6px_25px_rgba(229,169,61,0.35)] hover:from-[#F3C05D] hover:to-[#E5A93D]"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -605,7 +605,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                     {fileId && (
                       <button
                         onClick={handleKaraokeDownload}
-                        className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl border border-[#2A2A2A] bg-[#121212] px-4 py-3.5 font-semibold text-white shadow-[0_4px_15px_rgba(0,0,0,0.2)] transition-all hover:border-[#E5A93D]/50 hover:text-[#E5A93D] hover:bg-[#1A1A1A]"
+                        className="cursor-pointer flex w-full items-center justify-center gap-2 rounded-xl border border-[#2C2824] bg-[#161412] px-4 py-3.5 font-semibold text-white shadow-[0_4px_15px_rgba(0,0,0,0.2)] transition-all hover:border-[#E5A93D]/50 hover:text-[#E5A93D] hover:bg-[#1E1B18]"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 opacity-70" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.938l3-8V5a1 1 0 00-1-1H4a1 1 0 00-1 1v1.938l3 8V17a3 3 0 006 0v-2.062z" clipRule="evenodd" />
@@ -617,13 +617,13 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                 )}
 
                 {downloadUrl && downloadFileName && !downloadFileName.endsWith(".zip") && (
-                  <div className="rounded-2xl border border-[#222] bg-[#0A0A0A] p-5 space-y-5 shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
+                  <div className="rounded-2xl border border-[#222] bg-[#0D0B0A] p-5 space-y-5 shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
                     <div>
                       <WaveformPlayer audioUrl={downloadUrl} />
                     </div>
                     <button
                       onClick={() => setIsSingleExportModalOpen(true)}
-                      className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[#E5A93D] to-[#D6962A] px-4 py-3.5 font-bold text-[#0A0A0A] shadow-[0_4px_15px_rgba(229,169,61,0.2)] transition-all hover:shadow-[0_6px_25px_rgba(229,169,61,0.35)] hover:from-[#F3C05D] hover:to-[#E5A93D]"
+                      className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[#E5A93D] to-[#D6962A] px-4 py-3.5 font-bold text-[#0D0B0A] shadow-[0_4px_15px_rgba(229,169,61,0.2)] transition-all hover:shadow-[0_6px_25px_rgba(229,169,61,0.35)] hover:from-[#F3C05D] hover:to-[#E5A93D]"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />

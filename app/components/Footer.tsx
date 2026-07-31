@@ -48,7 +48,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#555555]">
+        <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#5C5854]">
           <p>© {new Date().getFullYear()} HarmoniQ Inc. All rights reserved.</p>
           <div className="flex items-center gap-1.5 text-[#777777]">
             <span></span>
