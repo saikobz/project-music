@@ -151,7 +151,6 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
   const [analysis, setAnalysis] = useState<{ tempo: number; key: string; pitch: string | null } | null>(null);
   const [statusText, setStatusText] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
-  const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const handleExport = async (exportType: string, format: string, targetLufs: number, selectedStems: string[]) => {
@@ -248,9 +247,6 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
-      if (progressTimerRef.current) {
-        clearInterval(progressTimerRef.current);
-      }
     };
   }, []);
 
@@ -337,23 +333,13 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
     setSuccessMessage(null);
     setAnalysis(null);
     setStatusText("กำลังอัปโหลดและประมวลผล...");
+    // แสดง indeterminate progress animation ระหว่างรอ backend ประมวลผล
     setProgress(0);
-    if (progressTimerRef.current) {
-      clearInterval(progressTimerRef.current);
-    }
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
     abortControllerRef.current = new AbortController();
     const signal = abortControllerRef.current.signal;
-
-    // ทำ progress แบบจำลองไว้ก่อน เพราะ backend ไม่ได้ส่งสถานะระหว่างประมวลผลกลับมา
-    progressTimerRef.current = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 90) return prev; // หยุดไว้ที่ 90% แล้วรอผลจริงจาก backend
-        return prev + 2;
-      });
-    }, 200);
 
     const formData = new FormData();
     formData.append("file", file);
@@ -529,10 +515,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
       setStatusText(null);
       setProgress(100);
     } finally {
-      if (progressTimerRef.current) {
-        clearInterval(progressTimerRef.current);
-        progressTimerRef.current = null;
-      }
+      setProgress(0);
       setLoading(false);
     }
   };
@@ -842,44 +825,29 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
 
                 {/* ── Progress + Status ── */}
                 <div className="space-y-2">
-                  {/* Segmented meter bar */}
-                  <div className="flex gap-px h-1.5 w-full overflow-hidden rounded-full bg-[#111111] border border-[#1A1A1A]">
-                    {Array.from({ length: 20 }).map((_, i) => {
-                      // แต่ละ segment จะสว่างถ้า progress เกิน threshold
-                      const threshold = ((i + 1) / 20) * 100;
-                      const lit = progress >= threshold;
-                      
-                      let segClass = "bg-[#1C1C1C]";
-                      if (lit) {
-                        if (loading) {
-                          const gradientColors = action === "separate" ? "from-[#A78BFA] via-[#C084FC] to-[#A78BFA]"
-                            : action === "eq-ai" ? "from-[#22D3EE] via-[#67e8f9] to-[#22D3EE]"
-                            : action === "compressor" ? "from-[#E5A93D] via-[#FBBF24] to-[#E5A93D]"
-                            : "from-[#34D399] via-[#6EE7B7] to-[#34D399]";
-                          segClass = `bg-gradient-to-r ${gradientColors} bg-[length:200%_auto] animate-shimmer`;
-                        } else {
-                          const flatColor = action === "separate" ? "bg-[#A78BFA]"
-                            : action === "eq-ai" ? "bg-[#22D3EE]"
-                            : action === "compressor" ? "bg-[#E5A93D]"
-                            : "bg-[#34D399]";
-                          segClass = `${flatColor} ${i > 15 ? "opacity-100" : i > 10 ? "opacity-90" : "opacity-80"}`;
-                        }
-                      }
-                      return (
-                        <div
-                          key={i}
-                          className={`flex-1 transition-all duration-150 ${segClass}`}
-                        />
-                      );
-                    })}
+                  <div className="flex flex-col gap-1.5 w-full">
+                    {/* Indeterminate progress bar — เคลื่อนที่ไปมาไม่แสดง % */}
+                    <div className="w-full h-1.5 overflow-hidden rounded-full bg-[#111111] border border-[#1A1A1A]">
+                      <div 
+                        className={`h-full rounded-full transition-all ${
+                          action === "separate" ? "bg-gradient-to-r from-[#A78BFA] via-[#C084FC] to-[#A78BFA]" 
+                          : action === "eq-ai" ? "bg-gradient-to-r from-[#22D3EE] via-[#67e8f9] to-[#22D3EE]"
+                          : action === "compressor" ? "bg-gradient-to-r from-[#E5A93D] via-[#FBBF24] to-[#E5A93D]"
+                          : "bg-gradient-to-r from-[#34D399] via-[#6EE7B7] to-[#34D399]"
+                        } bg-[length:200%_auto] animate-shimmer`}
+                        style={{ width: "60%" }}
+                      />
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[11px] text-[#555555]">
+                        {statusText || (loading ? "กำลังประมวลผล..." : "พร้อมใช้งาน")}
+                      </span>
+                      {/* ไม่แสดง % ปลอมอีกต่อไป */}
+                    </div>
+                    {processingTime && (
+                      <div className="text-[11px] text-[#444444] font-mono">⏱ {processingTime}</div>
+                    )}
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[11px] text-[#555555]">{statusText || (loading ? "Processing…" : "Ready")}</span>
-                    <span className="text-[11px] font-mono text-[#444444]">{progress}%</span>
-                  </div>
-                  {processingTime && (
-                    <div className="text-[11px] text-[#444444] font-mono">⏱ {processingTime}</div>
-                  )}
                 </div>
 
                 {/* ── Error / Success ── */}
