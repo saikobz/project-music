@@ -21,7 +21,9 @@ function SignInForm() {
   useEffect(() => {
     if (urlError) {
       if (urlError === "OAuthSignin") {
-        setError("ระบบ Social Login กำลังรอใส่ Client ID / Secret ของผู้ให้บริการ");
+        setError(
+          "ไม่สามารถเชื่อมต่อกับผู้ให้บริการ (Google/Facebook/LINE) ได้ กรุณาลองใหม่อีกครั้ง — หากยังคงเกิดซ้ำ ให้ตรวจสอบ Client ID/Secret และ Redirect URI ในการตั้งค่าของผู้ให้บริการ"
+        );
       } else if (urlError === "CredentialsSignin") {
         setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
       } else {

@@ -10,7 +10,6 @@ import UserMenu from "./UserMenu";
 const NAV_LINKS = [
   { href: "/studio", label: "Studio Workspace" },
   { href: "/pricing", label: "Pricing & Plans" },
-  { href: "/dashboard/history", label: "History" },
   { href: "/guide", label: "Guide" },
   { href: "/models", label: "AI Models" },
   { href: "/about", label: "About" },

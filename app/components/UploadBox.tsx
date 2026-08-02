@@ -23,8 +23,8 @@ const AUTO_EQ_DELTA_CLAMP_MAX = 6;
 const AUTO_EQ_DELTA_CLAMP_DEFAULT = 2;
 const AUTO_EQ_MODEL_DEFAULT = "lstm-last";
 const AUTO_EQ_MODEL_OPTIONS = [
-  { value: "cnn-v1", label: "CNN", hint: "โหมดเดิมของโปรเจกต์" },
-  { value: "lstm-last", label: "LSTM", hint: "โมเดลใหม่แบบ sequence-aware" },
+  { value: "cnn-v1", label: "CNN", hint: "โหมดเดิมของโปรเจกต์", locked: false },
+  { value: "lstm-last", label: "LSTM", hint: "โมเดลใหม่แบบ sequence-aware", locked: false },
 ];
 
 // ===== Skeleton Components สำหรับแสดงสถานะกำลังประมวลผล (Processing State) =====
@@ -145,6 +145,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
     handleExport,
     handleSingleExport,
     handleKaraokeDownload,
+    userTier,
   } = useAudioProcessor({
     file,
     action,
@@ -231,6 +232,20 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
 
   const selectedAutoEqModel =
     AUTO_EQ_MODEL_OPTIONS.find((option) => option.value === autoEqModel) ?? AUTO_EQ_MODEL_OPTIONS[0];
+
+  // FREE plan ใช้โมเดล CNN ไม่ได้ (backend ล็อก 403) — ล็อก option ใน UI + บังคับเปลี่ยนกลับเป็น LSTM
+  const isFreeTier = userTier === "FREE";
+  const modelOptions = AUTO_EQ_MODEL_OPTIONS.map((opt) =>
+    isFreeTier && opt.value === "cnn-v1"
+      ? { ...opt, locked: true, hint: "เฉพาะสมาชิก Basic / Pro — อัปเกรดเพื่อปลดล็อก" }
+      : opt
+  );
+
+  React.useEffect(() => {
+    if (isFreeTier && autoEqModel === "cnn-v1") {
+      setAutoEqModel(AUTO_EQ_MODEL_DEFAULT);
+    }
+  }, [isFreeTier, autoEqModel]);
 
   const handleDragOver = (e: React.DragEvent<HTMLLabelElement>) => {
     e.preventDefault();
@@ -390,7 +405,7 @@ function UploadBox({ onHeightChange }: UploadBoxProps) {
                       deltaClampDb={deltaClampDb}
                       setDeltaClampDb={setDeltaClampDb}
                       loading={loading}
-                      modelOptions={AUTO_EQ_MODEL_OPTIONS}
+                      modelOptions={modelOptions}
                       minDeltaClamp={AUTO_EQ_DELTA_CLAMP_MIN}
                       maxDeltaClamp={AUTO_EQ_DELTA_CLAMP_MAX}
                       defaultDeltaClamp={AUTO_EQ_DELTA_CLAMP_DEFAULT}

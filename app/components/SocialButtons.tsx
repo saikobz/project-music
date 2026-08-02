@@ -34,21 +34,21 @@ export default function SocialButtons() {
   return (
     <div className="space-y-2">
       <button
-        onClick={() => signIn("google")}
+        onClick={() => signIn("google", { callbackUrl: "/" })}
         className="w-full py-2 bg-[#1E1B18] hover:bg-[#2C2824] border border-[#36322E] text-white text-xs font-semibold rounded-lg flex items-center justify-center gap-2 transition cursor-pointer"
       >
         <GoogleIcon />
         Continue with Google
       </button>
       <button
-        onClick={() => signIn("facebook")}
+        onClick={() => signIn("facebook", { callbackUrl: "/" })}
         className="w-full py-2 bg-[#1E1B18] hover:bg-[#2C2824] border border-[#36322E] text-white text-xs font-semibold rounded-lg flex items-center justify-center gap-2 transition cursor-pointer"
       >
         <FacebookIcon />
         Continue with Facebook
       </button>
       <button
-        onClick={() => signIn("line")}
+        onClick={() => signIn("line", { callbackUrl: "/" })}
         className="w-full py-2 bg-[#1E1B18] hover:bg-[#2C2824] border border-[#36322E] text-white text-xs font-semibold rounded-lg flex items-center justify-center gap-2 transition cursor-pointer"
       >
         <LineIcon />

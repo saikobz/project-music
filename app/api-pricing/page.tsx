@@ -17,7 +17,7 @@ const PLANS = [
     features: [
       "อัปโหลดไฟล์ WAV สูงสุด 100 MB",
       "Stem Separation (4 แทร็ก)",
-      "Auto EQ (CNN + LSTM)",
+      "Auto EQ (โมเดล LSTM)",
       "Compressor & Pitch Shift",
       "Export WAV / MP3",
       "ไม่มีบัญชี ไม่ต้องล็อกอิน",

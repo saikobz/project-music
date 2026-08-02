@@ -5,7 +5,7 @@
  *
  * @jest-environment node
  */
-jest.mock("@auth/prisma-adapter", () => ({
+jest.mock("@next-auth/prisma-adapter", () => ({
   PrismaAdapter: jest.fn(),
 }));
 

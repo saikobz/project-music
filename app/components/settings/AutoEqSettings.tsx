@@ -6,7 +6,7 @@ interface AutoEqSettingsProps {
   deltaClampDb: string;
   setDeltaClampDb: (val: string) => void;
   loading: boolean;
-  modelOptions: Array<{ value: string; label: string; hint: string }>;
+  modelOptions: Array<{ value: string; label: string; hint: string; locked?: boolean }>;
   minDeltaClamp: number;
   maxDeltaClamp: number;
   defaultDeltaClamp: number;
@@ -40,12 +40,15 @@ export const AutoEqSettings: React.FC<AutoEqSettingsProps> = ({
           disabled={loading}
         >
           {modelOptions.map((option) => (
-            <option key={option.value} value={option.value}>
+            <option key={option.value} value={option.value} disabled={option.locked}>
               {option.label}
+              {option.locked ? " — อัปเกรดเพื่อปลดล็อก" : ""}
             </option>
           ))}
         </select>
-        <p className="mt-1 text-xs text-[#A78BFA]">{selectedModel?.hint}</p>
+        <p className={`mt-1 text-xs ${selectedModel?.locked ? "text-[#5C5854]" : "text-[#A78BFA]"}`}>
+          {selectedModel?.locked ? `🔒 ${selectedModel.hint}` : selectedModel?.hint}
+        </p>
       </div>
       <div className="flex items-center justify-between gap-3">
         <label className="block text-sm mb-1">Delta Clamp (dB)</label>

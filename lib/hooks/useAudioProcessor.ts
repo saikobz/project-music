@@ -546,5 +546,7 @@ export function useAudioProcessor({
     handleSingleExport,
     handleKaraokeDownload,
     saveHistory,
+    // tier ของผู้ใช้ (ใช้กรองฟีเจอร์ใน UI เช่น CNN model)
+    userTier,
   };
 }

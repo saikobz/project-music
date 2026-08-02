@@ -1,5 +1,5 @@
 import { NextAuthOptions, getServerSession, type Session } from "next-auth";
-import { PrismaAdapter } from "@auth/prisma-adapter";
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import GoogleProvider from "next-auth/providers/google";
 import FacebookProvider from "next-auth/providers/facebook";
 import LineProvider from "next-auth/providers/line";
@@ -91,6 +91,12 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: "/auth/signin",
   },
+  logger: {
+    // ดีบั๊ก OAuth error: แสดง code + message จริงของ NextAuth (ไม่ใช่แค่ error generic)
+    error(code, ...message) {
+      console.error("NextAuth error:", code, ...message);
+    },
+  },
   providers: [
     CredentialsProvider({
       id: "credentials",
@@ -111,9 +117,10 @@ export const authOptions: NextAuthOptions = {
       clientId: process.env.FACEBOOK_CLIENT_ID || "",
       clientSecret: process.env.FACEBOOK_CLIENT_SECRET || "",
       authorization: {
-        // L7: ต้องขอ scope email ด้วย (เดิม scope แค่ public_profile -> ได้ email ปลอม fb_*@facebook.local
-        // ทำให้ notification/การผูกบัญชีผิดพลาด)
-        params: { scope: "public_profile,email" },
+        // L7: ขอแค่ public_profile — อย่าขอ scope email เพราะ Facebook ปฏิเสธ
+        // (ต้องผ่าน App Review) ทำให้ login ผ่านไม่ได้
+        // email ที่ได้มาเป็น null จะใช้ fallback fb_{id}@facebook.local ใน profile() แทน
+        params: { scope: "public_profile" },
       },
       profile(profile) {
         return {
