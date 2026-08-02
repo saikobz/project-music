@@ -54,7 +54,7 @@ export default function FaqSection() {
                 key={i}
                 className={`rounded-xl border transition-all ${
                   isOpen
-                    ? "bg-[#1E1B18] border-purple-500/20"
+                    ? "bg-[#1E1B18] border-[#F97316]/20"
                     : "bg-[#161412] border-[#1E1E1E] hover:border-[#2C2824]"
                 }`}
               >

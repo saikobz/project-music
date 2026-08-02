@@ -18,7 +18,7 @@ const PARAMS = [
 ];
 
 const EQ_BANDS = [
-  { range: "Sub Bass (20–80 Hz)", color: "#7C3AED", desc: "ความรู้สึก 'ฟีล' ของเบส ส่วนใหญ่รู้สึกได้มากกว่าได้ยิน ตัดออกถ้าเสียงโคลงและอ้วน" },
+  { range: "Sub Bass (20–80 Hz)", color: "#A78BFA", desc: "ความรู้สึก 'ฟีล' ของเบส ส่วนใหญ่รู้สึกได้มากกว่าได้ยิน ตัดออกถ้าเสียงโคลงและอ้วน" },
   { range: "Bass (80–250 Hz)", color: "#A78BFA", desc: "น้ำหนักของเบสและกีตาร์เบส บูสต์เพื่อความอบอุ่น คัตถ้า 'โคลน'" },
   { range: "Low-Mid (250–2000 Hz)", color: "#E5A93D", desc: "ย่านที่ทำให้เสียง 'มัว' ถ้าบูสต์มากเกิน คัตเบาๆ เพื่อความชัดเจน" },
   { range: "Upper-Mid (2000–6000 Hz)", color: "#F59E0B", desc: "ความชัดของเสียงร้องและกีตาร์ บูสต์เพื่อ Presence คัตถ้า 'แหลมแทง'" },
@@ -32,7 +32,7 @@ export default function GuidePage() {
       <Navbar />
       <main className="flex-grow mx-auto w-full max-w-5xl px-4 py-12 space-y-16">
         <header className="space-y-3">
-          <p className="text-xs font-semibold tracking-[0.2em] text-[#E5A93D] uppercase">Audio Guide</p>
+          <p className="text-xs font-semibold tracking-[0.2em] text-[#F97316] uppercase">Audio Guide</p>
           <h1 className="text-4xl font-bold tracking-tight">คู่มือการปรับแต่งเสียง</h1>
           <p className="text-[#8E8E8E] max-w-2xl leading-relaxed">
             เข้าใจหลักการ EQ และ Compressor เพื่อนำมาใช้งานใน HarmoniQ ได้อย่างถูกต้องและได้ผลลัพธ์ที่ดีที่สุด

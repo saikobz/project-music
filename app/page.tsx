@@ -32,11 +32,12 @@ const FEATURES = [
   },
 ];
 
+// Action Colors อ้างอิงจาก DESIGN.md Section 2.3 — ใช้เฉพาะใน Player/Mixer Context
 const COLOR_MAP: Record<string, { border: string; bg: string; text: string; hover: string }> = {
-  purple: { border: "border-purple-500/20", bg: "bg-purple-500/10", text: "text-purple-400", hover: "hover:border-purple-500/40" },
-  blue: { border: "border-blue-500/20", bg: "bg-blue-500/10", text: "text-blue-400", hover: "hover:border-blue-500/40" },
-  indigo: { border: "border-indigo-500/20", bg: "bg-indigo-500/10", text: "text-indigo-400", hover: "hover:border-indigo-500/40" },
-  pink: { border: "border-pink-500/20", bg: "bg-pink-500/10", text: "text-pink-400", hover: "hover:border-pink-500/40" },
+  purple: { border: "border-[#A78BFA]/20", bg: "bg-[#A78BFA]/10", text: "text-[#A78BFA]", hover: "hover:border-[#A78BFA]/40" },
+  blue:   { border: "border-[#22D3EE]/20", bg: "bg-[#22D3EE]/10", text: "text-[#22D3EE]", hover: "hover:border-[#22D3EE]/40" },
+  indigo: { border: "border-[#E5A93D]/20", bg: "bg-[#E5A93D]/10", text: "text-[#E5A93D]", hover: "hover:border-[#E5A93D]/40" },
+  pink:   { border: "border-[#34D399]/20", bg: "bg-[#34D399]/10", text: "text-[#34D399]", hover: "hover:border-[#34D399]/40" },
 };
 
 export default function Home() {
@@ -47,11 +48,11 @@ export default function Home() {
       <main className="flex-grow">
         {/* ──────── Hero Section ──────── */}
         <section className="relative overflow-hidden pt-16 pb-24 md:pt-24 md:pb-32 border-b border-[#1E1E1E]">
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-purple-600/15 blur-[120px] rounded-full pointer-events-none animate-glow-pulse" />
-          <div className="absolute top-1/3 left-1/3 w-[400px] h-[250px] bg-blue-600/10 blur-[100px] rounded-full pointer-events-none animate-glow-pulse" style={{ animationDelay: "1.5s" }} />
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-[#F97316]/10 blur-[120px] rounded-full pointer-events-none animate-glow-pulse" />
+          <div className="absolute top-1/3 left-1/3 w-[400px] h-[250px] bg-[#FB923C]/6 blur-[100px] rounded-full pointer-events-none animate-glow-pulse" style={{ animationDelay: "1.5s" }} />
 
           <div className="max-w-6xl mx-auto px-4 text-center relative z-10 space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-xs md:text-sm font-medium">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#F97316]/10 border border-[#F97316]/20 text-[#F97316] text-xs md:text-sm font-medium">
               <Sparkles className="w-4 h-4" />
               <span>Next-Generation AI Audio Separation & Mastering</span>
             </div>
@@ -59,7 +60,7 @@ export default function Home() {
             <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight max-w-4xl mx-auto">
               <span className="inline-block">แยกแทร็กเสียงดนตรี</span>{" "}
               <span className="inline-block">และมาสเตอริ่ง</span>{" "}
-              <span className="inline-block bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
+              <span className="inline-block bg-gradient-to-r from-[#F97316] via-[#FB923C] to-[#EA580C] bg-clip-text text-transparent">
                 ด้วย AI อัจฉริยะ
               </span>
             </h1>
@@ -109,7 +110,7 @@ export default function Home() {
                 const Icon = stat.icon;
                 return (
                   <div key={stat.label} className="text-center space-y-2">
-                    <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center mx-auto text-purple-400">
+                    <div className="w-10 h-10 rounded-xl bg-[#F97316]/10 border border-[#F97316]/20 flex items-center justify-center mx-auto text-[#F97316]">
                       <Icon className="w-5 h-5" />
                     </div>
                     <div className="text-2xl font-bold text-white">{stat.number}</div>
@@ -157,7 +158,7 @@ export default function Home() {
           <div className="max-w-6xl mx-auto px-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
               <div className="space-y-5">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-medium">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#F97316]/10 border border-[#F97316]/20 text-[#F97316] text-xs font-medium">
                   <Cpu className="w-4 h-4" />
                   <span>AI Model Specs</span>
                 </div>
@@ -180,9 +181,9 @@ export default function Home() {
                 </ul>
               </div>
               <div className="hidden md:flex items-center justify-center">
-                <div className="w-full max-w-sm aspect-square rounded-3xl bg-gradient-to-br from-purple-600/10 via-indigo-600/5 to-pink-600/10 border border-[#2C2824] flex items-center justify-center p-8">
+                <div className="w-full max-w-sm aspect-square rounded-3xl bg-gradient-to-br from-[#F97316]/8 via-[#F97316]/4 to-[#F97316]/8 border border-[#2C2824] flex items-center justify-center p-8">
                   <div className="text-center space-y-4">
-                    <BrainCircuit className="w-16 h-16 text-purple-400 mx-auto opacity-60" />
+                    <BrainCircuit className="w-16 h-16 text-[#F97316] mx-auto opacity-50" />
                     <p className="text-xs text-[#5C5854] font-mono">Open-Unmix v2.1 · PyTorch Backend</p>
                   </div>
                 </div>

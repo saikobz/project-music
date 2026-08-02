@@ -18,7 +18,7 @@ export default function PricingPage() {
 
       <main className="flex-grow mx-auto w-full max-w-5xl px-4 py-16">
         <div className="text-center mb-12 space-y-3">
-          <p className="text-xs font-semibold tracking-[0.2em] text-[#34D399] uppercase">Subscription Plans</p>
+          <p className="text-xs font-semibold tracking-[0.2em] text-[#F97316] uppercase">Subscription Plans</p>
           <h1 className="text-4xl font-extrabold tracking-tight"> HarmoniQ Plans & Pricing</h1>
           <p className="text-[#8E8E8E] max-w-2xl mx-auto text-sm leading-relaxed">
             เลือกแพ็กเกจที่เหมาะสำหรับการแยกแทร็กเสียง, AI AutoEQ, Compressor และ Pitch Shifting
@@ -55,8 +55,8 @@ export default function PricingPage() {
           </div>
 
           {/* Basic Plan */}
-          <div className="bg-[#161412] border border-[#34D399]/40 rounded-2xl p-6 flex flex-col justify-between relative shadow-lg shadow-[#34D399]/5">
-            <span className="absolute -top-3 right-6 bg-[#34D399] text-[#0D0B0A] text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full">
+          <div className="bg-[#161412] border border-[#F97316]/40 rounded-2xl p-6 flex flex-col justify-between relative shadow-lg shadow-[#F97316]/5">
+            <span className="absolute -top-3 right-6 bg-[#F97316] text-[#0D0B0A] text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full">
               Popular
             </span>
             <div>
@@ -86,17 +86,17 @@ export default function PricingPage() {
           </div>
 
           {/* Pro Plan */}
-          <div className="bg-gradient-to-b from-[#1E1B18] to-[#161412] border border-purple-500/40 rounded-2xl p-6 flex flex-col justify-between">
+          <div className="bg-gradient-to-b from-[#1E1B18] to-[#161412] border border-[#2C2824] rounded-2xl p-6 flex flex-col justify-between">
             <div>
-              <h3 className="text-xl font-bold mb-2 text-purple-400">Pro</h3>
+              <h3 className="text-xl font-bold mb-2 text-[#F5F0EB]">Pro</h3>
               <div className="text-3xl font-extrabold mb-4 text-[#F5F0EB]">299 THB<span className="text-sm font-normal text-[#8E8E8E]">/เดือน</span></div>
               <ul className="text-[#A09890] text-sm space-y-3 mb-6">
-                <li className="flex items-center gap-2"><span className="text-purple-400">✓</span> ไม่จำกัดจำนวนเพลง (Unlimited)</li>
-                <li className="flex items-center gap-2"><span className="text-purple-400">✓</span> ใช้ได้ทุกโมเดล (LSTM & CNN)</li>
-                <li className="flex items-center gap-2"><span className="text-purple-400">✓</span> Pro Multiband Compressor & Auto Knee</li>
-                <li className="flex items-center gap-2"><span className="text-purple-400">✓</span> Full Studio Pitch Shift (±12 Semitones / Full Octave)</li>
-                <li className="flex items-center gap-2"><span className="text-purple-400">✓</span> Export ไฟล์ WAV Lossless (High-bitrate)</li>
-                <li className="flex items-center gap-2"><span className="text-purple-400">✓</span> LUFS & Peak Auto Mastering แบบจัดเต็ม</li>
+                <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> ไม่จำกัดจำนวนเพลง (Unlimited)</li>
+                <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> ใช้ได้ทุกโมเดล (LSTM & CNN)</li>
+                <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> Pro Multiband Compressor & Auto Knee</li>
+                <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> Full Studio Pitch Shift (±12 Semitones / Full Octave)</li>
+                <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> Export ไฟล์ WAV Lossless (High-bitrate)</li>
+                <li className="flex items-center gap-2"><span className="text-[#34D399]">✓</span> LUFS & Peak Auto Mastering แบบจัดเต็ม</li>
               </ul>
             </div>
             {currentTier === "PRO" ? (

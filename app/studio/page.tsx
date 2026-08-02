@@ -18,8 +18,8 @@ export default function StudioPage() {
         isExpanded ? "max-w-7xl" : "max-w-5xl"
       }`}>
         <header className="flex flex-col gap-2">
-          <div className="flex items-center gap-2 text-xs font-semibold text-purple-400 uppercase tracking-widest">
-            <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></span>
+          <div className="flex items-center gap-2 text-xs font-semibold text-[#F97316] uppercase tracking-widest">
+            <span className="w-2 h-2 rounded-full bg-[#F97316] animate-pulse"></span>
             HarmoniQ Studio Workspace
           </div>
           <h1 className="text-3xl md:text-4xl font-bold leading-tight">

@@ -23,10 +23,11 @@ const STEPS = [
   },
 ] as const;
 
+// ใช้ Coral Brand ทั่วทั้ง Process Flow — หนึ่งผลิตภัณฑ์ หนึ่งสี
 const COLOR_CONFIG = {
-  purple: { border: "border-purple-500/20", bg: "bg-purple-500/10", text: "text-purple-400", glow: "shadow-purple-500/10" },
-  indigo: { border: "border-indigo-500/20", bg: "bg-indigo-500/10", text: "text-indigo-400", glow: "shadow-indigo-500/10" },
-  pink: { border: "border-pink-500/20", bg: "bg-pink-500/10", text: "text-pink-400", glow: "shadow-pink-500/10" },
+  purple: { border: "border-[#F97316]/20", bg: "bg-[#F97316]/10", text: "text-[#F97316]", glow: "shadow-[#F97316]/10" },
+  indigo: { border: "border-[#F97316]/20", bg: "bg-[#F97316]/10", text: "text-[#F97316]", glow: "shadow-[#F97316]/10" },
+  pink:   { border: "border-[#F97316]/20", bg: "bg-[#F97316]/10", text: "text-[#F97316]", glow: "shadow-[#F97316]/10" },
 };
 
 export default function HowItWorks() {

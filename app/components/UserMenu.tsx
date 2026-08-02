@@ -28,7 +28,7 @@ export default function UserMenu() {
   const tierColors: Record<string, string> = {
     FREE: "bg-slate-800 text-slate-300 border-slate-700",
     BASIC: "bg-[#34D399]/10 text-[#34D399] border-[#34D399]/30",
-    PRO: "bg-purple-950/40 text-purple-400 border-purple-500/30",
+    PRO: "bg-[#F97316]/10 text-[#F97316] border-[#F97316]/20",
   };
 
   return (

@@ -19,7 +19,7 @@ export default function SupportPage() {
 
       <main className="flex-grow max-w-4xl mx-auto px-4 py-12 md:py-16 space-y-8">
         <header className="space-y-3 border-b border-[#2C2824] pb-6">
-          <div className="inline-flex items-center gap-2 text-indigo-400 text-xs font-semibold uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 text-[#F97316] text-xs font-semibold uppercase tracking-wider">
             <HelpCircle className="w-4 h-4" />
             <span>Help &amp; Customer Support</span>
           </div>
@@ -30,7 +30,7 @@ export default function SupportPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-1 space-y-4">
             <div className="p-6 rounded-2xl bg-[#161412] border border-[#2C2824] space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+              <div className="w-10 h-10 rounded-xl bg-[#F97316]/10 border border-[#F97316]/20 flex items-center justify-center text-[#F97316]">
                 <Mail className="w-5 h-5" />
               </div>
               <h3 className="font-semibold text-white">อีเมลช่วยเหลือ</h3>
@@ -38,7 +38,7 @@ export default function SupportPage() {
             </div>
 
             <div className="p-6 rounded-2xl bg-[#161412] border border-[#2C2824] space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+              <div className="w-10 h-10 rounded-xl bg-[#F97316]/10 border border-[#F97316]/20 flex items-center justify-center text-[#F97316]">
                 <MessageSquare className="w-5 h-5" />
               </div>
               <h3 className="font-semibold text-white">เวลาทำการ</h3>

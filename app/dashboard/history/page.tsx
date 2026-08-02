@@ -140,10 +140,10 @@ export default function HistoryPage() {
       <div className="min-h-screen bg-[#0D0B0A] text-[#F5F0EB] flex flex-col justify-between">
         <Navbar />
         <div className="max-w-md mx-auto py-24 text-center space-y-4 px-4">
-          <div className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center mx-auto text-purple-400">
+          <div className="w-12 h-12 rounded-2xl bg-[#F97316]/10 border border-[#F97316]/20 flex items-center justify-center mx-auto text-[#F97316]">
             <Music className="w-6 h-6" />
           </div>
-          <h2 className="text-xl font-bold">เข้าสู่ระบบเพื่อดูประวัติสเต็มเสียง</h2>
+          <h2 className="text-xl font-bold">เข้าสู่ระบบเพื่อดูประวัติการแยกแทร็กเสียง</h2>
           <p className="text-xs text-[#8E8E8E]">
             กรุณาเข้าสู่ระบบเพื่อเข้าถึงรายการเพลงและแทร็กสเต็มที่คุณเคยแยกไว้
           </p>
@@ -167,7 +167,7 @@ export default function HistoryPage() {
       <main className="flex-grow max-w-5xl mx-auto w-full px-4 py-12 space-y-8">
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#2C2824] pb-6">
           <div>
-            <div className="inline-flex items-center gap-2 text-purple-400 text-xs font-semibold uppercase tracking-wider mb-1">
+            <div className="inline-flex items-center gap-2 text-[#F97316] text-xs font-semibold uppercase tracking-wider mb-1">
               <Clock className="w-4 h-4" />
               <span>Cloud Stem Library</span>
             </div>
@@ -238,7 +238,7 @@ export default function HistoryPage() {
                                 className={`w-9 h-9 rounded-xl border flex items-center justify-center transition ${
                                   isExpired
                                     ? "bg-[#1E1B18] border-[#2C2824] text-[#5C5854] cursor-not-allowed"
-                                    : "bg-purple-500/10 border-purple-500/20 text-purple-400 hover:bg-purple-500 hover:text-white cursor-pointer"
+                                    : "bg-[#F97316]/10 border-[#F97316]/20 text-[#F97316] hover:bg-[#F97316] hover:text-white cursor-pointer"
                                 }`}
                                 title={isExpired ? "ไฟล์หมดอายุแล้ว" : "เล่นตัวอย่าง"}
                               >
@@ -247,7 +247,7 @@ export default function HistoryPage() {
                             )}
                             <div>
                               <p className="font-semibold text-white truncate max-w-xs">{record.originalFilename}</p>
-                              <span className="text-[11px] text-purple-400">{actionLabels[record.action] || record.action}</span>
+                              <span className="text-[11px] text-[#F97316]">{actionLabels[record.action] || record.action}</span>
                             </div>
                           </div>
                         </td>
@@ -262,7 +262,7 @@ export default function HistoryPage() {
                               {stemsList.map((stem) => (
                                 <span
                                   key={stem}
-                                  className="px-2 py-0.5 rounded-md bg-[#1E1B18] border border-[#36322E] text-[11px] text-purple-300"
+                                  className="px-2 py-0.5 rounded-md bg-[#1E1B18] border border-[#36322E] text-[11px] text-[#A09890]"
                                 >
                                   {stem}
                                 </span>
@@ -307,7 +307,7 @@ export default function HistoryPage() {
                                     : "bg-[#1E1B18] hover:bg-[#36322E] text-white"
                                 }`}
                               >
-                                <Download className="w-4 h-4 text-purple-400" />
+                                <Download className="w-4 h-4 text-[#F97316]" />
                                 <span className="hidden sm:inline">ดาวน์โหลด</span>
                               </button>
                             )}

@@ -12,7 +12,7 @@ export default function PrivacyPage() {
 
       <main className="flex-grow max-w-4xl mx-auto px-4 py-12 md:py-16 space-y-8">
         <header className="space-y-3 border-b border-[#2C2824] pb-6">
-          <div className="inline-flex items-center gap-2 text-emerald-400 text-xs font-semibold uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 text-[#F97316] text-xs font-semibold uppercase tracking-wider">
             <Lock className="w-4 h-4" />
             <span>Data Protection & Privacy Policy</span>
           </div>
@@ -33,7 +33,7 @@ export default function PrivacyPage() {
 
           <section className="space-y-3 bg-[#161412] p-6 rounded-2xl border border-[#2C2824]">
             <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-              <Trash2 className="w-5 h-5 text-purple-400" />
+              <Trash2 className="w-5 h-5 text-[#F97316]" />
               2. นโยบายลบไฟล์เสียงชั่วคราว (Temporary Audio Retention & Cleanup)
             </h2>
             <p>
@@ -43,7 +43,7 @@ export default function PrivacyPage() {
 
           <section className="space-y-3 bg-[#161412] p-6 rounded-2xl border border-[#2C2824]">
             <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-              <Database className="w-5 h-5 text-blue-400" />
+              <Database className="w-5 h-5 text-[#F97316]" />
               3. ระบบชำระเงินและคุกกี้ (Payments & Cookies)
             </h2>
             <p>

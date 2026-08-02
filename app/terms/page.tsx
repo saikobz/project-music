@@ -12,7 +12,7 @@ export default function TermsPage() {
 
       <main className="flex-grow max-w-4xl mx-auto px-4 py-12 md:py-16 space-y-8">
         <header className="space-y-3 border-b border-[#2C2824] pb-6">
-          <div className="inline-flex items-center gap-2 text-purple-400 text-xs font-semibold uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 text-[#F97316] text-xs font-semibold uppercase tracking-wider">
             <FileText className="w-4 h-4" />
             <span>HarmoniQ Legal Compliance</span>
           </div>
@@ -23,7 +23,7 @@ export default function TermsPage() {
         <article className="space-y-8 text-sm md:text-base text-[#A09890] leading-relaxed">
           <section className="space-y-3 bg-[#161412] p-6 rounded-2xl border border-[#2C2824]">
             <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-              <UserCheck className="w-5 h-5 text-purple-400" />
+              <UserCheck className="w-5 h-5 text-[#F97316]" />
               1. สิทธิ์และการรับรองในไฟล์เสียง (Audio Copyright Ownership)
             </h2>
             <p>
@@ -33,7 +33,7 @@ export default function TermsPage() {
 
           <section className="space-y-3 bg-[#161412] p-6 rounded-2xl border border-[#2C2824]">
             <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-              <Scale className="w-5 h-5 text-blue-400" />
+              <Scale className="w-5 h-5 text-[#F97316]" />
               2. ข้อจำกัดและโควตาการใช้งาน (Service Quotas & Restrictions)
             </h2>
             <p>
@@ -43,7 +43,7 @@ export default function TermsPage() {
 
           <section className="space-y-3 bg-[#161412] p-6 rounded-2xl border border-[#2C2824]">
             <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-              <ShieldAlert className="w-5 h-5 text-pink-400" />
+              <ShieldAlert className="w-5 h-5 text-[#F97316]" />
               3. นโยบายการคืนเงินและการยกเลิก (Refund & Cancellation)
             </h2>
             <p>

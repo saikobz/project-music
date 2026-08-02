@@ -27,7 +27,7 @@ const PLANS = [
   {
     name: "Pro",
     price: "Coming Soon",
-    color: "#E5A93D",
+    color: "#F97316",
     features: [
       "ทุกอย่างใน Free",
       "Priority Processing Queue",
@@ -69,7 +69,7 @@ export default function ApiPricingPage() {
       <Navbar />
       <main className="flex-grow mx-auto w-full max-w-5xl px-4 py-12 space-y-16">
         <header className="space-y-3">
-          <p className="text-xs font-semibold tracking-[0.2em] text-[#34D399] uppercase">API & Pricing</p>
+          <p className="text-xs font-semibold tracking-[0.2em] text-[#F97316] uppercase">API & Pricing</p>
           <h1 className="text-4xl font-bold tracking-tight">สำหรับนักพัฒนา</h1>
           <p className="text-[#8E8E8E] max-w-2xl leading-relaxed">
             HarmoniQ ให้บริการ REST API ที่เปิดให้เชื่อมต่อโดยตรง พร้อมเอกสารและตัวอย่างโค้ดสำหรับการ Integrate ในโปรเจกต์ของคุณ
